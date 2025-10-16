@@ -1,0 +1,173 @@
+/* ================================
+   Gamisaetha Scholarship Form Styles
+   ================================ */
+
+/* Container */
+.student-container {
+  padding: 30px;
+  font-family: "Noto Sans Sinhala", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 950px;
+  margin: 30px auto;
+  background: linear-gradient(135deg, #e3f2fd, #ffffff);
+  border-radius: 16px;
+  box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Title */
+.student-title {
+  text-align: center;
+  font-size: 26px;
+  font-weight: 800;
+  margin-bottom: 25px;
+  color: #1565c0;
+  text-transform: uppercase;
+}
+
+/* Form */
+.student-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Labels and Inputs */
+.student-form label {
+  font-weight: 600;
+  color: #1a237e;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.student-form input,
+.student-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #90caf9;
+  border-radius: 8px;
+  outline: none;
+  background: #fff;
+  transition: all 0.25s ease-in-out;
+  font-size: 15px;
+}
+
+.student-form input:focus,
+.student-form textarea:focus {
+  border-color: #1976d2;
+  box-shadow: 0 0 6px rgba(25, 118, 210, 0.5);
+}
+
+/* Textarea */
+.student-form textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* Radio Buttons */
+.student-form input[type="radio"] {
+  margin-right: 8px;
+  accent-color: #1976d2;
+}
+
+.student-form div > label {
+  margin-right: 12px;
+}
+
+/* Table */
+.student-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.student-table th,
+.student-table td {
+  border: 1px solid #bbdefb;
+  padding: 12px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.student-table th {
+  background: linear-gradient(135deg, #1976d2, #42a5f5);
+  color: white;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.student-table tr:nth-child(even) {
+  background: #e3f2fd;
+}
+
+.student-table tr:hover {
+  background: #bbdefb;
+  transition: 0.3s;
+}
+
+.student-table input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #90caf9;
+  border-radius: 6px;
+  transition: border 0.2s;
+  font-size: 14px;
+}
+
+.student-table input:focus {
+  border-color: #1976d2;
+}
+
+/* Amount Section */
+.student-form div[style*="display: flex"] input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Submit Button */
+.submit-btn-container {
+  text-align: center;
+  margin-top: 25px;
+}
+
+.submit-btn {
+  padding: 12px 30px;
+  background: linear-gradient(135deg, #1976d2, #42a5f5);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 5px 15px rgba(25, 118, 210, 0.3);
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+}
+
+.submit-btn:hover {
+  background: linear-gradient(135deg, #1565c0, #1e88e5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(25, 118, 210, 0.4);
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .student-container {
+    padding: 20px;
+  }
+
+  .student-title {
+    font-size: 22px;
+  }
+
+  .student-table th,
+  .student-table td {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  .submit-btn {
+    width: 100%;
+    font-size: 15px;
+  }
+}

@@ -1,0 +1,116 @@
+/* contact.css - Professional Blue Theme */
+
+/* Container */
+.contact-container {
+  max-width: 700px;
+  margin: 30px auto;
+  padding: 30px;
+  background: linear-gradient(135deg, #e3f2fd, #ffffff);
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+/* Page Title */
+.contact-container h2 {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1565c0;
+  margin-bottom: 25px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* Paragraph */
+.contact-container p {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #1a237e;
+  margin-bottom: 25px;
+}
+
+/* Form Styling */
+.contact-container form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.contact-container label {
+  font-weight: 500;
+  color: #1565c0;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.95rem;
+}
+
+.contact-container input,
+.contact-container textarea {
+  padding: 10px 12px;
+  margin-top: 6px;
+  border: 1.5px solid #90caf9;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.25s ease-in-out;
+  background-color: #f9f9ff;
+}
+
+.contact-container input:focus,
+.contact-container textarea:focus {
+  border-color: #1565c0;
+  box-shadow: 0 0 6px rgba(25, 118, 210, 0.4);
+}
+
+/* Textarea */
+.contact-container textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+/* Submit Button */
+.contact-container .submit-btn {
+  width: 150px;
+  padding: 10px 0;
+  margin-top: 10px;
+  background: linear-gradient(135deg, #1976d2, #42a5f5);
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  align-self: flex-start;
+}
+
+.contact-container .submit-btn:hover {
+  background: linear-gradient(135deg, #1565c0, #1e88e5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(25, 118, 210, 0.3);
+}
+
+/* Back Link */
+.contact-container .back-link {
+  display: inline-block;
+  margin-top: 20px;
+  color: #1565c0;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.25s;
+}
+
+.contact-container .back-link:hover {
+  opacity: 0.8;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .contact-container {
+    padding: 20px;
+  }
+
+  .contact-container .submit-btn {
+    width: 100%;
+  }
+}

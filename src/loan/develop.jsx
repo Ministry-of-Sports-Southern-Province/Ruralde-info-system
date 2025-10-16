@@ -1,0 +1,369 @@
+import React, { useState } from "react";
+import "../loan/develop.css";
+
+const Develop = () => {
+  const districtData = {
+    Galle: [
+      "හික්කඩුව","හබරාදුව","ඇල්පිටිය","යක්කලමුල්ල","තවලම","නාගොඩ","නෙඵව",
+      "අක්මීමණ","නියාගම","ගාල්ල කඩවත්සතර","බද්දේගම","බෙන්තොට","බෝපේ පෝද්දල",
+      "බලපිටිය","අම්බලන්ගොඩ","ඉමදුව","කරන්දෙනිය","වැලිවිටිය දිවිතුර","ගෝනාපිනුවල",
+      "රත්ගම","මාදම්පාගම","වඳුරඔ"
+    ],
+    Matara: [
+      "තිහගොඩ","අකුරැස්ස","හක්මණ","වැලිගම","මාලිම්බඩ","දික්වැල්ල","අතුරලිය",
+      "දෙවිනුවර","පිටබැද්දර","මුලටියන","වැලිපිටිය","පස්ගොඩ","කඔරුපිටිය",
+      "කිරින්ද පුහුල්වැල්ල","කොටපොළ","මාතර"
+    ],
+    Hambantota: [
+      "අඟුණකොලපැලැස්ස","අම්බලන්තොට","බෙලිඅත්ත","හම්බන්තොට","කටුවන","ලුණුගම්වෙහෙර",
+      "ඕකෙවෙල","සූරියවැව","තංගල්ල","තිස්සමහාරාමය","වලස්මුල්ල","වීරකැටිය"
+    ],
+  };
+
+  const [bankDetails, setBankDetails] = useState([
+    { bankName: "", accountNumber: "", salary: "" },
+  ]);
+  const [debitDetails, setDebitDetails] = useState([
+    { amount: "", date: "", warika: "" },
+  ]);
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [selectedSecretary, setSelectedSecretary] = useState("");
+
+  const handleDistrictChange = (district) => {
+    setSelectedDistrict(district);
+    setSelectedSecretary("");
+  };
+
+  const handleBankChange = (index, field, value) => {
+    const newDetails = [...bankDetails];
+    newDetails[index][field] = value;
+    setBankDetails(newDetails);
+  };
+
+  const handleDebitChange = (index, field, value) => {
+    const newDetails = [...debitDetails];
+    newDetails[index][field] = value;
+    setDebitDetails(newDetails);
+  };
+
+  const addBankRow = () => {
+    setBankDetails([...bankDetails, { bankName: "", accountNumber: "", salary: "" }]);
+  };
+
+  const addDebitRow = () => {
+    setDebitDetails([...debitDetails, { amount: "", date: "", warika: "" }]);
+  };
+
+  // ✅ Delete a bank row
+  const deleteBankRow = (index) => {
+    const newDetails = bankDetails.filter((_, i) => i !== index);
+    setBankDetails(newDetails);
+  };
+
+  // ✅ Delete a debit row
+  const deleteDebitRow = (index) => {
+    const newDetails = debitDetails.filter((_, i) => i !== index);
+    setDebitDetails(newDetails);
+  };
+
+  return (
+    <div className="develop-container">
+      <div className="develop-header">
+        <h3>දකුණු පළාත් ග්‍රාම සංවර්ධන දෙපාර්තමේන්තුව</h3>
+        <h3>MS-SP/RD/FO/03</h3>
+      </div>
+
+      <h2 className="develop-title">
+       ග්‍රාම සංවර්ධන සමිති ගිණුමෙන් මුදල් නිදහස් කර ගැනීම සඳහා ඉල්ලුම් පත්‍රය
+      </h2>
+
+      <form className="develop-form">
+        {/* 01. District */}
+        <div>
+          <label>
+            01.දිස්ත්රික්කය:
+            <select
+              value={selectedDistrict}
+              onChange={(e) => handleDistrictChange(e.target.value)}
+            >
+              <option value="">තෝරන්න</option>
+              <option value="Galle">ගාල්ල</option>
+              <option value="Matara">මාතර</option>
+              <option value="Hambantota">හම්බන්තොට</option>
+            </select>
+          </label>
+        </div>
+
+        {/* 02. Secretary Division */}
+        <div>
+          <label>
+            02.ප්‍රාදේශීය ලේකම් කොට්ඨාසය :
+            <select
+              value={selectedSecretary}
+              onChange={(e) => setSelectedSecretary(e.target.value)}
+              disabled={!selectedDistrict}
+            >
+              <option value="">Select Division</option>
+              {selectedDistrict &&
+                districtData[selectedDistrict].map((sec, idx) => (
+                  <option key={idx} value={sec}>
+                    {sec}
+                  </option>
+                ))}
+            </select>
+          </label>
+        </div>
+
+        {/* Other Form Fields */}
+        <div>
+          <label>
+            03.ලියාපදිංචි අංකය:
+            <input type="text" placeholder="Enter Register No" />
+          </label>
+
+          <label>ලියාපදිංචි දිනය</label>
+          <input type="date"></input>
+        </div>
+
+        <div>
+          <label>
+            04.ග්‍රාම සංවර්ධන සමිතියේ නම :
+            <input type="text" placeholder="Enter Name" />
+          </label>
+        </div>
+
+        <div>
+          <label>
+            05.ලිපිනය:
+            <input type="text" placeholder="Enter Address" />
+          </label>
+        </div>
+
+        {/* Bank Table */}
+        <div>
+          <h4>06.සමිතිය සතු බැංකු ගිණුම් </h4>
+          <table className="develop-table">
+            <thead>
+              <tr>
+                <th>බැංකුවේ නම</th>
+                <th>ගිණුම් අංකය</th>
+                <th>ශේෂය</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bankDetails.map((row, index) => (
+                <tr key={index}>
+                  <td>
+                    <input
+                      type="text"
+                      value={row.bankName}
+                      onChange={(e) =>
+                        handleBankChange(index, "bankName", e.target.value)
+                      }
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={row.accountNumber}
+                      onChange={(e) =>
+                        handleBankChange(index, "accountNumber", e.target.value)
+                      }
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={row.salary}
+                      onChange={(e) =>
+                        handleBankChange(index, "salary", e.target.value)
+                      }
+                    />
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      className="delete-row-btn"
+                      onClick={() => deleteBankRow(index)}
+                    >
+                      ❌
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <button type="button" className="add-row-btn" onClick={addBankRow}>
+            ➕ Add Row
+          </button>
+        </div>
+
+        {/* Why want finance */}
+        <div>
+          <label>
+            07.මුදල් අවශ්‍ය කාරණය (ඇස්තමේන්තු පිටපත් අමුණන්න) :
+            <input type="file"
+            placeholder="ඇස්තමේන්තු පිටපත් අමුණන්න"
+            onChange={(e=>setAttachedFile(e.target.files[0]))}></input>
+          </label>
+        </div>
+
+        {/* Want Money */}
+        <div>
+          <label>
+            08.අවශ්‍ය මුදල රුපියල්:
+            <input type="number" placeholder="Enter Amount" />
+          </label>
+        </div>
+
+        {/* Date of Function */}
+        <div>
+          <label>
+            09.මීට අදාල මහා සභාව පැවැත්වු දිනය
+            <input type="date" />
+          </label>
+        </div>
+
+        {/* Debit Money Table */}
+        <div>
+          <h4>10.සමිති ගිණුමෙන් මීට පෙර ලබා ගත් ණය</h4>
+          <table className="develop-table">
+            <thead>
+              <tr>
+                <th>ලබාගත් මුදල</th>
+                <th>ලබාගත් දිනය</th>
+                <th>දැනට ගෙවා ඇති වාරික ගණන ( මුදල )</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {debitDetails.map((row, index) => (
+                <tr key={index}>
+                  <td>
+                    <input
+                      type="number"
+                      value={row.amount}
+                      onChange={(e) =>
+                        handleDebitChange(index, "amount", e.target.value)
+                      }
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="date"
+                      value={row.date}
+                      onChange={(e) =>
+                        handleDebitChange(index, "date", e.target.value)
+                      }
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={row.warika}
+                      onChange={(e) =>
+                        handleDebitChange(index, "warika", e.target.value)
+                      }
+                    />
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      className="delete-row-btn"
+                      onClick={() => deleteDebitRow(index)}
+                    >
+                      ❌
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <button type="button" className="add-row-btn" onClick={addDebitRow}>
+            ➕ Add Row
+          </button>
+        </div>
+
+        {/* Type of Debit */}
+        <div>
+          <label>
+            11.ඉල්ලුම් කරන මුදල නැවත සමිති ගිණුමට බැර කරන ආකාරය :
+            <select>
+              <option value="">Select Type</option>
+              <option value="Cash">Cash</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="Cheque">Cheque</option>
+            </select>
+          </label>
+        </div>
+
+        {/* Signatures */}
+        <div>
+          <h4>12.ඉහත සඳහන් තොරතුරු නිවැරදි බැව් සහතික කරමි.</h4>
+          <div className="signature-section">
+            <div className="signature-field">
+              <div className="signature-line"></div>
+              <div>භාණ්ඩාගාරික</div>
+            </div>
+            <div className="signature-field">
+              <div className="signature-line"></div>
+              <div>සභාපති</div>
+            </div>
+            <div className="signature-field">
+              <div className="signature-line"></div>
+              <div>ලේකම්</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Submit Button */}
+        <div className="submit-btn-container">
+          <button
+            type="submit"
+            className="submit-btn"
+            onClick={(e) => {
+              e.preventDefault();
+              alert("Form submitted!");
+            }}
+          >
+            Submit
+          </button>
+        </div>
+
+        {/* Verification Links */}
+        <div
+          className="verification-links"
+          style={{ marginTop: "30px", textAlign: "center" }}
+        >
+          <a href="/ruralofficer" className="verification-link">
+            Rural Officer Verification
+          </a>
+          <span style={{ margin: "0 15px" }}>|</span>
+          <a href="/provincialofficer" className="verification-link">
+            Provincial Officer Verification
+          </a>
+          <span style={{ margin: "0 15px" }}>|</span>
+          <a href="/student" className="verification-link">
+            Student Application Form
+          </a>
+          <span style={{ margin: "0 15px" }}>|</span>
+          <a href="/society" className="verification-link">
+            Society Form
+          </a>
+          <span style={{ margin: "0 15px" }}>|</span>
+          <a href="/member" className="verification-link">
+            Members
+          </a>
+
+           <span style={{ margin: "0 15px" }}>|</span>
+          <a href="/contact" className="verification-link">
+            Contact Us
+          </a>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default Develop;

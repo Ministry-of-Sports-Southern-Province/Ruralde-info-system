@@ -1,0 +1,206 @@
+/* General container */
+.develop-container {
+  padding: 30px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 950px;
+  margin: 30px auto;
+  background: linear-gradient(135deg, #e0f7fa, #f1f8ff);
+  border-radius: 16px;
+  box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.15);
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+/* Fade In Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Header */
+.develop-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.develop-header h3 {
+  margin: 0;
+  color: #004e4165;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+/* Title */
+.develop-title {
+  text-align: center;
+  margin: 25px 0;
+  font-size: 20px;
+  color: #1e88e5;
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+/* Form */
+.develop-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Labels and inputs */
+.develop-form label {
+  font-weight: 600;
+  color: #2e3c50;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.develop-form input,
+.develop-form select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #cfd8dc;
+  border-radius: 8px;
+  outline: none;
+  background: #fff;
+  transition: all 0.25s ease-in-out;
+}
+
+.develop-form input:focus,
+.develop-form select:focus {
+  border-color: #1e88e5;
+  box-shadow: 0 0 6px rgba(30, 136, 229, 0.5);
+}
+
+/* Table */
+.develop-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.develop-table th,
+.develop-table td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.develop-table th {
+  background: linear-gradient(135deg, #1e88e5, #42a5f5);
+  color: white;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.develop-table tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+.develop-table tr:hover {
+  background: #e3f2fd;
+  transition: 0.3s;
+}
+
+.develop-table input {
+  width: 100%;
+  padding: 7px;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  transition: border 0.2s;
+}
+
+.develop-table input:focus {
+  border-color: #1e88e5;
+}
+
+/* Add Row Button */
+.add-row-btn {
+  margin-top: 15px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #43a047, #66bb6a);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+}
+
+.add-row-btn:hover {
+  background: linear-gradient(135deg, #2e7d32, #43a047);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(0,0,0,0.25);
+}
+.signature-section {
+  display: flex;
+  justify-content: space-between; /* spread evenly across row */
+  margin-top: 30px;
+}
+
+.signature-field {
+  text-align: center;
+  flex: 1;
+  margin: 0 10px; /* spacing between fields */
+}
+
+.signature-line {
+  border-bottom: 1px dotted #000;
+  height: 1px;
+  margin-bottom: 5px; /* space between dotted line and position name */
+}
+.verification-links {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.verification-link {
+  text-decoration: none;
+  color: #007bff;
+  font-weight: bold;
+  transition: color 0.2s;
+}
+
+.verification-link:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+.submit-btn {
+  padding: 12px 30px;
+  background: linear-gradient(135deg, #1e88e5, #42a5f5); /* nice blue gradient */
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 5px 15px rgba(30, 136, 229, 0.3); /* soft shadow */
+  transition: all 0.3s ease;
+  display: inline-block;
+  text-transform: uppercase;
+}
+
+.submit-btn:hover {
+  background: linear-gradient(135deg, #1565c0, #1e88e5); /* darker on hover */
+  transform: translateY(-2px); /* subtle lift */
+  box-shadow: 0 8px 20px rgba(30, 136, 229, 0.4);
+}
+
+.delete-row-btn {
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.delete-row-btn:hover {
+  background-color: #e33e3f;
+}

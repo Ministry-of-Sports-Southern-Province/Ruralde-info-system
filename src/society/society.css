@@ -1,0 +1,181 @@
+/* Main Container */
+.society-container {
+  padding: 30px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 950px;
+  margin: 30px auto;
+  background: linear-gradient(135deg, #e3f2fd, #ffffff);
+  border-radius: 16px;
+  box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Title */
+.society-title {
+  text-align: center;
+  font-size: 26px;
+  font-weight: 800;
+  margin-bottom: 25px;
+  color: #1565c0;
+  text-transform: uppercase;
+}
+
+/* Form Layout */
+.society-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Labels and Inputs */
+.society-form label {
+  font-weight: 600;
+  color: #1a237e;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.society-form input,
+.society-form select,
+.society-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #90caf9;
+  border-radius: 8px;
+  outline: none;
+  background: #fff;
+  transition: all 0.25s ease-in-out;
+  font-size: 14px;
+  resize: none;
+}
+
+.society-form input:focus,
+.society-form select:focus,
+.society-form textarea:focus {
+  border-color: #1976d2;
+  box-shadow: 0 0 6px rgba(25, 118, 210, 0.5);
+}
+
+/* Tables */
+.society-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.society-table th,
+.society-table td {
+  border: 1px solid #bbdefb;
+  padding: 12px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.society-table th {
+  background: linear-gradient(135deg, #1976d2, #42a5f5);
+  color: white;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.society-table tr:nth-child(even) {
+  background: #e3f2fd;
+}
+
+.society-table tr:hover {
+  background: #bbdefb;
+  transition: 0.3s;
+}
+
+.society-table input {
+  width: 100%;
+  padding: 7px;
+  border: 1px solid #90caf9;
+  border-radius: 6px;
+  transition: border 0.2s;
+}
+
+.society-table input:focus {
+  border-color: #1976d2;
+}
+
+/* Add Row Button */
+.add-row-btn {
+  margin-top: 15px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #0288d1, #03a9f4);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.add-row-btn:hover {
+  background: linear-gradient(135deg, #0277bd, #0288d1);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* Signature Section */
+.signature-section {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.signature-field {
+  text-align: center;
+  flex: 1;
+  margin: 0 10px;
+}
+
+.signature-line {
+  border-bottom: 1px dotted #1565c0;
+  height: 1px;
+  margin-bottom: 5px;
+}
+
+/* Submit Button */
+.submit-btn-container {
+  text-align: center;
+  margin-top: 25px;
+}
+
+.submit-btn {
+  padding: 12px 30px;
+  background: linear-gradient(135deg, #1976d2, #42a5f5);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 5px 15px rgba(25, 118, 210, 0.3);
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+}
+
+.submit-btn:hover {
+  background: linear-gradient(135deg, #1565c0, #1e88e5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(25, 118, 210, 0.4);
+}
+
+/* Optional: Delete Button (if added later) */
+.delete-row-btn {
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.delete-row-btn:hover {
+  background-color: #e33e3f;
+}

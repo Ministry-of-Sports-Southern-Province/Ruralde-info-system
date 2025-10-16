@@ -1,0 +1,131 @@
+/* Container */
+.provincial-container {
+  padding: 30px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 700px;
+  margin: 30px auto;
+  background: linear-gradient(135deg, #e3f2fd, #ffffff);
+  border-radius: 16px;
+  box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Title */
+.provincial-title {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 25px;
+  color: #1565c0;
+  text-transform: uppercase;
+}
+
+/* Instruction */
+.provincial-instruction {
+  font-size: 14px;
+  color: #1a237e;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.provincial-instruction span {
+  font-size: 15px;
+  text-decoration: underline;
+  font-weight: 600;
+  color: #093475;
+}
+
+/* Form Layout */
+.provincial-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Inputs and Dropdowns */
+.provincial-form input,
+.provincial-form select {
+  padding: 6px 10px;
+  border: 1px solid #81aaf5;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: #f9f5f2;
+  color: #1b1c5a;
+  margin-left: 5px;
+}
+
+/* Amount Input Short Style */
+.amount-input {
+  width: 120px;
+}
+
+/* Signature Section */
+.signature-section {
+  display: flex;
+  justify-content: flex-start;
+  gap: 40px;
+  margin-top: 25px;
+}
+
+.signature-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 200px;
+}
+
+.signature-line {
+  width: 100%;
+  border-bottom: 2px solid #000;
+  margin-bottom: 8px;
+}
+
+.signature-field div:last-child {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Date Inputs (Year, Month, Day) */
+.date-inputs {
+  display: flex;
+  gap: 8px;
+}
+
+.date-inputs input {
+  width: 60px;
+  text-align: center;
+}
+
+/* Styled Horizontal Rule */
+.styled-hr {
+  border: none;
+  border-top: 2px solid #1a2c52;
+  margin: 25px 0;
+}
+
+/* Submit Button */
+.submit-btn-container {
+  text-align: center;
+  margin-top: 25px;
+}
+
+.submit-btn {
+  padding: 12px 30px;
+  background: linear-gradient(135deg, #1976d2, #42a5f5);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 5px 15px rgba(25, 118, 210, 0.3);
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+}
+
+.submit-btn:hover {
+  background: linear-gradient(135deg, #1565c0, #1e88e5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(25, 118, 210, 0.4);
+}
