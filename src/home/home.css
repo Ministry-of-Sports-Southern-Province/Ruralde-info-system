@@ -1,76 +1,208 @@
-/* Container */
+/* ---------------------------------------------------
+   Page Container
+---------------------------------------------------- */
 .page.container {
-  max-width: 1000px;
-  margin: 30px auto;
-  padding: 30px;
-  background: linear-gradient(135deg, #e3f2fd, #ffffff);
-  border-radius: 16px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 40px 30px;
+  background: linear-gradient(135deg, #e8f0fe, #ffffff);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #333;
+  color: #2c3e50;
+  transition: all 0.3s ease;
 }
 
-/* Page Title */
+/* Subtle fade-in animation */
+.page.container {
+  opacity: 0;
+  transform: translateY(15px);
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------------------------------------------------
+   Home Section (Image + Text)
+---------------------------------------------------- */
+.home-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 50px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+/* Left: Image */
+.home-container img {
+  width: 100%;
+  max-width: 520px;
+  height: 500px;
+  object-fit: cover;
+  border-radius: 14px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.home-container img:hover {
+  transform: scale(1.03);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Right: Text Section */
+.right-container {
+  flex: 1;
+  text-align: left;
+  padding-right: 20px;
+}
+
+/* ---------------------------------------------------
+   Title and Text
+---------------------------------------------------- */
 .page-title {
-  font-size: 22px;
+  font-size: 2.2rem;
   font-weight: 800;
-  color: #1565c0;
-  margin-bottom: 20px;
-  text-align: center;
+  color: #0d47a1;
+  margin-bottom: 18px;
   text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-/* Paragraph */
 .page p {
-  font-size: 1rem;
-  line-height: 1.6;
-  color: #1a237e;
-  margin-bottom: 25px;
-  text-align: center;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: #283593;
+  margin-bottom: 30px;
 }
 
-/* Card Grid */
+/* ---------------------------------------------------
+   Button Styles
+---------------------------------------------------- */
+.primary-btn {
+  display: inline-block;
+  background: linear-gradient(90deg, #1976d2, #42a5f5);
+  color: #fff;
+  padding: 14px 32px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  font-size: 1rem;
+  box-shadow: 0 6px 20px rgba(25, 118, 210, 0.25);
+  transition: all 0.3s ease;
+}
+
+.primary-btn:hover {
+  background: linear-gradient(90deg, #0d47a1, #1976d2);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(25, 118, 210, 0.35);
+}
+
+/* For multiple buttons if needed */
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+/* ---------------------------------------------------
+   Card Grid (if used later)
+---------------------------------------------------- */
 .card-grid {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  gap: 20px;
+  gap: 25px;
+  margin-top: 40px;
 }
 
-/* Card Style */
 .card {
   flex: 1 1 30%;
   background: #fff;
-  border: 2px solid #90caf9;
-  border-radius: 12px;
-  padding: 20px;
+  border: 1px solid #bbdefb;
+  border-radius: 14px;
+  padding: 25px;
   text-align: center;
   text-decoration: none;
-  color: #1565c0;
+  color: #0d47a1;
   font-weight: 600;
   box-shadow: 0 4px 15px rgba(25, 118, 210, 0.1);
   transition: all 0.3s ease;
 }
 
 .card:hover {
-  background: #e3f2fd;
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(25, 118, 210, 0.2);
+  background: linear-gradient(135deg, #e3f2fd, #ffffff);
+  transform: translateY(-6px);
+  box-shadow: 0 10px 25px rgba(25, 118, 210, 0.25);
 }
 
-/* Responsive */
+/* ---------------------------------------------------
+   Footer
+---------------------------------------------------- */
+footer {
+  margin-top: 60px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #607d8b;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 20px;
+}
+
+/* ---------------------------------------------------
+   Responsive Design
+---------------------------------------------------- */
 @media (max-width: 1024px) {
   .card {
     flex: 1 1 45%;
+  }
+
+  .home-container {
+    gap: 30px;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-container {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .home-container img {
+    max-width: 90%;
+    height: auto;
+  }
+
+  .right-container {
+    text-align: center;
+    padding: 0;
+  }
+
+  .page-title {
+    font-size: 1.8rem;
+  }
+
+  .button-group {
+    justify-content: center;
   }
 }
 
 @media (max-width: 600px) {
   .page.container {
-    padding: 20px;
+    padding: 25px 15px;
   }
 
   .card {
     flex: 1 1 100%;
+  }
+
+  .primary-btn {
+    width: 100%;
+    text-align: center;
   }
 }

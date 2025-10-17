@@ -33,9 +33,7 @@ export default function Contact() {
         </button>
       </form>
 
-      <Link to="/" className="back-link">
-        ← Back
-      </Link>
+     
     </div>
   );
 }
