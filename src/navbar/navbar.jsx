@@ -32,7 +32,7 @@ export default function Navbar() {
               </div>
             )}
           </div>
-
+          <Link to="/reports">Reports</Link>
           <Link to="/contact">Contact Us</Link>
         </nav>
       </div>
