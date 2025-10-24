@@ -21,7 +21,7 @@ export default function Navbar() {
             onMouseEnter={() => setShowForms(true)}
             onMouseLeave={() => setShowForms(false)}
           >
-            <span className="dropdown-title">Forms ▼</span>
+            <span className="dropdown-title">Applications ▼</span>
             {showForms && (
               <div className="dropdown-content">
                 <Link to="/register">සමිති ලියාපදින්චිය</Link>

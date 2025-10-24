@@ -317,7 +317,7 @@ const Develop = () => {
           </div>
         </div>
 
-        {/* Submit Button */}
+       {/* Submit Button */}
         <div className="submit-btn-container">
           <button
             type="submit"
@@ -343,23 +343,7 @@ const Develop = () => {
           <a href="/provincialofficer" className="verification-link">
             Provincial Officer Verification
           </a>
-          <span style={{ margin: "0 15px" }}>|</span>
-          <a href="/student" className="verification-link">
-            Student Application Form
-          </a>
-          <span style={{ margin: "0 15px" }}>|</span>
-          <a href="/society" className="verification-link">
-            Society Form
-          </a>
-          <span style={{ margin: "0 15px" }}>|</span>
-          <a href="/member" className="verification-link">
-            Members
-          </a>
-
-           <span style={{ margin: "0 15px" }}>|</span>
-          <a href="/contact" className="verification-link">
-            Contact Us
-          </a>
+         
         </div>
       </form>
     </div>

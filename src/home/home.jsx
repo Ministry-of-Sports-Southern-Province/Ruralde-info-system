@@ -22,7 +22,7 @@ export default function Home() {
           </p>
 
           <div className="button-group">
-            <Link to="/forms" className="primary-btn">
+            <Link to="/startup" className="primary-btn">
               Get Started
             </Link>
           </div>
