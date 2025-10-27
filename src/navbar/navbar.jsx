@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import "../navbar/navbar.css"; // make sure to create this CSS file
+import "../navbar/navbar.css";
 
 export default function Navbar() {
   const [showForms, setShowForms] = useState(false);
@@ -15,6 +15,7 @@ export default function Navbar() {
         <nav className="nav-links">
           <Link to="/">Home</Link>
           <Link to="/about">About</Link>
+
           {/* Forms Dropdown */}
           <div
             className="dropdown"
@@ -32,8 +33,14 @@ export default function Navbar() {
               </div>
             )}
           </div>
-          <Link to="/reports">Reports</Link>
+
+          <Link to="/login">Reports</Link>
           <Link to="/contact">Contact Us</Link>
+
+          {/* ✅ Sign Up Button */}
+          <Link to="/signup" className="signup-btn">
+            Sign Up
+          </Link>
         </nav>
       </div>
     </header>

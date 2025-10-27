@@ -1,3 +1,6 @@
+/* =========================
+   Navbar Main Styles
+   ========================= */
 .nav {
   background: linear-gradient(90deg, #1565c0, #42a5f5);
   color: #fff;
@@ -6,8 +9,8 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;              /* Full width */
-  z-index: 1000; 
+  width: 100%;
+  z-index: 1000;
 }
 
 .nav-inner {
@@ -25,16 +28,28 @@
   text-decoration: none;
 }
 
-.nav-links a, .dropdown-title {
+/* =========================
+   Links & Dropdown
+   ========================= */
+.nav-links {
+  display: flex;
+  align-items: center;
+}
+
+.nav-links a,
+.dropdown-title {
   color: #fff;
   margin-left: 18px;
   text-decoration: none;
   font-weight: 600;
   cursor: pointer;
+  transition: opacity 0.3s ease, transform 0.2s ease;
 }
 
-.nav-links a:hover, .dropdown-title:hover {
+.nav-links a:hover,
+.dropdown-title:hover {
   opacity: 0.85;
+  transform: translateY(-1px);
 }
 
 /* Dropdown */
@@ -49,7 +64,7 @@
   left: 0;
   background-color: #fff;
   min-width: 220px;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
   border-radius: 8px;
   z-index: 1000;
   overflow: hidden;
@@ -65,4 +80,75 @@
 
 .dropdown-content a:hover {
   background-color: #e3f2fd;
+}
+
+/* =========================
+   Sign Up Button (Professional Gradient)
+   ========================= */
+.signup-btn {
+  background: linear-gradient(135deg, #0d47a1, #42a5f5);
+  color: #fff;
+  padding: 12px 28px;
+  border-radius: 30px;
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  font-size: 1rem;
+  box-shadow: 0 4px 15px rgba(66, 165, 245, 0.4),
+              inset 0 0 8px rgba(255, 255, 255, 0.2);
+  transition: all 0.35s ease;
+  position: relative;
+  overflow: hidden;
+  margin-left: 20px;
+}
+
+/* Subtle glowing border effect */
+.signup-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 30px;
+  padding: 2px;
+  background: linear-gradient(90deg, #42a5f5, #00c6ff, #42a5f5);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+/* Hover animation */
+.signup-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 25px rgba(66, 165, 245, 0.6);
+  background: linear-gradient(135deg, #1565c0, #64b5f6);
+}
+
+.signup-btn:hover::before {
+  opacity: 1;
+}
+
+/* =========================
+   Responsive Design
+   ========================= */
+@media (max-width: 768px) {
+  .nav-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav-links {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: 10px;
+  }
+
+  .nav-links a,
+  .dropdown-title,
+  .signup-btn {
+    margin-left: 0;
+    margin-top: 10px;
+  }
 }

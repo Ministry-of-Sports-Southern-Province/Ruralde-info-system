@@ -1,6 +1,9 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import "../startup/startup.css";
+
 const Startup = () => {
+  // District and Secretary Divisions data
   const districtData = {
     Galle: [
       "හික්කඩුව", "හබරාදුව", "ඇල්පිටිය", "යක්කලමුල්ල", "තවලම", "නාගොඩ", "නෙඵව",
@@ -19,118 +22,98 @@ const Startup = () => {
     ],
   };
 
-  const [bankDetails, setBankDetails] = useState([
-    { bankName: "", accountNumber: "", salary: "" },
-  ]);
-  const [debitDetails, setDebitDetails] = useState([
-    { amount: "", date: "", warika: "" },
-  ]);
+  // Form State
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedSecretary, setSelectedSecretary] = useState("");
+  const [bankDetails, setBankDetails] = useState([{ bankName: "", accountNumber: "", salary: "" }]);
+  const [debitDetails, setDebitDetails] = useState([{ amount: "", date: "", warika: "" }]);
 
+  // Handlers
   const handleDistrictChange = (district) => {
     setSelectedDistrict(district);
     setSelectedSecretary("");
   };
 
   const handleBankChange = (index, field, value) => {
-    const newDetails = [...bankDetails];
-    newDetails[index][field] = value;
-    setBankDetails(newDetails);
+    const updated = [...bankDetails];
+    updated[index][field] = value;
+    setBankDetails(updated);
   };
 
   const handleDebitChange = (index, field, value) => {
-    const newDetails = [...debitDetails];
-    newDetails[index][field] = value;
-    setDebitDetails(newDetails);
+    const updated = [...debitDetails];
+    updated[index][field] = value;
+    setDebitDetails(updated);
   };
 
-  const addBankRow = () => {
-    setBankDetails([...bankDetails, { bankName: "", accountNumber: "", salary: "" }]);
-  };
+  const addBankRow = () => setBankDetails([...bankDetails, { bankName: "", accountNumber: "", salary: "" }]);
+  const deleteBankRow = (index) => setBankDetails(bankDetails.filter((_, i) => i !== index));
 
-  const addDebitRow = () => {
-    setDebitDetails([...debitDetails, { amount: "", date: "", warika: "" }]);
-  };
-
-  // ✅ Delete a bank row
-  const deleteBankRow = (index) => {
-    const newDetails = bankDetails.filter((_, i) => i !== index);
-    setBankDetails(newDetails);
-  };
-
-  // ✅ Delete a debit row
-  const deleteDebitRow = (index) => {
-    const newDetails = debitDetails.filter((_, i) => i !== index);
-    setDebitDetails(newDetails);
-  };
+  const addDebitRow = () => setDebitDetails([...debitDetails, { amount: "", date: "", warika: "" }]);
+  const deleteDebitRow = (index) => setDebitDetails(debitDetails.filter((_, i) => i !== index));
 
   return (
     <div className="develop-container">
-
+      {/* Professional Title */}
+      <h2 className="form-title">ග්‍රාම සංවර්ධන සමිතිය සඳහා අයදුම් කිරීම</h2>
 
       <form className="develop-form">
-        {/* 01. District */}
-        <div>
-          <label>
-            01.දිස්ත්රික්කය:
-            <select
-              value={selectedDistrict}
-              onChange={(e) => handleDistrictChange(e.target.value)}
-            >
-              <option value="">තෝරන්න</option>
-              <option value="Galle">ගාල්ල</option>
-              <option value="Matara">මාතර</option>
-              <option value="Hambantota">හම්බන්තොට</option>
-            </select>
-          </label>
+        {/* District Selection */}
+        <div className="form-group">
+          <label>01. දිස්ත්රික්කය:</label>
+          <select value={selectedDistrict} onChange={(e) => handleDistrictChange(e.target.value)}>
+            <option value="">තෝරන්න</option>
+            {Object.keys(districtData).map((district) => (
+              <option key={district} value={district}>
+                {district === "Galle" ? "ගාල්ල" : district === "Matara" ? "මාතර" : "හම්බන්තොට"}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* 02. Secretary Division */}
-        <div>
-          <label>
-            02.ප්‍රාදේශීය ලේකම් කොට්ඨාසය :
-            <select
-              value={selectedSecretary}
-              onChange={(e) => setSelectedSecretary(e.target.value)}
-              disabled={!selectedDistrict}
-            >
-              <option value="">Select Division</option>
-              {selectedDistrict &&
-                districtData[selectedDistrict].map((sec, idx) => (
-                  <option key={idx} value={sec}>
-                    {sec}
-                  </option>
-                ))}
-            </select>
-          </label>
+        {/* Secretary Division */}
+        <div className="form-group">
+          <label>02. ප්‍රාදේශීය ලේකම් කොට්ඨාසය:</label>
+          <select
+            value={selectedSecretary}
+            onChange={(e) => setSelectedSecretary(e.target.value)}
+            disabled={!selectedDistrict}
+          >
+            <option value="">තෝරන්න</option>
+            {selectedDistrict &&
+              districtData[selectedDistrict].map((sec, idx) => (
+                <option key={idx} value={sec}>
+                  {sec}
+                </option>
+              ))}
+          </select>
         </div>
 
-        {/* Other Form Fields */}
-        <div>
-          <label>
-            03.ලියාපදිංචි අංකය:
-            <input type="text" placeholder="Enter Register No" />
-          </label>
-
-
+        {/* Registration Number */}
+        <div className="form-group">
+          <label>03. ලියාපදිංචි අංකය:</label>
+          <input type="text" placeholder="Enter Register No" />
         </div>
 
-        <div>
-          <label>
-            04.ග්‍රාම සංවර්ධන සමිතියේ නම :
-            <input type="text" placeholder="Enter Name" />
-          </label>
+        {/* Committee Name */}
+        <div className="form-group">
+          <label>04. ග්‍රාම සංවර්ධන සමිතියේ නම:</label>
+          <input type="text" placeholder="Enter Name" />
         </div>
 
-
-        <h5>කරුණාකර පහත සඳහන් සේවාවන් අතරින් ඔබට අවශ්‍ය සේවාව තෝරා ගන්න.</h5>
-
-        <button class="service-button">1.ගැමිසෙත ශිශ්‍යත්වය සදහා අයදුම් කිරීම.</button>
-        <button class="service-button">2.මුදල් නිදහස් කර ගැනීමට අයදුම් කිරීම.</button>
-        <button class="service-button">3.ණය සදහා අයදුම් කිරීම.</button>
-
-
+        {/* Services */}
+        <h5>කරුණාකර පහත සඳහන් සේවාවන් අතරින් ඔබට අවශ්‍ය සේවාව තෝරා ගන්න:</h5>
+        <div className="service-links">
+          <Link to="/student" className="service-button">
+            1. "ගැමිසෙත" ශිෂ්‍යත්වය සඳහා අයදුම් කිරීම
+          </Link>
+          <Link to="/develop" className="service-button">
+            2. මුදල් නිදහස් කර ගැනීමට අයදුම් කිරීම
+          </Link>
+          <Link to="/society" className="service-button">
+            3. ණය සඳහා අයදුම් කිරීම
+          </Link>
+        </div>
       </form>
     </div>
   );
