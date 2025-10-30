@@ -8,32 +8,40 @@ export default function Contact() {
     <div className="contact-container">
       <h2>Contact Us / සම්බන්ධ වන්න</h2>
       <p>
-        ඔබට ග්‍රාම සංවර්ධන සමිති පිළිබඳව අදහස්, ප්‍රශ්න හෝ යෝජනා
-        ඇතුළත් කිරීමට මෙම පිටුව භාවිතා කරන්න.
+        ඔබට ග්‍රාම සංවර්ධන සමිති පිළිබඳව අදහස්, ප්‍රශ්න හෝ යෝජනා ඇතුළත් කිරීමට
+        මෙම පිටුව භාවිතා කරන්න.
       </p>
 
-      <form className="contact-form">
-        <label>
-          Name / නම:
-          <input type="text" placeholder="Enter your name" />
-        </label>
+      <div className="contact-content">
+        <div className="contact-info">
+          <h3>Contact Information / සම්බන්ධතා තොරතුරු</h3>
+          <p>Address / ලිපිනය: 123 Village Road, Your City</p>
+          <p>Phone / දුරකථන: +94 123 456 789</p>
+          <p>Email / ඊ-මේල්:test@gmail.com</p>
+        </div>
 
-        <label>
-          Email / ඊ-මේල්:
-          <input type="email" placeholder="Enter your email" />
-        </label>
+        {/* Contact Form */}
+        <form className="contact-form">
+          <label>
+            Name / නම:
+            <input type="text" placeholder="Enter your name" />
+          </label>
 
-        <label>
-          Message / පණිවිඩය:
-          <textarea placeholder="Type your message here"></textarea>
-        </label>
+          <label>
+            Email / ඊ-මේල්:
+            <input type="email" placeholder="Enter your email" />
+          </label>
 
-        <button type="submit" className="submit-btn">
-          Send / යවන්න
-        </button>
-      </form>
+          <label>
+            Message / පණිවිඩය:
+            <textarea placeholder="Type your message here"></textarea>
+          </label>
 
-     
+          <button type="submit" className="submit-btn">
+            Send / යවන්න
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
