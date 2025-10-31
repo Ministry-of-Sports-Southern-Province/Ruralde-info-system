@@ -1,16 +1,125 @@
+/* General Container */
 .contact-container {
-   max-width: 1000px;
-  margin: auto;
+  padding: 60px 20px;
+  max-width: 1000px;
+  margin: 40px auto;
+  background: linear-gradient(135deg, #ffffff, #0c61e0);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #e0d2d2;
+  border-radius: 12px;
+  box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Title */
+.contact-container h2 {
   text-align: center;
+  color: #2f313b;
+  font-size: 28px;
+  margin-bottom: 10px;
 }
-.contact-info {
- text-align: left;
-  margin-bottom: 20px;
+
+.contact-container p {
+  text-align: center;
+  font-size: 15px;
+  color: #555555;
+  margin-bottom: 40px;
 }
-.contact-form {
+
+/* Flex layout for info + form */
+.contact-content {
   display: flex;
-  flex-direction: column;
-  text-align: right;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+/* Left side - Info */
+.contact-info {
+  flex: 1;
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.contact-info h3 {
+  font-size: 20px;
+  color: #2a2c4a;
   margin-bottom: 20px;
-  
+}
+
+.contact-info p {
+  font-size: 15px;
+  color: #444444;
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+
+/* Right side - Form */
+.contact-form {
+  flex: 1.2;
+  background: #fff;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.contact-form label {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #2f303b;
+}
+
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 18px;
+  border: 1px solid #cccccc;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.3s;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  border-color: #1f138b;
+  outline: none;
+}
+
+.contact-form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* Button */
+.submit-btn {
+  background-color: #13158b;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.submit-btn:hover {
+  background-color: #2d3ea0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .contact-content {
+    flex-direction: column;
+  }
+
+  .contact-info,
+  .contact-form {
+    width: 100%;
+  }
 }

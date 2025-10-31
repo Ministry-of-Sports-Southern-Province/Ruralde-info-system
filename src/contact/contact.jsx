@@ -15,9 +15,11 @@ export default function Contact() {
       <div className="contact-content">
         <div className="contact-info">
           <h3>Contact Information / සම්බන්ධතා තොරතුරු</h3>
-          <p>Address / ලිපිනය: 123 Village Road, Your City</p>
-          <p>Phone / දුරකථන: +94 123 456 789</p>
-          <p>Email / ඊ-මේල්:test@gmail.com</p>
+          <p>Address / ලිපිනය: 03 "floor," "Dakshinapaya",Ministry Complex,Labuduwa,Galle</p>
+          <p>Phone / දුරකථන: +91 4936740 </p>
+          <p>Fax / ෆැක්ස් : +91 4936733</p>
+          <p>Email / ඊ-මේල්:min.ruraldev.sp@gmail.com</p>
+          
         </div>
 
         {/* Contact Form */}
@@ -40,8 +42,9 @@ export default function Contact() {
           <button type="submit" className="submit-btn">
             Send / යවන්න
           </button>
+         
         </form>
-      </div>
+       </div>
     </div>
   );
 }
