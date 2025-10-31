@@ -16,8 +16,9 @@ import Secretary from "./register/secretary";
 import Treasurer from "./register/treasurer";
 import Report from "./report/report";
 import Startup from "./startup/startup";
-import Login from "./login/login"; 
+import Login from "./login/login";
 import SignUp from "./login/signup";
+import Footer from "./footer/footer";
 
 function App() {
   return (
@@ -41,8 +42,9 @@ function App() {
         <Route path="/treasurer" element={<Treasurer />} />
         <Route path="/reports" element={<Report />} />
         <Route path="/startup" element={<Startup />} />
-        <Route path="/login" element={<Login />} /> 
-     <Route path="/signup" element={<SignUp/>}></Route>
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUp />}></Route>
+        <Route path="/footer" element={<Footer />}></Route>
       </Routes>
     </BrowserRouter>
   );

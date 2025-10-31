@@ -15,11 +15,11 @@ export default function Contact() {
       <div className="contact-content">
         <div className="contact-info">
           <h3>Contact Information / සම්බන්ධතා තොරතුරු</h3>
-          <p>Address / ලිපිනය: 03 "floor," "Dakshinapaya",Ministry Complex,Labuduwa,Galle</p>
-          <p>Phone / දුරකථන: +91 4936740 </p>
-          <p>Fax / ෆැක්ස් : +91 4936733</p>
-          <p>Email / ඊ-මේල්:min.ruraldev.sp@gmail.com</p>
-          
+          <p><span>Address / ලිපිනය:</span> 03 "floor," "Dakshinapaya",Ministry Complex,Labuduwa,Galle</p>
+          <p><span>Phone / දුරකථන:</span> +91 4936740 </p>
+          <p><span>Fax / ෆැක්ස් : </span>+91 4936733</p>
+          <p><span>Email / ඊ-මේල්:</span>min.ruraldev.sp@gmail.com</p>
+
         </div>
 
         {/* Contact Form */}

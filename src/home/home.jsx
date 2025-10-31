@@ -4,6 +4,7 @@ import "../home/home.css";
 import backgroundImage from "../assets/dp01.jpg";
 import About from "../about/about";
 import Contact from "../contact/contact";
+import Footer from "../footer/footer";
 
 export default function Home() {
   return (
@@ -38,9 +39,9 @@ export default function Home() {
         <Contact />
       </section>
 
-      <footer>
-        © {new Date().getFullYear()} Grama Samurdhi Portal — All Rights Reserved
-      </footer>
+      <section id="footer-section">
+        <Footer/>
+      </section>
     </div>
   );
 }
