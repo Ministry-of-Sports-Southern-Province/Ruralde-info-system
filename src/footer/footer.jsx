@@ -1,51 +1,70 @@
-import React from 'react'
-import './footer.css'
-const footer = () => {
-    return (
+import React from 'react';
+import './footer.css';
 
-        <footer className='footer'>
-            <div className='footer-container'>
-                {/*footer left side*/}
-                <div className='footer-left'>
-                    <h3>Rural Department Management System</h3>
+const Footer = () => {
+  return (
+    <footer className="footer">
+      <div className="footer-container">
 
-                    <p>
-                        Empowering local communities through technology and efficient
-                        development management.
-                    </p>
-                </div>
-                {/*footer center side*/}
-                <div className='footer-center'>
-                    <h4>Contact Info</h4>
-                    <p>📍 Address: Galle, Southern Province, Sri Lanka</p>
-                    <p>📞 Phone: +94 123 456 789</p>
-                    <p>📧 Email: ruraldept@gmail.com</p>
-                </div>
-                {/*footer right side*/}
-                <div className='footer-right'>
-                    <h4>Follow Us</h4>
-                    <div className='social-icons'></div>
-                    <a href="https://facebook.com" target="_blank" rel="noreferrer">
-                        🌐 Facebook
-                    </a>
-                    <a href="https://twitter.com" target="_blank" rel="noreferrer">
-                        🕊️ Twitter
-                    </a>
-                    <a href="https://instagram.com" target="_blank" rel="noreferrer">
-                        📸 Instagram
-                    </a>
-                </div>
-            </div>
+        {/* Left Side - About */}
+        <div className="footer-left">
+          <h3>Rural Department Management System</h3>
+          <p>
+            Empowering local communities through technology and efficient
+            development management.
+          </p>
+        </div>
 
-            <div className='footer-bottom'>
-                <p>
-                    © {new Date().getFullYear()} Ministry of Sports - Southern Province |
-                    Developed by Dilu Tharushika
-                </p>
-            </div>
-        </footer>
+        {/* Center - Contact Info */}
+        <div className="footer-center">
+          <h3>Contact Info</h3>
+          <ul>
+            <li>📍 Galle, Southern Province, Sri Lanka</li>
+            <li>📞 +94 123 456 789</li>
+            <li>📧 min.ruraldev.sp@gmail.com</li>
+          </ul>
+        </div>
 
-    );
-}
+        {/* Right Side - Social Links */}
+        <div className="footer-right">
+          <h3>Follow Us</h3>
+          <ul className="social-icons">
+            <li>
+            <a href="https://facebook.com" target="_blank" rel="noreferrer">
+              🌐 Facebook
+            </a>
+            </li>
+            <li>
+            <a href="https://twitter.com" target="_blank" rel="noreferrer">
+              🕊️ Twitter
+            </a>
+            </li>
+             <li>
+            <a href="https://instagram.com" target="_blank" rel="noreferrer">
+              📸 Instagram
+            </a>
+            </li>
+          </ul>
+        </div>
+      </div>
 
-export default footer
+      {/* Bottom Section */}
+      <div className="footer-bottom">
+        <p>
+          © {new Date().getFullYear()} <span className="highlight">Ministry of Sports - Southern Province</span> | 
+          Developed by{" "}
+          <a
+            href="https://dilutharushika.github.io/my-portfolio/"
+            target="_blank"
+            rel="noreferrer"
+            className="highlight"
+          >
+            Dilu Tharushika
+          </a>
+        </p>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;

@@ -1,106 +1,140 @@
 .footer {
-    background: linear-gradient(135deg, #ffffff, #114ccc);
-    color: #f9f9f9;
-    padding: 40px 20px 20px;
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #0a1a5c, #1c6dd0);
+  color: #f1f5f9;
+  padding: 60px 20px 30px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
 }
 
 .footer-container {
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 40px;
-    max-width: 1000px;
-    margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
-/*left side - About*/
+
+/* === Left Section (About) === */
 .footer-left {
-    flex: 1;
-    min-width: 250px;
+  flex: 1;
+  min-width: 280px;
 }
 .footer-left h3 {
-    font-size: 20px;
-    margin-bottom: 10px;
-    color: #ffffff;
+  font-size: 22px;
+  margin-bottom: 15px;
+  color: #ffffff;
+  letter-spacing: 1px;
+}
+.footer-left p {
+  color: #dbe2ef;
+  font-size: 15px;
+  line-height: 1.7;
 }
 
-/*center - Links*/
+/* === Center Section (Quick Links) === */
 .footer-center {
-    flex: 1;
-    min-width: 250px;
-    text-align: left;
-    gap: 10px;
+  flex: 1;
+  min-width: 200px;
 }
 .footer-center h3 {
-    font-size: 20px;
-    margin-bottom: 10px;
-    color: #ffffff;
+  font-size: 22px;
+  margin-bottom: 15px;
+  color: #ffffff;
 }
 .footer-center ul {
-    list-style: none;
-    padding: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 .footer-center ul li {
-    margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 .footer-center ul li a {
-    color: #e0d2d2;
-    text-decoration: none;
+  color: #dbe2ef;
+  text-decoration: none;
+  transition: color 0.3s ease, transform 0.2s ease;
+  display: inline-block;
 }
 .footer-center ul li a:hover {
-    text-decoration: underline;
+  color: #ffffff;
+  transform: translateX(5px);
 }
-/*right side - Contact*/
+
+/* === Right Section (Contact) === */
 .footer-right {
-    flex: 1;
-    min-width: 250px;
+  flex: 1;
+  min-width: 280px;
 }
 .footer-right h3 {
-    font-size: 20px;
-    margin-bottom: 10px;
-    color: #ffffff;
+  font-size: 22px;
+  margin-bottom: 15px;
+  color: #ffffff;
 }
 .footer-right p {
-    margin-bottom: 8px;
-    line-height: 1.6;
+  color: #dbe2ef;
+  margin-bottom: 8px;
+  font-size: 15px;
+  line-height: 1.7;
 }
 .footer-right span {
-    font-weight: 500;
-    color: #d1c4c4;
+  font-weight: 600;
+  color: #ffffff;
 }
+.social-icons {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.social-icons li {
+  margin-bottom: 10px;
+}
+
+.social-icons li a {
+  color: #dbe2ef;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.social-icons li a:hover {
+  color: #ffffff;
+  transform: translateX(5px);
+}
+
+/* === Bottom Bar === */
 .footer-bottom {
-    text-align: center;
-    margin-top: 30px;
-    font-size: 14px;
-    color: #e0d2d2;
+  text-align: center;
+  margin-top: 50px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 14px;
+  color: #dbe2ef;
 }
 .footer-bottom a {
-    color: #e0d2d2;
-    text-decoration: none;
+  color: #f9fafb;
+  text-decoration: none;
+  transition: color 0.3s ease;
 }
 .footer-bottom a:hover {
-    text-decoration: underline;
-}
-.footer-bottom span {
-    font-weight: 600;
+  color: #ffd700;
 }
 .footer-bottom .highlight {
-    color: #ffffff;
+  color: #ffffff;
+  font-weight: 700;
 }
 
-/* Responsive Design */
+/* === Responsive Design === */
 @media (max-width: 768px) {
-    .footer-container {
-        flex-direction: column;
-        align-items: center;
-    }
-    .footer-left,
-    .footer-center,
-    .footer-right {
-        min-width: 100%;
-        text-align: center;
-    }
+  .footer-container {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .footer-left,
+  .footer-center,
+  .footer-right {
+    min-width: 100%;
+  }
 }
-
-
-
