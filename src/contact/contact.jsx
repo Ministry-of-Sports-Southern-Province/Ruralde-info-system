@@ -1,50 +1,80 @@
 // pages/Contact.jsx
 import React from "react";
-import { Link } from "react-router-dom";
-import "../contact/contact.css"; // Make sure this path matches your project
+import "../contact/contact.css"; // ✅ Ensure correct relative path
 
 export default function Contact() {
   return (
-    <div className="contact-container">
+    <section className="contact-container">
       <h2>Contact Us / සම්බන්ධ වන්න</h2>
       <p>
-        ඔබට ග්‍රාම සංවර්ධන සමිති පිළිබඳව අදහස්, ප්‍රශ්න හෝ යෝජනා ඇතුළත් කිරීමට
+        ඔබට ග්‍රාම සංවර්ධන සමිති පිළිබඳ අදහස්, ප්‍රශ්න හෝ යෝජනා ඇතුළත් කිරීමට
         මෙම පිටුව භාවිතා කරන්න.
       </p>
 
       <div className="contact-content">
+        {/* === Contact Information === */}
         <div className="contact-info">
           <h3>Contact Information / සම්බන්ධතා තොරතුරු</h3>
-          <p><span>Address / ලිපිනය:</span> 03 "floor," "Dakshinapaya",Ministry Complex,Labuduwa,Galle</p>
-          <p><span>Phone / දුරකථන:</span> +91 4936740 </p>
-          <p><span>Fax / ෆැක්ස් : </span>+91 4936733</p>
-          <p><span>Email / ඊ-මේල්:</span>min.ruraldev.sp@gmail.com</p>
-
+          <p>
+            <span>Address / ලිපිනය:</span>{" "}
+            03rd Floor, "Dakshinapaya", Ministry Complex, Labuduwa, Galle
+          </p>
+          <p>
+            <span>Phone / දුරකථන:</span> +94 91 4936740
+          </p>
+          <p>
+            <span>Fax / ෆැක්ස්:</span> +94 91 4936733
+          </p>
+          <p>
+            <span>Email / ඊ-මේල්:</span>{" "}
+            <a
+              href="mailto:min.ruraldev.sp@gmail.com"
+              style={{ color: "#0c61e0", textDecoration: "none" }}
+            >
+              min.ruraldev.sp@gmail.com
+            </a>
+          </p>
         </div>
 
-        {/* Contact Form */}
-        <form className="contact-form">
-          <label>
+        {/* === Contact Form === */}
+        <form className="contact-form" onSubmit={(e) => e.preventDefault()}>
+          <label htmlFor="name">
             Name / නම:
-            <input type="text" placeholder="Enter your name" />
+            <input
+              type="text"
+              id="name"
+              name="name"
+              placeholder="Enter your name"
+              required
+            />
           </label>
 
-          <label>
+          <label htmlFor="email">
             Email / ඊ-මේල්:
-            <input type="email" placeholder="Enter your email" />
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="Enter your email"
+              required
+            />
           </label>
 
-          <label>
+          <label htmlFor="message">
             Message / පණිවිඩය:
-            <textarea placeholder="Type your message here"></textarea>
+            <textarea
+              id="message"
+              name="message"
+              placeholder="Type your message here"
+              required
+            ></textarea>
           </label>
 
           <button type="submit" className="submit-btn">
             Send / යවන්න
           </button>
-         
         </form>
-       </div>
-    </div>
+      </div>
+    </section>
   );
 }

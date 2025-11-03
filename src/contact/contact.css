@@ -1,31 +1,33 @@
-/* General Container */
+/* === Contact Section Container === */
 .contact-container {
-  padding: 60px 20px;
-  max-width: 1000px;
-  margin: 20px auto;
-  background: linear-gradient(135deg, #ffffff, #0c61e0);
+  padding: 60px 30px;
+  max-width: 1100px;
+  margin: 40px auto;
+  background: linear-gradient(135deg, #f8faff, #0c61e0);
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  color: #e0d2d2;
-  border-radius: 12px;
-  box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.1);
+  color: #2f313b;
+  border-radius: 16px;
+  box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.12);
+  box-sizing: border-box;
 }
 
-/* Title */
+/* === Section Title === */
 .contact-container h2 {
   text-align: center;
-  color: #2f313b;
-  font-size: 28px;
-  margin-bottom: 10px;
+  color: #0a1a5c;
+  font-size: 30px;
+  font-weight: 700;
+  margin-bottom: 12px;
 }
 
 .contact-container p {
   text-align: center;
   font-size: 15px;
-  color: #555555;
-  margin-bottom: 40px;
+  color: #444;
+  margin-bottom: 50px;
 }
 
-/* Flex layout for info + form */
+/* === Flex Layout for Info + Form === */
 .contact-content {
   display: flex;
   justify-content: space-between;
@@ -34,40 +36,54 @@
   flex-wrap: wrap;
 }
 
-/* Left side - Info */
+/* === Left Side (Contact Info) === */
 .contact-info {
   flex: 1;
   background: #ffffff;
-  padding: 25px;
-  border-radius: 10px;
-  box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.08);
+  padding: 25px 28px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.contact-info:hover {
+  transform: translateY(-4px);
+  box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.1);
 }
 
 .contact-info h3 {
   font-size: 20px;
-  color: #2a2c4a;
+  color: #1f138b;
   margin-bottom: 20px;
+  font-weight: 700;
 }
 
 .contact-info p {
   font-size: 15px;
-  color: #444444;
+  color: #333;
   margin-bottom: 10px;
   line-height: 1.6;
- text-align: left;
-}
-.contact-info span {
-  font-weight: 500;
-  color: #1f138b;
+  text-align: left;
 }
 
-/* Right side - Form */
+.contact-info span {
+  font-weight: 600;
+  color: #0c61e0;
+}
+
+/* === Right Side (Form) === */
 .contact-form {
   flex: 1.2;
-  background: #fff;
-  padding: 25px;
-  border-radius: 10px;
-  box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  padding: 25px 28px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.contact-form:hover {
+  transform: translateY(-4px);
+  box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.1);
 }
 
 .contact-form label {
@@ -81,50 +97,65 @@
 .contact-form input,
 .contact-form textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px 14px;
   margin-bottom: 18px;
-  border: 1px solid #cccccc;
+  border: 1px solid #c9c9c9;
   border-radius: 8px;
   font-size: 14px;
   font-family: inherit;
-  transition: border-color 0.3s;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .contact-form input:focus,
 .contact-form textarea:focus {
-  border-color: #1f138b;
+  border-color: #0c61e0;
+  box-shadow: 0 0 0 3px rgba(12, 97, 224, 0.15);
   outline: none;
 }
 
 .contact-form textarea {
-  min-height: 120px;
+  min-height: 130px;
   resize: vertical;
 }
 
-/* Button */
+/* === Submit Button === */
 .submit-btn {
-  background-color: #13158b;
-  color: white;
-  padding: 12px 20px;
+  background-color: #0c61e0;
+  color: #ffffff;
+  padding: 12px 22px;
   border: none;
   border-radius: 8px;
   font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, transform 0.2s;
 }
 
 .submit-btn:hover {
-  background-color: #2d3ea0;
+  background-color: #1034a6;
+  transform: translateY(-2px);
 }
 
-/* Responsive */
+/* === Responsive Design === */
 @media (max-width: 768px) {
+  .contact-container {
+    padding: 40px 20px;
+    margin: 20px;
+  }
+
   .contact-content {
     flex-direction: column;
+    align-items: center;
+    gap: 30px;
   }
 
   .contact-info,
   .contact-form {
     width: 100%;
+  }
+
+  .contact-form input,
+  .contact-form textarea {
+    font-size: 16px;
   }
 }

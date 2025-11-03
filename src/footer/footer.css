@@ -1,19 +1,27 @@
+/* === Footer Base === */
 .footer {
   background: linear-gradient(135deg, #0a1a5c, #1c6dd0);
   color: #f1f5f9;
-  padding: 60px 20px 30px;
+  padding: 60px 0 30px; /* ⬅️ Removed left/right padding that caused extra space */
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  overflow-x: hidden; /* ✅ Hide horizontal scrollbar */
 }
 
+/* === Footer Container === */
 .footer-container {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   flex-wrap: wrap;
   gap: 40px;
-  max-width: 1200px;
+
+  max-width: 1200px; /* ✅ Consistent centered width */
+  width: 100%;
   margin: 0 auto;
+  padding: 0 20px; /* ✅ Balanced internal spacing */
+  box-sizing: border-box;
 }
 
 /* === Left Section (About) === */
@@ -21,72 +29,63 @@
   flex: 1;
   min-width: 280px;
 }
+
 .footer-left h3 {
   font-size: 22px;
   margin-bottom: 15px;
   color: #ffffff;
   letter-spacing: 1px;
 }
+
 .footer-left p {
   color: #dbe2ef;
   font-size: 15px;
   line-height: 1.7;
 }
 
-/* === Center Section (Quick Links) === */
+/* === Center Section (Contact Info) === */
 .footer-center {
   flex: 1;
-  min-width: 200px;
+  min-width: 250px;
 }
+
 .footer-center h3 {
   font-size: 22px;
   margin-bottom: 15px;
   color: #ffffff;
 }
+
 .footer-center ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
+
 .footer-center ul li {
-  margin-bottom: 10px;
-}
-.footer-center ul li a {
   color: #dbe2ef;
-  text-decoration: none;
-  transition: color 0.3s ease, transform 0.2s ease;
-  display: inline-block;
-}
-.footer-center ul li a:hover {
-  color: #ffffff;
-  transform: translateX(5px);
+  margin-bottom: 10px;
+  font-size: 15px;
+  line-height: 1.7;
 }
 
-/* === Right Section (Contact) === */
+/* === Right Section (Social Links) === */
 .footer-right {
   flex: 1;
-  min-width: 280px;
+  min-width: 250px;
 }
+
 .footer-right h3 {
   font-size: 22px;
   margin-bottom: 15px;
   color: #ffffff;
 }
-.footer-right p {
-  color: #dbe2ef;
-  margin-bottom: 8px;
-  font-size: 15px;
-  line-height: 1.7;
-}
-.footer-right span {
-  font-weight: 600;
-  color: #ffffff;
-}
+
 .social-icons {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
+
 .social-icons li {
   margin-bottom: 10px;
 }
@@ -96,6 +95,7 @@
   text-decoration: none;
   font-weight: 500;
   transition: color 0.3s ease, transform 0.2s ease;
+  display: inline-block;
 }
 
 .social-icons li a:hover {
@@ -103,7 +103,7 @@
   transform: translateX(5px);
 }
 
-/* === Bottom Bar === */
+/* === Footer Bottom === */
 .footer-bottom {
   text-align: center;
   margin-top: 50px;
@@ -112,17 +112,27 @@
   font-size: 14px;
   color: #dbe2ef;
 }
+
 .footer-bottom a {
   color: #f9fafb;
   text-decoration: none;
   transition: color 0.3s ease;
 }
+
 .footer-bottom a:hover {
   color: #ffd700;
 }
+
 .footer-bottom .highlight {
   color: #ffffff;
   font-weight: 700;
+}
+
+/* === Global Fix (no scroll) === */
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
 
 /* === Responsive Design === */
@@ -131,10 +141,21 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
+    padding: 0 30px; /* Slightly wider padding for mobile */
   }
+
   .footer-left,
   .footer-center,
   .footer-right {
     min-width: 100%;
+  }
+
+  .social-icons li {
+    display: inline-block;
+    margin: 0 10px;
+  }
+
+  .social-icons li a:hover {
+    transform: translateY(-3px);
   }
 }

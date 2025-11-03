@@ -91,14 +91,14 @@ const Startup = () => {
 
         {/* Registration Number */}
         <div className="form-group">
-          <label>03. ලියාපදිංචි අංකය:</label>
-          <input type="text" placeholder="Enter Register No" />
+          <label>03.ග්‍රාම සංවර්ධන සමිතියේ නම:</label>
+          <input type="text" placeholder="Enter Name" />
         </div>
 
         {/* Committee Name */}
         <div className="form-group">
-          <label>04. ග්‍රාම සංවර්ධන සමිතියේ නම:</label>
-          <input type="text" placeholder="Enter Name" />
+          <label>04.ලියාපදිංචි අංකය:</label>
+          <input type="text" placeholder="Enter Register No" />
         </div>
 
         {/* Services */}

@@ -6,7 +6,7 @@ const Footer = () => {
     <footer className="footer">
       <div className="footer-container">
 
-        {/* Left Side - About */}
+        {/* === Left Section (About) === */}
         <div className="footer-left">
           <h3>Rural Department Management System</h3>
           <p>
@@ -15,48 +15,68 @@ const Footer = () => {
           </p>
         </div>
 
-        {/* Center - Contact Info */}
+        {/* === Center Section (Contact Info) === */}
         <div className="footer-center">
           <h3>Contact Info</h3>
           <ul>
             <li>📍 Galle, Southern Province, Sri Lanka</li>
             <li>📞 +94 123 456 789</li>
-            <li>📧 min.ruraldev.sp@gmail.com</li>
+            <li>
+              📧{" "}
+              <a href="mailto:min.ruraldev.sp@gmail.com" className="email-link">
+                min.ruraldev.sp@gmail.com
+              </a>
+            </li>
           </ul>
         </div>
 
-        {/* Right Side - Social Links */}
+        {/* === Right Section (Social Links) === */}
         <div className="footer-right">
           <h3>Follow Us</h3>
           <ul className="social-icons">
             <li>
-            <a href="https://facebook.com" target="_blank" rel="noreferrer">
-              🌐 Facebook
-            </a>
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                🌐 Facebook
+              </a>
             </li>
             <li>
-            <a href="https://twitter.com" target="_blank" rel="noreferrer">
-              🕊️ Twitter
-            </a>
+              <a
+                href="https://twitter.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                🕊️ Twitter
+              </a>
             </li>
-             <li>
-            <a href="https://instagram.com" target="_blank" rel="noreferrer">
-              📸 Instagram
-            </a>
+            <li>
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                📸 Instagram
+              </a>
             </li>
           </ul>
         </div>
       </div>
 
-      {/* Bottom Section */}
+      {/* === Bottom Bar === */}
       <div className="footer-bottom">
         <p>
-          © {new Date().getFullYear()} <span className="highlight">Ministry of Sports - Southern Province</span> | 
-          Developed by{" "}
+          © {new Date().getFullYear()}{" "}
+          <span className="highlight">
+            Ministry of Sports - Southern Province
+          </span>{" "}
+          | Developed by{" "}
           <a
             href="https://dilutharushika.github.io/my-portfolio/"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="highlight"
           >
             Dilu Tharushika
