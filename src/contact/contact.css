@@ -160,7 +160,7 @@
 @media (max-width: 600px) {
   .contact-wrapper {
     padding: 60px 15px;
-    margin-top: 90px; /* ✅ adds more gap so it doesn’t touch About */
+    margin-top: 130px; /* ✅ adds more gap so it doesn’t touch About */
   }
 
   .contact-container {
