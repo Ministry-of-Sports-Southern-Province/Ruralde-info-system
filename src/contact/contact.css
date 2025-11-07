@@ -1,15 +1,27 @@
 /* ============================
-   Contact Page Styles
+   Contact Page Container
    ============================ */
 
+.contact-wrapper {
+  width: 100%;
+  background: #f9f9fc;
+  padding: 80px 20px;
+  margin-top: 60px; /* ✅ keeps distance from previous section (About) */
+  position: relative;
+  z-index: 1; /* prevents overlay issues */
+}
+
+/* Inner container */
 .contact-container {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 80px 20px;
-  background-color: #f9f9fc;
+  background: #ffffff;
+  padding: 40px 30px;
   border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
+/* Header */
 .contact-container h2 {
   text-align: center;
   color: #1565c0;
@@ -19,13 +31,14 @@
 
 .contact-intro {
   text-align: center;
-  color: #444;
-  max-width: 700px;
-  margin: 0 auto 40px;
+  color: #555;
+  margin-bottom: 40px;
   line-height: 1.6;
 }
 
-/* === Layout for Info + Form === */
+/* ============================
+   Layout for Info + Form
+   ============================ */
 .contact-content {
   display: flex;
   justify-content: space-between;
@@ -37,11 +50,11 @@
 /* === Contact Info === */
 .contact-info {
   flex: 1;
-  min-width: 280px;
+  min-width: 300px;
   background: #e3f2fd;
   padding: 25px;
   border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 .contact-info h3 {
@@ -73,7 +86,7 @@
 /* === Contact Form === */
 .contact-form {
   flex: 1;
-  min-width: 280px;
+  min-width: 300px;
   background: #ffffff;
   padding: 25px;
   border-radius: 10px;
@@ -128,9 +141,8 @@
 }
 
 /* ============================
-   Responsive Design
+   Responsive Fix
    ============================ */
-
 @media (max-width: 992px) {
   .contact-content {
     flex-direction: column;
@@ -144,7 +156,17 @@
   }
 }
 
+/* Small Mobile Fix (main issue solved here) */
 @media (max-width: 600px) {
+  .contact-wrapper {
+    padding: 60px 15px;
+    margin-top: 40px; /* ✅ adds more gap so it doesn’t touch About */
+  }
+
+  .contact-container {
+    padding: 25px 15px;
+  }
+
   .contact-container h2 {
     font-size: 1.6rem;
   }
