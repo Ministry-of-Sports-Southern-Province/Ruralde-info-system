@@ -102,7 +102,7 @@
 
 .contact-form input,
 .contact-form textarea {
-  width: 90%;
+  width: 100%;
   padding: 12px;
   margin-bottom: 20px;
   border: 1.5px solid #ccc;
