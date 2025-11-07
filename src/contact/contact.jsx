@@ -1,12 +1,12 @@
 // pages/Contact.jsx
 import React from "react";
-import "../contact/contact.css"; // ✅ Ensure correct relative path
+import "../contact/contact.css";
 
 export default function Contact() {
   return (
     <section className="contact-container">
       <h2>Contact Us / සම්බන්ධ වන්න</h2>
-      <p>
+      <p className="contact-intro">
         ඔබට ග්‍රාම සංවර්ධන සමිති පිළිබඳ අදහස්, ප්‍රශ්න හෝ යෝජනා ඇතුළත් කිරීමට
         මෙම පිටුව භාවිතා කරන්න.
       </p>
@@ -16,20 +16,20 @@ export default function Contact() {
         <div className="contact-info">
           <h3>Contact Information / සම්බන්ධතා තොරතුරු</h3>
           <p>
-            <span>Address / ලිපිනය:</span>{" "}
-            03rd Floor, "Dakshinapaya", Ministry Complex, Labuduwa, Galle
+            <span>📍 Address / ලිපිනය:</span> 03rd Floor, "Dakshinapaya",
+            Ministry Complex, Labuduwa, Galle
           </p>
           <p>
-            <span>Phone / දුරකථන:</span> +94 91 4936740
+            <span>📞 Phone / දුරකථන:</span> +94 91 4936740
           </p>
           <p>
-            <span>Fax / ෆැක්ස්:</span> +94 91 4936733
+            <span>📠 Fax / ෆැක්ස්:</span> +94 91 4936733
           </p>
           <p>
-            <span>Email / ඊ-මේල්:</span>{" "}
+            <span>📧 Email / ඊ-මේල්:</span>{" "}
             <a
               href="mailto:min.ruraldev.sp@gmail.com"
-              style={{ color: "#0c61e0", textDecoration: "none" }}
+              className="email-link"
             >
               min.ruraldev.sp@gmail.com
             </a>
