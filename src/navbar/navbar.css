@@ -34,6 +34,7 @@
 .nav-links {
   display: flex;
   align-items: center;
+  transition: all 0.3s ease;
 }
 
 .nav-links a,
@@ -95,14 +96,13 @@
   letter-spacing: 0.6px;
   font-size: 1rem;
   box-shadow: 0 4px 15px rgba(66, 165, 245, 0.4),
-              inset 0 0 8px rgba(255, 255, 255, 0.2);
+    inset 0 0 8px rgba(255, 255, 255, 0.2);
   transition: all 0.35s ease;
   position: relative;
   overflow: hidden;
   margin-left: 20px;
 }
 
-/* Subtle glowing border effect */
 .signup-btn::before {
   content: "";
   position: absolute;
@@ -113,13 +113,15 @@
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   opacity: 0;
   transition: opacity 0.4s ease;
 }
 
-/* Hover animation */
 .signup-btn:hover {
   transform: translateY(-2px) scale(1.05);
   box-shadow: 0 6px 25px rgba(66, 165, 245, 0.6);
@@ -133,22 +135,62 @@
 /* =========================
    Responsive Design
    ========================= */
+.menu-icon {
+  display: none;
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* ✅ Mobile styles */
 @media (max-width: 768px) {
-  .nav-inner {
-    flex-direction: column;
-    align-items: flex-start;
+  .menu-icon {
+    display: block;
   }
 
   .nav-links {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    background-color: #1565c0;
     flex-direction: column;
-    align-items: flex-start;
-    margin-top: 10px;
+    align-items: center;
+    gap: 1rem;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: all 0.4s ease;
+    padding: 0;
+    display: flex;
   }
 
-  .nav-links a,
-  .dropdown-title,
+  /* ✅ When active */
+  .nav-links.active {
+    max-height: 500px; /* enough space for links */
+    opacity: 1;
+    padding: 1rem 0;
+  }
+
+  /* Adjust dropdowns on mobile */
+  .dropdown-content {
+    position: static;
+    background-color: #0d47a1;
+    width: 100%;
+    box-shadow: none;
+  }
+
+  .dropdown-content a {
+    color: #fff;
+    padding: 10px 20px;
+  }
+
+  .dropdown-content a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
   .signup-btn {
-    margin-left: 0;
-    margin-top: 10px;
+    margin: 10px 0;
   }
 }

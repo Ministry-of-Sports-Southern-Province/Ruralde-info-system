@@ -1,44 +1,95 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "../navbar/navbar.css";
+import { Menu, X } from "lucide-react";
 
 export default function Navbar() {
   const [showForms, setShowForms] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // ✅ Detect screen resize (to handle mobile vs desktop)
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // ✅ Toggle dropdown differently on mobile
+  const toggleForms = () => {
+    if (isMobile) setShowForms((prev) => !prev);
+  };
 
   return (
     <header className="nav">
       <div className="nav-inner">
+        {/* Brand */}
         <Link to="/" className="brand">
           ග්‍රාම සංවර්ධන දෙපාර්තමේන්තුව
         </Link>
 
-        <nav className="nav-links">
-          <Link to="/">Home</Link>
-          <Link to="/about">About</Link>
+        {/* ✅ Mobile menu icon */}
+        <button
+          className="menu-icon"
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Toggle navigation menu"
+        >
+          {menuOpen ? <X size={28} /> : <Menu size={28} />}
+        </button>
 
-          {/* Forms Dropdown */}
+        {/* ✅ Navigation Links */}
+        <nav className={`nav-links ${menuOpen ? "active" : ""}`}>
+          <Link to="/" onClick={() => setMenuOpen(false)}>
+            Home
+          </Link>
+          <Link to="/about" onClick={() => setMenuOpen(false)}>
+            About
+          </Link>
+
+          {/* ✅ Forms Dropdown */}
           <div
             className="dropdown"
-            onMouseEnter={() => setShowForms(true)}
-            onMouseLeave={() => setShowForms(false)}
+            onMouseEnter={!isMobile ? () => setShowForms(true) : undefined}
+            onMouseLeave={!isMobile ? () => setShowForms(false) : undefined}
+            onClick={toggleForms}
           >
-            <span className="dropdown-title">Applications ▼</span>
+            <span className="dropdown-title">
+              Applications ▼
+            </span>
+
             {showForms && (
               <div className="dropdown-content">
-                <Link to="/register">සමිති ලියාපදින්චිය</Link>
-                <Link to="/society">මූල්‍ය ඉල්ලුම් පත්‍රය</Link>
-                <Link to="/member">සාමාජිකයින්ගේ තොරතුරු</Link>
-                <Link to="/develop">ණය යෙදවුම් වාර්තාව</Link>
-                <Link to="/student">ගැමිසෙත ශිෂ්‍යත්ව අයදුම් පත්‍රය</Link>
+                <Link to="/register" onClick={() => setMenuOpen(false)}>
+                  සමිති ලියාපදින්චිය
+                </Link>
+                <Link to="/society" onClick={() => setMenuOpen(false)}>
+                  මූල්‍ය ඉල්ලුම් පත්‍රය
+                </Link>
+                <Link to="/member" onClick={() => setMenuOpen(false)}>
+                  සාමාජිකයින්ගේ තොරතුරු
+                </Link>
+                <Link to="/develop" onClick={() => setMenuOpen(false)}>
+                  ණය යෙදවුම් වාර්තාව
+                </Link>
+                <Link to="/student" onClick={() => setMenuOpen(false)}>
+                  ගැමිසෙත ශිෂ්‍යත්ව අයදුම් පත්‍රය
+                </Link>
               </div>
             )}
           </div>
 
-          <Link to="/login">Reports</Link>
-          <Link to="/contact">Contact Us</Link>
+          <Link to="/login" onClick={() => setMenuOpen(false)}>
+            Reports
+          </Link>
+          <Link to="/contact" onClick={() => setMenuOpen(false)}>
+            Contact Us
+          </Link>
 
-          {/* ✅ Sign Up Button */}
-          <Link to="/signup" className="signup-btn">
+          <Link
+            to="/signup"
+            className="signup-btn"
+            onClick={() => setMenuOpen(false)}
+          >
             Sign Up
           </Link>
         </nav>
