@@ -103,13 +103,14 @@
 .contact-form input,
 .contact-form textarea {
   width: 100%;
-  padding: 12px;
+  padding:12px;
   margin-bottom: 20px;
   border: 1.5px solid #ccc;
   border-radius: 8px;
   font-size: 1rem;
   outline: none;
   transition: all 0.3s ease;
+  margin-right:12px;
 }
 
 .contact-form input:focus,

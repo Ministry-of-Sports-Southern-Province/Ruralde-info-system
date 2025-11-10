@@ -27,7 +27,8 @@
 /* === Left Section (About) === */
 .footer-left {
   flex: 1;
-  min-width: 280px;
+  padding-left: 70px;
+  min-width: 250px;
 }
 
 .footer-left h3 {
@@ -72,6 +73,7 @@
 .footer-right {
   flex: 1;
   min-width: 250px;
+ 
 }
 
 .footer-right h3 {
