@@ -1,9 +1,10 @@
 /* Container */
 .signup-container {
+  padding-top: 110px;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  min-height: 100vh;
   background: linear-gradient(to bottom, #e6f2ff, #b3d9ff);
   font-family: "Segoe UI", sans-serif;
 }
@@ -51,6 +52,14 @@
   outline: none;
   border-color: #1565c0;
   box-shadow: 0 0 8px rgba(21, 101, 192, 0.3);
+}
+.signup-form select {
+  padding: 10px 12px;
+  margin-bottom: 18px;
+  border: 1px solid #80bfff;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: 0.2s;
 }
 
 /* Error text */

@@ -46,7 +46,7 @@ p {
   line-height: 1.6;
 }
 
-/* ✅ Button styling */
+/* ✅ Primary Button */
 .primary-btn {
   display: inline-block;
   background: linear-gradient(135deg, #1565c0, #42a5f5);
@@ -56,19 +56,62 @@ p {
   text-decoration: none;
   font-weight: 600;
   transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .primary-btn:hover {
   background: linear-gradient(135deg, #0d47a1, #1e88e5);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
 }
 
-/* Responsive */
+/* ✅ Login Button */
+.login-btn {
+  display: inline-block;
+  background: linear-gradient(135deg, #1565c065, #42a4f594);
+  color: #ffffff;
+  padding: 12px 28px;
+  border-radius: 25px;
+  text-decoration: none;
+  font-weight: 600;
+  margin-left: 15px;
+  transition: all 0.3s ease;
+  border: 2px solid #ffffff;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+
+
+}
+
+.login-btn:hover {
+  background: linear-gradient(135deg, #0d47a1, #1e88e5);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+}
+
+/* ✅ Button Group */
+.button-group {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+/* ✅ Responsive */
 @media (max-width: 768px) {
   .page-title {
     font-size: 1.6rem;
   }
   p {
     font-size: 1rem;
+  }
+  .button-group {
+    flex-direction: column;
+    align-items: center;
+  }
+  .login-btn {
+    margin-left: 0;
   }
 }

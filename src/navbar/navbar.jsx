@@ -57,7 +57,7 @@ export default function Navbar() {
             )}
           </div>
 
-          <Link to="/login" onClick={() => setMenuOpen(false)}>Reports</Link>
+        
           <Link to="/contact" onClick={() => setMenuOpen(false)}>Contact Us</Link>
           <Link to="/signup" className="signup-btn" onClick={() => setMenuOpen(false)}>Sign Up</Link>
         </nav>

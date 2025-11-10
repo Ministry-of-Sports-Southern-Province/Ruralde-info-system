@@ -173,7 +173,12 @@
   }
 
   .contact-form input,
-  .contact-form textarea {
-    font-size: 0.95rem;
+  .contact-form textarea {  
+    font-size: 0.9rem;
+    
   }
+  .contact-form {
+    padding: 20px 15px;
+  }
+  
 }

@@ -32,6 +32,10 @@ export default function Home() {
             <Link to="/startup" className="primary-btn">
               Get Started
             </Link>
+
+             <Link to="/login" className="login-btn">
+              Login
+            </Link>
           </div>
         </div>
       </div>
