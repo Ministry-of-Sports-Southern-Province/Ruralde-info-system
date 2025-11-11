@@ -94,6 +94,16 @@
   box-shadow: 0 6px 25px rgba(66, 165, 245, 0.6);
   background: linear-gradient(135deg, #1565c0, #64b5f6);
 }
+.id-preview {
+  width: 160px;
+  height: auto;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  display: block;
+}
+
+
 
 /* Responsive */
 @media (max-width: 480px) {

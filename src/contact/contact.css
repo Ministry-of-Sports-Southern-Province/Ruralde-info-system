@@ -162,6 +162,7 @@
   .contact-wrapper {
     padding: 60px 15px;
     margin-top: 50px; /* ✅ adds more gap so it doesn’t touch About */
+  
   }
 
   .contact-container {
