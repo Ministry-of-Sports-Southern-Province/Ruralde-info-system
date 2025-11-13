@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../login/signup.css";
+import { db } from "../firebase";
+import { collection, getDocs } from "firebase/firestore";
 
 export default function SignUp() {
   const [formData, setFormData] = useState({
@@ -17,65 +19,133 @@ export default function SignUp() {
 
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedSecretary, setSelectedSecretary] = useState("");
+  const [societies, setSocieties] = useState([]);
+  const [selectedSociety, setSelectedSociety] = useState("");
   const [error, setError] = useState("");
 
+  // Sinhala district & division data
   const districtData = {
     Galle: [
-      "හික්කඩුව", "හබරාදුව", "ඇල්පිටිය", "යක්කලමුල්ල", "තවලම", "නාගොඩ", "නෙඵව",
-      "අක්මීමණ", "නියාගම", "ගාල්ල කඩවත්සතර", "බද්දේගම", "බෙන්තොට", "බෝපේ පෝද්දල",
-      "බලපිටිය", "අම්බලන්ගොඩ", "ඉමදුව", "කරන්දෙනිය", "වැලිවිටිය දිවිතුර", "ගෝනාපිනුවල",
-      "රත්ගම", "මාදම්පාගම", "වඳුරඔ"
+      "හික්කඩුව", "හබරාදුව", "ඇල්පිටිය", "යක්කලමුල්ල", "තවලම", "නාගොඩ",
+      "නෙමිනැව", "අක්මීමණ", "නියාගම", "ගාල්ල කඩවත්සතර", "බද්දේගම",
+      "බෙන්තොට", "බෝපේ පෝද්දල", "බලපිටිය", "අම්බලන්ගොඩ", "ඉමදුව",
+      "කරන්දෙනිය", "වැලිවිටිය දිවිතුර", "ගෝනාපිනුවල", "රත්ගම", "මාදම්පාගම", "වඳුරඔ"
     ],
     Matara: [
-      "තිහගොඩ", "අකුරැස්ස", "හක්මණ", "වැලිගම", "මාලිම්බඩ", "දික්වැල්ල", "අතුරලිය",
-      "දෙවිනුවර", "පිටබැද්දර", "මුලටියන", "වැලිපිටිය", "පස්ගොඩ", "කඔරුපිටිය",
-      "කිරින්ද පුහුල්වැල්ල", "කොටපොළ", "මාතර"
+      "තිහගොඩ", "අකුරැස්ස", "හක්මණ", "වැලිගම", "මාලිම්බඩ", "දික්වැල්ල",
+      "අතුරලිය", "දෙවිනුවර", "පිටබැද්දර", "මුලටියන", "වැලිපිටිය",
+      "පස්ගොඩ", "කඔරුපිටිය", "කිරින්ද පුහුල්වැල්ල", "කොටපොළ", "මාතර"
     ],
     Hambantota: [
-      "අඟුණකොලපැලැස්ස", "අම්බලන්තොට", "බෙලිඅත්ත", "හම්බන්තොට", "කටුවන", "ලුණුගම්වෙහෙර",
-      "ඕකෙවෙල", "සූරියවැව", "තංගල්ල", "තිස්සමහාරාමය", "වලස්මුල්ල", "වීරකැටිය"
+      "අඟුණකොලපැලැස්ස", "අම්බලන්තොට", "බෙලිඅත්ත", "හම්බන්තොට", "කටුවන",
+      "ලුණුගම්වෙහෙර", "ඕකෙවෙල", "සූරියවැව", "තංගල්ල", "තිස්සමහාරාමය",
+      "වලස්මුල්ල", "වීරකැටිය"
     ],
+  };
+
+  // Sinhala → English division ID map for Firestore
+  const divisionMap = {
+    "හික්කඩුව": "hikkaduwa",
+    "හබරාදුව": "habaraduwa",
+    "ඇල්පිටිය": "elptiya",
+    "යක්කලමුල්ල": "yakkalamulla",
+    "තවලම": "thawalama",
+    "නාගොඩ": "nagoda",
+    "නෙමිනැව": "neminawa",
+    "අක්මීමණ": "akmeemana",
+    "නියාගම": "niyagama",
+    "ගාල්ල කඩවත්සතර": "galle",
+    "බද්දේගම": "baddegama",
+    "බෙන්තොට": "bentota",
+    "බෝපේ පෝද්දල": "bopepoddala",
+    "බලපිටිය": "balapitiya",
+    "අම්බලන්ගොඩ": "ambalangoda",
+    "ඉමදුව": "imaduwa",
+    "කරන්දෙනිය": "karandeniya",
+    "වැලිවිටිය දිවිතුර": "walivitiya-divitura",
+    "ගෝනාපිනුවල": "gonapinuwala",
+    "රත්ගම": "rathgama",
+    "මාදම්පාගම": "madampagama",
+    "වඳුරඔ": "wanduraba",
   };
 
   const handleDistrictChange = (district) => {
     setSelectedDistrict(district);
     setSelectedSecretary("");
+    setSocieties([]);
+    setSelectedSociety("");
   };
 
   const handleChange = (e) => {
     let { name, value, files } = e.target;
 
-    // Handle image upload
     if (files && files[0]) {
-      setFormData({
-        ...formData,
-        [name]: files[0],
-      });
+      setFormData({ ...formData, [name]: files[0] });
       return;
     }
 
-    // Validate phone
     if (name === "contactnumber") {
       value = value.replace(/[^0-9]/g, "");
       if (value.length > 10) value = value.slice(0, 10);
     }
 
-    // Validate NIC
     if (name === "identitynumber") {
       value = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
     }
 
-    // Reset location fields if position changes
     if (name === "position") {
       setSelectedDistrict("");
       setSelectedSecretary("");
+      setSocieties([]);
+      setSelectedSociety("");
     }
 
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData({ ...formData, [name]: value });
   };
+
+  // 🔥 Fetch villages when both district + division are selected
+  useEffect(() => {
+    const fetchVillages = async () => {
+      if (!selectedDistrict || !selectedSecretary) {
+        setSocieties([]);
+        return;
+      }
+
+      try {
+        const divisionId = divisionMap[selectedSecretary] || selectedSecretary;
+
+        // ✅ Correct Firestore path
+        const villagesRef = collection(
+          db,
+          "districts",
+          selectedDistrict,
+          "divisions",
+          divisionId,
+          "villages"
+        );
+
+        const snapshot = await getDocs(villagesRef);
+
+        if (snapshot.empty) {
+          console.warn("⚠️ No villages found for this division");
+          setSocieties([]);
+          return;
+        }
+
+        // ✅ Use correct Sinhala field
+        const villageNames = snapshot.docs.map(
+          (doc) => doc.data()["ග්‍රාම නිලධාරී වසම"] || doc.id
+        );
+
+        setSocieties(villageNames);
+      } catch (err) {
+        console.error("🔥 Error fetching villages:", err);
+        setSocieties([]);
+      }
+    };
+
+    fetchVillages();
+  }, [selectedDistrict, selectedSecretary]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -101,8 +171,11 @@ export default function SignUp() {
       return;
     }
 
-    if (formData.position === "village_officer" && (!selectedDistrict || !selectedSecretary)) {
-      setError("Please select both district and secretary division.");
+    if (
+      formData.position === "village_officer" &&
+      (!selectedDistrict || !selectedSecretary || !selectedSociety)
+    ) {
+      setError("Please select district, division, and village.");
       return;
     }
 
@@ -122,22 +195,6 @@ export default function SignUp() {
     }
 
     alert(`✅ Account created for ${formData.username}!`);
-
-    // Reset
-    setFormData({
-      position: "",
-      district: "",
-      username: "",
-      email: "",
-      contactnumber: "",
-      identitynumber: "",
-      idFront: null,
-      idBack: null,
-      password: "",
-      confirmPassword: "",
-    });
-    setSelectedDistrict("");
-    setSelectedSecretary("");
   };
 
   return (
@@ -148,12 +205,7 @@ export default function SignUp() {
 
           {/* Position */}
           <label>Position</label>
-          <select
-            name="position"
-            value={formData.position}
-            onChange={handleChange}
-            required
-          >
+          <select name="position" value={formData.position} onChange={handleChange} required>
             <option value="">තනතුර තෝරන්න</option>
             <option value="chairman">පලාත් සංවර්ධන අධ්‍යක්ශක</option>
             <option value="secretary">දිස්ත්‍රික් නිලධාරී</option>
@@ -181,7 +233,7 @@ export default function SignUp() {
             </>
           )}
 
-          {/* Secretary Division */}
+          {/* Division */}
           {formData.position === "village_officer" && (
             <>
               <label>Secretary Division</label>
@@ -202,28 +254,26 @@ export default function SignUp() {
             </>
           )}
 
-          {formData.position === "village_officer" && (
+          {/* Villages */}
+          {formData.position === "village_officer" && selectedSecretary && (
             <>
-              <label>Society</label>
+              <label>Society Name</label>
               <select
-                value={selectedSecretary}
-                onChange={(e) => setSelectedSecretary(e.target.value)}
-                disabled={!selectedDistrict}
+                value={selectedSociety}
+                onChange={(e) => setSelectedSociety(e.target.value)}
                 required
               >
-                <option value="">Select Division</option>
-                {selectedDistrict &&
-                  districtData[selectedDistrict].map((sec, idx) => (
-                    <option key={idx} value={sec}>
-                      {sec}
-                    </option>
-                  ))}
+                <option value="">Select Society</option>
+                {societies.map((soc, idx) => (
+                  <option key={idx} value={soc}>
+                    {soc}
+                  </option>
+                ))}
               </select>
             </>
           )}
 
-
-          {/* Username */}
+          {/* Rest of the form */}
           <label>Username</label>
           <input
             type="text"
@@ -233,7 +283,6 @@ export default function SignUp() {
             placeholder="Enter your username"
           />
 
-          {/* Email */}
           <label>Email</label>
           <input
             type="email"
@@ -243,7 +292,6 @@ export default function SignUp() {
             placeholder="Enter your email"
           />
 
-          {/* Contact Number */}
           <label>Contact Number</label>
           <input
             type="tel"
@@ -254,7 +302,6 @@ export default function SignUp() {
             maxLength={10}
           />
 
-          {/* Identity Number */}
           <label>Identity Number</label>
           <input
             type="text"
@@ -265,40 +312,18 @@ export default function SignUp() {
             maxLength={12}
           />
 
-          {/* ✅ ID Photo Uploads */}
           <label>Upload NIC Front Side</label>
-          <input
-            type="file"
-            name="idFront"
-            accept="image/*"
-            onChange={handleChange}
-            required
-          />
+          <input type="file" name="idFront" accept="image/*" onChange={handleChange} required />
           {formData.idFront && (
-            <img
-              src={URL.createObjectURL(formData.idFront)}
-              alt="NIC Front Preview"
-              className="id-preview"
-            />
+            <img src={URL.createObjectURL(formData.idFront)} alt="NIC Front" className="id-preview" />
           )}
 
           <label>Upload NIC Back Side</label>
-          <input
-            type="file"
-            name="idBack"
-            accept="image/*"
-            onChange={handleChange}
-            required
-          />
+          <input type="file" name="idBack" accept="image/*" onChange={handleChange} required />
           {formData.idBack && (
-            <img
-              src={URL.createObjectURL(formData.idBack)}
-              alt="NIC Back Preview"
-              className="id-preview"
-            />
+            <img src={URL.createObjectURL(formData.idBack)} alt="NIC Back" className="id-preview" />
           )}
 
-          {/* Password */}
           <label>Password</label>
           <input
             type="password"
@@ -308,7 +333,6 @@ export default function SignUp() {
             placeholder="Enter your password"
           />
 
-          {/* Confirm Password */}
           <label>Confirm Password</label>
           <input
             type="password"
@@ -318,7 +342,6 @@ export default function SignUp() {
             placeholder="Confirm your password"
           />
 
-          {/* Error */}
           {error && <p className="error-text">{error}</p>}
 
           <button type="submit" className="signup-submit-btn">

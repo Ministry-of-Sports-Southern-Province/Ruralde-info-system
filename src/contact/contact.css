@@ -166,14 +166,16 @@
   }
 
   .contact-container {
-    padding: 25px 15px;
+    padding: 40px 15px;
+    margin-right:20px;
+    margin-left: 20px;
   }
 
   .contact-container h2 {
     font-size: 1.6rem;
   }
 
-  .contact-form input,
+ 
   .contact-form textarea {  
     font-size: 0.9rem;
     
@@ -181,5 +183,12 @@
   .contact-form {
     padding: 20px 15px;
   }
-  
+  .contact-form input{
+   margin:10px 0px 20px 0px;
+   font-size: 0.9rem;
+  }
+
+  .contact-info {
+    padding: 20px 15px;
+  }
 }

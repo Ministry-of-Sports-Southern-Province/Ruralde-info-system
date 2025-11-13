@@ -1,5 +1,5 @@
 import React from 'react'
-
+import '../register/chairman.css';
 
 const chairman = () => {
   return (
@@ -7,7 +7,7 @@ const chairman = () => {
       <h1>සභාපති</h1>
       <form>
         <div className='chairman-container'>
-          <div><label>1. සභාපතිතුමාගේ සම්පූර්ණ නම</label>
+          <div><label>1.සම්පූර්ණ නම</label>
           <input type="text" name="fullName" />
         </div>
         <div>

@@ -2,13 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
-// ✅ Only import analytics in browsers
-let analytics;
-if (typeof window !== "undefined") {
-  const { getAnalytics } = await import("firebase/analytics");
-  analytics = getAnalytics(app);
-}
-
+// ✅ Your Firebase project config
 const firebaseConfig = {
   apiKey: "AIzaSyBzSQ-G6CaPLSKik4AflPuGDXImEhel7FI",
   authDomain: "office-60c13.firebaseapp.com",
@@ -22,8 +16,16 @@ const firebaseConfig = {
 // ✅ Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// ✅ Initialize Firestore (database)
+// ✅ Initialize Firestore
 const db = getFirestore(app);
 
-// ✅ Export Firestore instance (used by Node script)
+// ✅ Optional: Add analytics (only in browser)
+let analytics;
+if (typeof window !== "undefined") {
+  import("firebase/analytics").then(({ getAnalytics }) => {
+    analytics = getAnalytics(app);
+  });
+}
+
+// ✅ Export the Firestore database
 export { db };

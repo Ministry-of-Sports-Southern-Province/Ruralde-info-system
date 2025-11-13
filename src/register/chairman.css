@@ -1,118 +1,105 @@
-/* ---------------------------------------------------
-   Chairman Form Container
----------------------------------------------------- */
-.chairman-container {
-  max-width: 700px;
-  margin: 40px auto;
-  padding: 40px 35px;
-  background: linear-gradient(135deg, #e3f2fd, #ffffff);
-  border-radius: 16px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  color: #1a237e;
-  transition: all 0.3s ease;
+/* Global Styles */
+body {
+  font-family: 'Noto Sans Sinhala', sans-serif;
+  background-color: #f4f6f9;
+  margin: 0;
+  padding: 0;
 }
 
-/* Heading */
+/* Main heading */
 h1 {
   text-align: center;
+  color: #1e3a8a;
+  margin-top: 30px;
   font-size: 2rem;
-  font-weight: 800;
-  color: #0d47a1;
-  margin-bottom: 25px;
-  text-shadow: 1px 1px 3px rgba(13, 71, 161, 0.15);
+  letter-spacing: 1px;
 }
 
-/* Form Layout */
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
+/* Main form container */
+.chairman-container {
+  max-width: 600px;
+  margin: 40px auto;
+  background-color: #ffffff;
+  padding: 35px 40px;
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
 
-/* Label Styling */
+/* Each label */
 label {
-  font-weight: 600;
-  color: #0d47a1;
   display: block;
-  margin-bottom: 8px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
 }
 
-/* Input Fields */
+/* Input and Textarea Styles */
 input[type="text"],
 input[type="tel"],
 input[type="email"],
 input[type="date"],
-textarea {
+textarea,
+input[type="file"] {
   width: 100%;
-  padding: 12px 14px;
-  border: 1.8px solid #90caf9;
-  border-radius: 10px;
-  background-color: #fff;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
   font-size: 1rem;
-  color: #1a237e;
-  box-shadow: 0 3px 6px rgba(33, 150, 243, 0.05);
+  margin-bottom: 20px;
+  box-sizing: border-box;
   transition: all 0.3s ease;
 }
 
+/* Focus Effects */
 input:focus,
 textarea:focus {
-  border-color: #1976d2;
-  box-shadow: 0 0 8px rgba(25, 118, 210, 0.3);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
   outline: none;
-}
-
-/* File Inputs */
-input[type="file"] {
-  margin-top: 8px;
-  padding: 8px;
-  border-radius: 8px;
-  background-color: #f5f9ff;
-  border: 1px solid #bbdefb;
-  color: #0d47a1;
-  cursor: pointer;
 }
 
 /* Textarea */
 textarea {
+  min-height: 80px;
   resize: vertical;
-  min-height: 100px;
+}
+
+/* File Input */
+input[type="file"] {
+  background-color: #f9fafb;
+  padding: 8px;
 }
 
 /* Submit Button */
 button[type="submit"] {
-  background: linear-gradient(90deg, #1976d2, #42a5f5);
-  color: #fff;
+  width: 100%;
+  padding: 12px;
+  background-color: #2563eb;
+  color: white;
   border: none;
-  padding: 12px 25px;
-  font-size: 1rem;
-  font-weight: 600;
   border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(25, 118, 210, 0.25);
-  transition: all 0.3s ease;
-  margin-top: 15px;
+  transition: background-color 0.3s ease, transform 0.1s ease;
 }
 
+/* Button hover and active */
 button[type="submit"]:hover {
-  background: linear-gradient(90deg, #0d47a1, #1976d2);
-  transform: translateY(-3px);
-  box-shadow: 0 6px 14px rgba(25, 118, 210, 0.35);
+  background-color: #1d4ed8;
 }
 
-/* ---------------------------------------------------
-   Responsive Design
----------------------------------------------------- */
-@media (max-width: 768px) {
+button[type="submit"]:active {
+  transform: scale(0.98);
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
   .chairman-container {
-    padding: 25px 20px;
+    padding: 25px;
   }
 
   h1 {
     font-size: 1.6rem;
-  }
-
-  button[type="submit"] {
-    width: 100%;
   }
 }

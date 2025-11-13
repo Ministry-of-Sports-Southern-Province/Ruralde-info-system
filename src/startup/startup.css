@@ -2,7 +2,7 @@
    General Container
    ========================= */
 .develop-container {
-  padding: 30px;
+  padding: 60px 20px;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   max-width: 950px;
   margin: 30px auto;
@@ -98,7 +98,7 @@
    ========================= */
 @media (max-width: 768px) {
   .develop-container {
-    padding: 20px;
+    padding: 60px 20px;
   }
 
   .service-button {

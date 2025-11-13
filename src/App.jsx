@@ -40,7 +40,6 @@ function App() {
         <Route path="/chairman" element={<Chairman />} />
         <Route path="/secretary" element={<Secretary />} />
         <Route path="/treasurer" element={<Treasurer />} />
-
         <Route path="/startup" element={<Startup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />}></Route>
