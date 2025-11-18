@@ -1,14 +1,57 @@
-import React from 'react'
-import "../about/about.css"
-const about = () => {
-  return (
-    <div className='about-container'>
-      <h1>About Us</h1>
-        <p>Welcome to the Grama Samurdhi Portal. This platform is dedicated to providing information and resources related to rural development and community welfare. Our mission is to empower local communities through various initiatives and support programs.</p>
-        <p>We are committed to transparency, inclusivity, and sustainable development. Our team works closely with local authorities, community leaders, and stakeholders to ensure that our programs meet the needs of the people we serve.</p>
-        <p>Thank you for visiting our portal. We encourage you to explore the various forms and resources available, and we look forward to working together to build stronger, more resilient communities.</p>
-    </div>
-  )
-}
+import React from "react";
+import { motion } from "framer-motion";
+import "../about/about.css";
 
-export default about
+const About = () => {
+  return (
+    <div className="about-container">
+
+      {/* Title */}
+      <motion.h1
+        initial={{ opacity: 0, y: 60 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        viewport={{ once: true }}   // <-- animate ONCE only
+      >
+        About Us
+      </motion.h1>
+
+      {/* Paragraph 1 */}
+      <motion.p
+        initial={{ opacity: 0, x: -60 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.7 }}
+        viewport={{ once: true }}
+      >
+        Welcome to the Grama Samurdhi Portal. This platform provides resources related 
+        to rural development and community welfare. Our mission is to empower local 
+        communities through support programs.
+      </motion.p>
+
+      {/* Paragraph 2 */}
+      <motion.p
+        initial={{ opacity: 0, x: 60 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.7 }}
+        viewport={{ once: true }}
+      >
+        We are committed to transparency, inclusivity, and sustainable development. 
+        Our team collaborates with local authorities and community leaders.
+      </motion.p>
+
+      {/* Paragraph 3 */}
+      <motion.p
+        initial={{ opacity: 0, y: 60 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7 }}
+        viewport={{ once: true }}
+      >
+        Thank you for visiting our portal. Explore the available resources — together 
+        we can build stronger, more resilient communities.
+      </motion.p>
+
+    </div>
+  );
+};
+
+export default About;

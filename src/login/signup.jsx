@@ -23,7 +23,7 @@ export default function SignUp() {
   const [selectedSociety, setSelectedSociety] = useState("");
   const [error, setError] = useState("");
 
-  // Sinhala district & division data
+  // Sinhala district & division data (unchanged)
   const districtData = {
     Galle: [
       "හික්කඩුව", "හබරාදුව", "ඇල්පිටිය", "යක්කලමුල්ල", "තවලම", "නාගොඩ",
@@ -43,7 +43,6 @@ export default function SignUp() {
     ],
   };
 
-  // Sinhala → English division ID map for Firestore
   const divisionMap = {
     "හික්කඩුව": "hikkaduwa",
     "හබරාදුව": "habaraduwa",
@@ -103,7 +102,6 @@ export default function SignUp() {
     setFormData({ ...formData, [name]: value });
   };
 
-  // 🔥 Fetch villages when both district + division are selected
   useEffect(() => {
     const fetchVillages = async () => {
       if (!selectedDistrict || !selectedSecretary) {
@@ -114,7 +112,6 @@ export default function SignUp() {
       try {
         const divisionId = divisionMap[selectedSecretary] || selectedSecretary;
 
-        // ✅ Correct Firestore path
         const villagesRef = collection(
           db,
           "districts",
@@ -127,25 +124,36 @@ export default function SignUp() {
         const snapshot = await getDocs(villagesRef);
 
         if (snapshot.empty) {
-          console.warn("⚠️ No villages found for this division");
           setSocieties([]);
           return;
         }
 
-        // ✅ Use correct Sinhala field
-        const villageNames = snapshot.docs.map(
-          (doc) => doc.data()["ග්‍රාම නිලධාරී වසම"] || doc.id
-        );
+        const villageNames = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          return (
+            data["සමිතියේ නම"] ||
+            data["ග්‍රාම සංවර්ධන සමිතිය"] ||
+            data["ග්‍රාම නිලධාරී වසම"] ||
+            doc.id
+          );
+        });
 
         setSocieties(villageNames);
       } catch (err) {
-        console.error("🔥 Error fetching villages:", err);
         setSocieties([]);
       }
     };
 
     fetchVillages();
   }, [selectedDistrict, selectedSecretary]);
+
+  // Positions that require district + division + society
+  const societyPositions = [
+    "village_officer",
+    "society_chairman",
+    "society_treasurer",
+    "society_secretary",
+  ];
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -172,15 +180,15 @@ export default function SignUp() {
     }
 
     if (
-      formData.position === "village_officer" &&
+      societyPositions.includes(formData.position) &&
       (!selectedDistrict || !selectedSecretary || !selectedSociety)
     ) {
-      setError("Please select district, division, and village.");
+      setError("Please select district, division, and society.");
       return;
     }
 
     if (!/^0\d{9}$/.test(formData.contactnumber)) {
-      setError("Please enter a valid Sri Lankan contact number (e.g., 0771234567).");
+      setError("Invalid Sri Lankan contact number.");
       return;
     }
 
@@ -194,7 +202,7 @@ export default function SignUp() {
       return;
     }
 
-    alert(`✅ Account created for ${formData.username}!`);
+    alert(`Account created for ${formData.username}!`);
   };
 
   return (
@@ -203,21 +211,21 @@ export default function SignUp() {
         <h2 className="signup-title">Create Account</h2>
         <form onSubmit={handleSubmit} className="signup-form">
 
-          {/* Position */}
           <label>Position</label>
           <select name="position" value={formData.position} onChange={handleChange} required>
             <option value="">තනතුර තෝරන්න</option>
             <option value="chairman">පලාත් සංවර්ධන අධ්‍යක්ශක</option>
             <option value="secretary">දිස්ත්‍රික් නිලධාරී</option>
             <option value="officer">විෂය භාර නිලධාරී</option>
+
+            {/* FIXED UNIQUE VALUES */}
             <option value="village_officer">ග්‍රාම සංවර්ධන නිලධාරී</option>
-            <option value="village_officer">සමිති සභාපති</option>
-            <option value="village_officer">සමිති භාණ්ඩාගාරික</option>
-            <option value="village_officer">සමිති ලේකම්</option>
+            <option value="society_chairman">සමිති සභාපති</option>
+            <option value="society_treasurer">සමිති භාණ්ඩාගාරික</option>
+            <option value="society_secretary">සමිති ලේකම්</option>
           </select>
 
-          {/* District */}
-          {(formData.position === "secretary" || formData.position === "village_officer") && (
+          {(formData.position === "secretary" || societyPositions.includes(formData.position)) && (
             <>
               <label>District</label>
               <select
@@ -233,8 +241,7 @@ export default function SignUp() {
             </>
           )}
 
-          {/* Division */}
-          {formData.position === "village_officer" && (
+          {societyPositions.includes(formData.position) && (
             <>
               <label>Secretary Division</label>
               <select
@@ -254,8 +261,7 @@ export default function SignUp() {
             </>
           )}
 
-          {/* Villages */}
-          {formData.position === "village_officer" && selectedSecretary && (
+          {societyPositions.includes(formData.position) && selectedSecretary && (
             <>
               <label>Society Name</label>
               <select
@@ -273,7 +279,6 @@ export default function SignUp() {
             </>
           )}
 
-          {/* Rest of the form */}
           <label>Username</label>
           <input
             type="text"
