@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import "../login/login.css";
+import { db } from "../firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -17,7 +19,7 @@ export default function Login() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -27,10 +29,30 @@ export default function Login() {
     }
 
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      alert(`Welcome, ${formData.username}!`);
-    }, 1000);
+
+    try {
+      // Firestore query
+      const usersRef = collection(db, "users");
+      const q = query(
+        usersRef,
+        where("username", "==", formData.username),
+        where("password", "==", formData.password)
+      );
+
+      const snapshot = await getDocs(q);
+
+      if (!snapshot.empty) {
+        // Login success
+        alert(`Welcome, ${formData.username}!`);
+      } else {
+        setError("Invalid username or password.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Login failed. Try again.");
+    }
+
+    setLoading(false);
   };
 
   return (
