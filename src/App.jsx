@@ -14,7 +14,10 @@ import Register from "./register/register";
 import Chairman from "./register/chairman";
 import Secretary from "./register/secretary";
 import Treasurer from "./register/treasurer";
-
+import Chairmanprofile from "./profile/chairman/chairmanprofile";
+import DistrictOfficer from "./profile/districtofficer/districtofficer";
+import SocietyOfficer from "./profile/societyofficer/societyofficer";
+import Subject from "./profile/subject/subject";
 import Startup from "./startup/startup";
 import Login from "./login/login";
 import SignUp from "./login/signup";
@@ -44,6 +47,13 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />}></Route>
         <Route path="/footer" element={<Footer />}></Route>
+        <Route path="/chairmanprofile" element={<Chairmanprofile />}></Route>
+        <Route path="/districtOfficer" element={<DistrictOfficer />}></Route>
+        <Route path="/societyOfficer" element={<SocietyOfficer />}></Route>
+        <Route path="/subject" element={<Subject />}></Route>
+
+        <Route path="/"></Route>
+
       </Routes>
     </BrowserRouter>
   );

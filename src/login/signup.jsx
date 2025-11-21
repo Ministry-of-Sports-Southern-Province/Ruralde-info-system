@@ -21,28 +21,28 @@ export default function SignUp() {
   const [selectedSociety, setSelectedSociety] = useState("");
   const [error, setError] = useState("");
 
-  // District → Divisions
+  // District → Divisions (Sinhala)
   const districtData = {
     Galle: [
-      "හික්කඩුව","හබරාදුව","ඇල්පිටිය","යක්කලමුල්ල","තවලම","නාගොඩ",
-      "නෙළුව","අක්මීමණ","නියාගම","ගාල්ල කඩවත්සතර","බද්දේගම",
-      "බෙන්තොට","බෝපේ පෝද්දල","බලපිටිය","අම්බලන්ගොඩ","ඉමදුව",
-      "කරන්දෙනිය","වැලිවිටිය දිවිතුර","ගෝනාපිනුවල","රත්ගම",
-      "මාදම්පාගම","වඳුරඔ"
+      "හික්කඩුව", "හබරාදුව", "ඇල්පිටිය", "යක්කලමුල්ල", "තවලම", "නාගොඩ",
+      "නෙළුව", "අක්මීමණ", "නියාගම", "ගාල්ල කඩවත්සතර", "බද්දේගම",
+      "බෙන්තොට", "බෝපේ පෝද්දල", "බලපිටිය", "අම්බලන්ගොඩ", "ඉමදුව",
+      "කරන්දෙනිය", "වැලිවිටිය දිවිතුර", "ගෝනාපිනුවල", "රත්ගම",
+      "මාදම්පාගම", "වඳුරඔ"
     ],
     Matara: [
-      "තිහගොඩ","අකුරැස්ස","හක්මණ","වැලිගම","මාලිම්බඩ","දික්වැල්ල",
-      "අතුරලිය","දෙවිනුවර","පිටබැද්දර","මුලටියන","වැලිපිටිය",
-      "පස්ගොඩ","කඹුරුපිටිය","කිරින්ද පුහුල්වැල්ල","කොටපොළ","මාතර"
+      "තිහගොඩ", "අකුරැස්ස", "හක්මණ", "වැලිගම", "මාලිම්බඩ", "දික්වැල්ල",
+      "අතුරලිය", "දෙවිනුවර", "පිටබැද්දර", "මුලටියන", "වැලිපිටිය",
+      "පස්ගොඩ", "කඹුරුපිටිය", "කිරින්ද පුහුල්වැල්ල", "කොටපොළ", "මාතර"
     ],
     Hambantota: [
-      "අඟුණකොලපැලැස්ස","අම්බලන්තොට","බෙලිඅත්ත","හම්බන්තොට","කටුවන",
-      "ලුණුගම්වෙහෙර","ඕකෙවෙල","සූරියවැව","තංගල්ල","තිස්සමහාරාමය",
-      "වලස්මුල්ල","වීරකැටිය"
+      "අඟුණකොලපැලැස්ස", "අම්බලන්තොට", "බෙලිඅත්ත", "හම්බන්තොට", "කටුවන",
+      "ලුණුගම්වෙහෙර", "ඕකෙවෙල", "සූරියවැව", "තංගල්ල", "තිස්සමහාරාමය",
+      "වලස්මුල්ල", "වීරකැටිය"
     ],
   };
 
-  // Sinhala → Firestore ID mapping
+  // Mapping to DB IDs
   const divisionMap = {
     "හික්කඩුව": "hikkaduwa",
     "හබරාදුව": "habaraduwa",
@@ -98,6 +98,13 @@ export default function SignUp() {
     "වීරකැටිය": "wiraketiya",
   };
 
+  const societyPositions = [
+    "society_chairman",
+    "society_treasurer",
+    "society_secretary",
+  ];
+
+  // Reset when district changes
   const handleDistrictChange = (district) => {
     setSelectedDistrict(district);
     setSelectedSecretary("");
@@ -105,6 +112,7 @@ export default function SignUp() {
     setSelectedSociety("");
   };
 
+  // Input handling
   const handleChange = (e) => {
     let { name, value } = e.target;
 
@@ -119,7 +127,7 @@ export default function SignUp() {
     setFormData({ ...formData, [name]: value });
   };
 
-  // Fetch societies
+  // Fetch Societies
   useEffect(() => {
     const fetchVillages = async () => {
       if (!selectedDistrict || !selectedSecretary) {
@@ -160,14 +168,7 @@ export default function SignUp() {
     fetchVillages();
   }, [selectedDistrict, selectedSecretary]);
 
-  const societyPositions = [
-    "village_officer",
-    "society_chairman",
-    "society_treasurer",
-    "society_secretary",
-  ];
-
-  // Submit (NO NIC, NO images)
+  // Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -189,7 +190,7 @@ export default function SignUp() {
       alert("User Registered Successfully!");
     } catch (err) {
       console.error(err);
-      setError("Error saving data. Try again.");
+      setError("Error saving data!");
     }
   };
 
@@ -199,25 +200,32 @@ export default function SignUp() {
         <h2 className="signup-title">Create Account</h2>
 
         <form onSubmit={handleSubmit} className="signup-form">
-          
+
+          {/* POSITION */}
           <label>Position</label>
           <select name="position" value={formData.position} onChange={handleChange} required>
             <option value="">තනතුර තෝරන්න</option>
+
             <option value="chairman">පලාත් සංවර්ධන අධ්‍යක්ශක</option>
-            <option value="secretary">දිස්ත්‍රික් නිලධාරී</option>
-            <option value="officer">විෂය භාර නිලධාරී</option>
+            <option value="districtOfficer">දිස්ත්‍රික් නිලධාරී</option>
+            <option value="subjectOfficer">විෂය භාර නිලධාරී</option>
 
             <option value="village_officer">ග්‍රාම සංවර්ධන නිලධාරී</option>
+
             <option value="society_chairman">සමිති සභාපති</option>
             <option value="society_treasurer">සමිති භාණ්ඩාගාරික</option>
             <option value="society_secretary">සමිති ලේකම්</option>
           </select>
 
-          {(formData.position === "secretary" ||
-            societyPositions.includes(formData.position)) && (
+          {/* DISTRICT OFFICER – ONLY DISTRICT */}
+          {formData.position === "districtOfficer" && (
             <>
               <label>District</label>
-              <select value={selectedDistrict} onChange={(e) => handleDistrictChange(e.target.value)} required>
+              <select
+                value={selectedDistrict}
+                onChange={(e) => handleDistrictChange(e.target.value)}
+                required
+              >
                 <option value="">තෝරන්න</option>
                 <option value="Galle">ගාල්ල</option>
                 <option value="Matara">මාතර</option>
@@ -226,8 +234,21 @@ export default function SignUp() {
             </>
           )}
 
-          {societyPositions.includes(formData.position) && (
+          {/* VILLAGE OFFICER – DISTRICT + SECRETARY DIVISION */}
+          {formData.position === "village_officer" && (
             <>
+              <label>District</label>
+              <select
+                value={selectedDistrict}
+                onChange={(e) => handleDistrictChange(e.target.value)}
+                required
+              >
+                <option value="">තෝරන්න</option>
+                <option value="Galle">ගාල්ල</option>
+                <option value="Matara">මාතර</option>
+                <option value="Hambantota">හම්බන්තොට</option>
+              </select>
+
               <label>Secretary Division</label>
               <select
                 value={selectedSecretary}
@@ -236,17 +257,47 @@ export default function SignUp() {
               >
                 <option value="">Select Division</option>
                 {selectedDistrict &&
-                  districtData[selectedDistrict].map((sec, idx) => (
-                    <option key={idx} value={sec}>{sec}</option>
+                  districtData[selectedDistrict].map((div, idx) => (
+                    <option value={div} key={idx}>{div}</option>
                   ))}
               </select>
             </>
           )}
 
-          {societyPositions.includes(formData.position) && selectedSecretary && (
+          {/* SOCIETY POSITIONS – DISTRICT + SECRETARY + SOCIETY */}
+          {societyPositions.includes(formData.position) && (
             <>
+              <label>District</label>
+              <select
+                value={selectedDistrict}
+                onChange={(e) => handleDistrictChange(e.target.value)}
+                required
+              >
+                <option value="">තෝරන්න</option>
+                <option value="Galle">ගාල්ල</option>
+                <option value="Matara">මාතර</option>
+                <option value="Hambantota">හම්බන්තොට</option>
+              </select>
+
+              <label>Secretary Division</label>
+              <select
+                value={selectedSecretary}
+                onChange={(e) => setSelectedSecretary(e.target.value)}
+                required
+              >
+                <option value="">Select Division</option>
+                {selectedDistrict &&
+                  districtData[selectedDistrict].map((div, idx) => (
+                    <option value={div} key={idx}>{div}</option>
+                  ))}
+              </select>
+
               <label>Society Name</label>
-              <select value={selectedSociety} onChange={(e) => setSelectedSociety(e.target.value)} required>
+              <select
+                value={selectedSociety}
+                onChange={(e) => setSelectedSociety(e.target.value)}
+                required
+              >
                 <option value="">Select Society</option>
                 {societies.map((soc, idx) => (
                   <option key={idx} value={soc}>{soc}</option>
@@ -255,6 +306,7 @@ export default function SignUp() {
             </>
           )}
 
+          {/* USER FIELDS */}
           <label>Username</label>
           <input type="text" name="username" value={formData.username} onChange={handleChange} required />
 

@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import "../login/login.css";
 import { db } from "../firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -31,7 +34,6 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Firestore query
       const usersRef = collection(db, "users");
       const q = query(
         usersRef,
@@ -42,8 +44,45 @@ export default function Login() {
       const snapshot = await getDocs(q);
 
       if (!snapshot.empty) {
-        // Login success
-        alert(`Welcome, ${formData.username}!`);
+        const docRef = snapshot.docs[0];
+        const userData = docRef.data();
+        const userId = docRef.id;
+
+        // Save user ID for session/profile usage
+        localStorage.setItem("userId", userId);
+
+        const userPosition = userData.position;
+
+        // Redirect based on position
+        switch (userPosition) {
+          case "chairman":              // පලාත් සංවර්ධන අධ්‍යක්ශක
+            navigate("/chairmanprofile");
+            break;
+
+          case "districtOfficer":       // දිස්ත්‍රික් නිලධාරී
+            navigate("/districtOfficer");
+            break;
+
+          case "subjectOfficer":        // විෂය භාර නිලධාරී
+            navigate("/subject");
+            break;
+
+          case "village_officer":       // ග්‍රාම සංවර්ධන නිලධාරී
+            navigate("/ruraldevofficer");
+            break;
+
+          case "society_chairman":      // සමිති සභාපති
+          case "society_treasurer":     // සමිති භාණ්ඩාගාරික
+          case "society_secretary":     // සමිති ලේකම්
+            navigate("/societyofficer");
+            break;
+
+          default:
+            setError("Unknown position. Contact admin.");
+        }
+
+        setLoading(false);
+        return;
       } else {
         setError("Invalid username or password.");
       }
@@ -59,6 +98,7 @@ export default function Login() {
     <div className="login-container">
       <div className="login-box">
         <h2 className="login-title">Login</h2>
+
         <form onSubmit={handleSubmit} className="login-form">
           <label>Username:</label>
           <input
@@ -67,6 +107,7 @@ export default function Login() {
             value={formData.username}
             onChange={handleChange}
             placeholder="Enter your username"
+            required
           />
 
           <label>Password:</label>
@@ -76,6 +117,7 @@ export default function Login() {
             value={formData.password}
             onChange={handleChange}
             placeholder="Enter your password"
+            required
           />
 
           {error && <p className="error-text">{error}</p>}
