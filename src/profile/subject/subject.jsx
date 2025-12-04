@@ -8,7 +8,6 @@ const Subject = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Requested letters & history (you can later load these from Firestore)
   const [requestedLetters, setRequestedLetters] = useState([]);
   const [historyLetters, setHistoryLetters] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -40,8 +39,7 @@ const Subject = () => {
 
     fetchUser();
 
-    // TODO: replace this dummy data with Firestore queries
-    // Example: collection(db, "letters") where("officerId", "==", userId)
+    // TODO: replace with Firestore queries filtered by this subject officer
     setRequestedLetters([
       {
         id: "L001",
@@ -53,7 +51,7 @@ const Subject = () => {
       {
         id: "L002",
         type: "උපදෙස් ලිපිය",
-        society: "වදුරඔ ග්‍රාම සංවර්ධන සමිතිය",
+        society: "වඳුරඔ ග්‍රාම සංවර්ධන සමිතිය",
         date: "2025-12-03",
         status: "In Review",
       },
@@ -81,89 +79,160 @@ const Subject = () => {
   if (error) return <p className="error-text">{error}</p>;
   if (!user) return null;
 
+  const totalPending = requestedLetters.length;
+  const totalHistory = historyLetters.length;
+  const approvedCount = historyLetters.filter(
+    (l) => l.status === "Approved"
+  ).length;
+
   return (
-    <div className="subject-container">
-      <div className="subject-box">
-        <h2 className="subject-title">Subject Officer Profile</h2>
-
-        <div className="subject-layout">
-          {/* LEFT: Profile info */}
-          <div className="subject-profile-column">
-            <h3 className="section-title">Profile Information</h3>
-            <div className="profile-info">
-              <p><strong>Username:</strong> {user.username}</p>
-              <p><strong>Email:</strong> {user.email}</p>
-              <p><strong>Contact Number:</strong> {user.contactnumber}</p>
-              <p><strong>Position:</strong> {user.position}</p>
-              <p><strong>District:</strong> {user.district}</p>
-              <p><strong>Division:</strong> {user.division || "N/A"}</p>
-              <p><strong>Society:</strong> {user.society || "N/A"}</p>
-              <p><strong>Identity Number:</strong> {user.identitynumber}</p>
+    <div className="subject-dashboard">
+      <div className="subject-shell">
+        {/* SIDEBAR */}
+        <aside className="subject-sidebar">
+          <div className="sidebar-profile-card">
+            <div className="sidebar-avatar">
+              <img
+                src={user.photoURL || "https://via.placeholder.com/120"}
+                alt="Profile"
+              />
             </div>
+            <h2 className="sidebar-name">{user.username}</h2>
+            <p className="sidebar-role">
+              විෂය භාර නිලධාරී <span>(Subject Officer)</span>
+            </p>
 
-            {/* Recommended extra info for officer */}
-            <div className="profile-recommendations">
-              <h4>Officer Notes</h4>
-              <ul>
-                <li>Check new letter requests daily.</li>
-                <li>Update status (Approved / Rejected / In Review) promptly.</li>
-                <li>Maintain communication with district and society officers.</li>
-              </ul>
+            <div className="sidebar-info">
+              <p>
+                <strong>District:</strong> {user.district || "N/A"}
+              </p>
+              <p>
+                <strong>Division:</strong> {user.division || "N/A"}
+              </p>
+              <p>
+                <strong>Society:</strong> {user.society || "N/A"}
+              </p>
+              <p>
+                <strong>Contact:</strong> {user.contactnumber}</p>
+              <p>
+                <strong>Email:</strong> {user.email}
+              </p>
             </div>
           </div>
 
-          {/* RIGHT: Requested letters + History */}
-          <div className="subject-letters-column">
-            <h3 className="section-title">Requested Letters</h3>
+          {/* QUICK STATS */}
+          <div className="sidebar-stats">
+            <div className="stat-card">
+              <p className="stat-label">Pending Letters</p>
+              <p className="stat-value">{totalPending}</p>
+            </div>
+            <div className="stat-card">
+              <p className="stat-label">Approved History</p>
+              <p className="stat-value">{approvedCount}</p>
+            </div>
+            <div className="stat-card">
+              <p className="stat-label">Total History</p>
+              <p className="stat-value">{totalHistory}</p>
+            </div>
+          </div>
 
-            {requestedLetters.length === 0 ? (
-              <p className="muted-text">No pending letter requests.</p>
-            ) : (
-              <ul className="letter-list">
-                {requestedLetters.map((letter) => (
-                  <li key={letter.id} className="letter-item">
-                    <div>
-                      <p className="letter-type">
-                        <strong>{letter.type}</strong>
-                      </p>
-                      <p className="letter-sub">
-                        Society: {letter.society}
-                      </p>
-                      <p className="letter-sub">
-                        Date: {letter.date}
-                      </p>
-                    </div>
-                    <span
-                      className={`letter-status badge ${
-                        letter.status === "Approved"
-                          ? "badge-success"
-                          : letter.status === "Rejected"
-                          ? "badge-danger"
-                          : "badge-warning"
-                      }`}
-                    >
-                      {letter.status}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
+          {/* RESPONSIBILITIES */}
+          <div className="sidebar-notes">
+            <h4>Officer Notes</h4>
+            <ul>
+              <li>දිනපතා නොමිලේ ලිපි අයදුම් සමාලෝචනය කරන්න.</li>
+              <li>අනුමත/ප්‍රතික්ෂේප/සමාලෝචනය යාවත්කාලීන කරන්න.</li>
+              <li>දිස්ත්‍රික් හා ග්‍රාම නිලධාරීන් සමඟ සම්බන්ධතාවය තබා ගන්න.</li>
+            </ul>
+          </div>
+        </aside>
 
-            <button
-              type="button"
-              className="history-toggle-btn"
-              onClick={() => setShowHistory(!showHistory)}
-            >
-              {showHistory ? "Hide History" : "Show History"}
-            </button>
+        {/* MAIN CONTENT */}
+        <main className="subject-main">
+          {/* TOP GRID */}
+          <section className="subject-grid">
+            {/* Requested letters */}
+            <div className="sub-widget">
+              <h3 className="widget-title">Latest Requested Letters</h3>
+              {requestedLetters.length === 0 ? (
+                <p className="muted-text">No pending letter requests.</p>
+              ) : (
+                <ul className="letter-list">
+                  {requestedLetters.map((letter) => (
+                    <li key={letter.id} className="letter-item">
+                      <div>
+                        <p className="letter-type">
+                          <strong>{letter.type}</strong>
+                        </p>
+                        <p className="letter-sub">
+                          Society: {letter.society}
+                        </p>
+                        <p className="letter-sub">
+                          Date: {letter.date}
+                        </p>
+                      </div>
+                      <span
+                        className={`badge ${
+                          letter.status === "Approved"
+                            ? "badge-success"
+                            : letter.status === "Rejected"
+                            ? "badge-danger"
+                            : "badge-warning"
+                        }`}
+                      >
+                        {letter.status}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Profile summary */}
+            <div className="sub-widget">
+              <h3 className="widget-title">Profile Summary</h3>
+              <div className="profile-summary-grid">
+                <div>
+                  <p className="summary-label">Identity Number</p>
+                  <p className="summary-value">{user.identitynumber}</p>
+                </div>
+                <div>
+                  <p className="summary-label">Position</p>
+                  <p className="summary-value">{user.position}</p>
+                </div>
+                <div>
+                  <p className="summary-label">Assigned Society</p>
+                  <p className="summary-value">
+                    {user.society || "Not Assigned"}
+                  </p>
+                </div>
+              </div>
+              <p className="summary-note">
+                Subject officer is responsible for subject‑wise monitoring,
+                reporting, and support for all societies under the assigned area.
+              </p>
+            </div>
+          </section>
+
+          {/* HISTORY SECTION */}
+          <section className="subject-history">
+            <div className="history-header">
+              <h3 className="widget-title">Letter History</h3>
+              <button
+                type="button"
+                className="toggle-btn"
+                onClick={() => setShowHistory(!showHistory)}
+              >
+                {showHistory ? "Hide" : "Show"} History
+              </button>
+            </div>
 
             {showHistory && (
-              <div className="history-section">
-                <h3 className="section-title small">Letter History</h3>
+              <div className="history-content">
                 {historyLetters.length === 0 ? (
                   <p className="muted-text">No history records.</p>
                 ) : (
-                  <ul className="letter-list history-list">
+                  <ul className="letter-list">
                     {historyLetters.map((letter) => (
                       <li key={letter.id} className="letter-item">
                         <div>
@@ -178,7 +247,7 @@ const Subject = () => {
                           </p>
                         </div>
                         <span
-                          className={`letter-status badge ${
+                          className={`badge ${
                             letter.status === "Approved"
                               ? "badge-success"
                               : letter.status === "Rejected"
@@ -194,8 +263,8 @@ const Subject = () => {
                 )}
               </div>
             )}
-          </div>
-        </div>
+          </section>
+        </main>
       </div>
     </div>
   );
