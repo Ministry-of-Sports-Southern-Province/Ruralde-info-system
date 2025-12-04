@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "../login/login.css";
 import { db } from "../firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -16,6 +16,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
+    setError(""); // clear error when user types
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -55,77 +56,95 @@ export default function Login() {
 
         // Redirect based on position
         switch (userPosition) {
-          case "chairman":              // පලාත් සංවර්ධන අධ්‍යක්ශක
+          case "chairman": // පලාත් සංවර්ධන අධ්‍යක්ශක
             navigate("/chairmanprofile");
             break;
 
-          case "districtOfficer":       // දිස්ත්‍රික් නිලධාරී
+          case "districtOfficer": // දිස්ත්‍රික් නිලධාරී
             navigate("/districtOfficer");
             break;
 
-          case "subjectOfficer":        // විෂය භාර නිලධාරී
+          case "subjectOfficer": // විෂය භාර නිලධාරී
             navigate("/subject");
             break;
 
-          case "village_officer":       // ග්‍රාම සංවර්ධන නිලධාරී
+          case "village_officer": // ග්‍රාම සංවර්ධන නිලධාරී
             navigate("/ruraldevofficer");
             break;
 
-          case "society_chairman":      // සමිති සභාපති
-          case "society_treasurer":     // සමිති භාණ්ඩාගාරික
-          case "society_secretary":     // සමිති ලේකම්
+          case "society_chairman": // සමිති සභාපති
+          case "society_treasurer": // සමිති භාණ්ඩාගාරික
+          case "society_secretary": // සමිති ලේකම්
             navigate("/societyofficer");
             break;
 
           default:
-            setError("Unknown position. Contact admin.");
+            setError("Unknown position. Please contact the administrator.");
         }
-
-        setLoading(false);
-        return;
       } else {
         setError("Invalid username or password.");
       }
     } catch (err) {
       console.error(err);
-      setError("Login failed. Try again.");
+      setError("Login failed. Please try again.");
     }
 
     setLoading(false);
   };
 
   return (
-    <div className="login-container">
-      <div className="login-box">
-        <h2 className="login-title">Login</h2>
+    <div className="auth-page">
+      <div className="auth-bg-animation" /> {/* animated background layer */}
+      <div className="login-card">
+        <h2 className="auth-title">Welcome Back</h2>
+        <p className="auth-subtitle">
+          Sign in to continue to the Rural Development Management System
+        </p>
 
-        <form onSubmit={handleSubmit} className="login-form">
-          <label>Username:</label>
-          <input
-            type="text"
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-            placeholder="Enter your username"
-            required
-          />
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="form-group">
+            <label>Username</label>
+            <input
+              className="animated-input"
+              type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              placeholder="Enter your username"
+              autoComplete="username"
+            />
+          </div>
 
-          <label>Password:</label>
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Enter your password"
-            required
-          />
+          <div className="form-group">
+            <label>Password</label>
+            <input
+              className="animated-input"
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Enter your password"
+              autoComplete="current-password"
+            />
+          </div>
 
-          {error && <p className="error-text">{error}</p>}
+          {error && <p className="auth-error animated-error">{error}</p>}
 
-          <button type="submit" disabled={loading}>
+          <button
+            type="submit"
+            className="auth-button animated-button"
+            disabled={loading}
+          >
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
+
+        <div className="auth-footer">
+          <span>Don&apos;t have an account?</span>
+          <Link to="/signup" className="auth-link">
+            Sign up
+          </Link>
+        </div>
       </div>
     </div>
   );
