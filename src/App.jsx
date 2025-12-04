@@ -16,7 +16,7 @@ import Secretary from "./register/secretary";
 import Treasurer from "./register/treasurer";
 import Chairmanprofile from "./profile/chairman/chairmanprofile";
 import DistrictOfficer from "./profile/districtOfficer/districtOfficer";
-import SocietyOfficer from "./profile/societyofficer/societyofficer";
+import SocietyOfficer from "./profile/societyOfficer/societyOfficer";
 import Subject from "./profile/subject/subject";
 import Startup from "./startup/startup";
 import Login from "./login/login";
