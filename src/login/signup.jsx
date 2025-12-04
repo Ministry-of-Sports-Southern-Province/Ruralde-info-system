@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from "react";
 import "../login/signup.css";
 import { db } from "../firebase.js";
-import { collection, addDoc, getDocs } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
 
 export default function SignUp() {
   const [formData, setFormData] = useState({
@@ -24,21 +25,60 @@ export default function SignUp() {
   // District → Divisions (Sinhala)
   const districtData = {
     Galle: [
-      "හික්කඩුව", "හබරාදුව", "ඇල්පිටිය", "යක්කලමුල්ල", "තවලම", "නාගොඩ",
-      "නෙළුව", "අක්මීමණ", "නියාගම", "ගාල්ල කඩවත්සතර", "බද්දේගම",
-      "බෙන්තොට", "බෝපේ පෝද්දල", "බලපිටිය", "අම්බලන්ගොඩ", "ඉමදුව",
-      "කරන්දෙනිය", "වැලිවිටිය දිවිතුර", "ගෝනාපිනුවල", "රත්ගම",
-      "මාදම්පාගම", "වඳුරඔ"
+      "හික්කඩුව",
+      "හබරාදුව",
+      "ඇල්පිටිය",
+      "යක්කලමුල්ල",
+      "තවලම",
+      "නාගොඩ",
+      "නෙළුව",
+      "අක්මීමණ",
+      "නියාගම",
+      "ගාල්ල කඩවත්සතර",
+      "බද්දේගම",
+      "බෙන්තොට",
+      "බෝපේ පෝද්දල",
+      "බලපිටිය",
+      "අම්බලන්ගොඩ",
+      "ඉමදුව",
+      "කරන්දෙනිය",
+      "වැලිවිටිය දිවිතුර",
+      "ගෝනාපිනුවල",
+      "රත්ගම",
+      "මාදම්පාගම",
+      "වඳුරඔ",
     ],
     Matara: [
-      "තිහගොඩ", "අකුරැස්ස", "හක්මණ", "වැලිගම", "මාලිම්බඩ", "දික්වැල්ල",
-      "අතුරලිය", "දෙවිනුවර", "පිටබැද්දර", "මුලටියන", "වැලිපිටිය",
-      "පස්ගොඩ", "කඹුරුපිටිය", "කිරින්ද පුහුල්වැල්ල", "කොටපොළ", "මාතර"
+      "තිහගොඩ",
+      "අකුරැස්ස",
+      "හක්මණ",
+      "වැලිගම",
+      "මාලිම්බඩ",
+      "දික්වැල්ල",
+      "අතුරලිය",
+      "දෙවිනුවර",
+      "පිටබැද්දර",
+      "මුලටියන",
+      "වැලිපිටිය",
+      "පස්ගොඩ",
+      "කඹුරුපිටිය",
+      "කිරින්ද පුහුල්වැල්ල",
+      "කොටපොළ",
+      "මාතර",
     ],
     Hambantota: [
-      "අඟුණකොලපැලැස්ස", "අම්බලන්තොට", "බෙලිඅත්ත", "හම්බන්තොට", "කටුවන",
-      "ලුණුගම්වෙහෙර", "ඕකෙවෙල", "සූරියවැව", "තංගල්ල", "තිස්සමහාරාමය",
-      "වලස්මුල්ල", "වීරකැටිය"
+      "අඟුණකොලපැලැස්ස",
+      "අම්බලන්තොට",
+      "බෙලිඅත්ත",
+      "හම්බන්තොට",
+      "කටුවන",
+      "ලුණුගම්වෙහෙර",
+      "ඕකෙවෙල",
+      "සූරියවැව",
+      "තංගල්ල",
+      "තිස්සමහාරාමය",
+      "වලස්මුල්ල",
+      "වීරකැටිය",
     ],
   };
 
@@ -174,6 +214,17 @@ export default function SignUp() {
     setError("");
 
     try {
+      // Check if this position already exists
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("position", "==", formData.position));
+      const existing = await getDocs(q);
+
+      if (!existing.empty) {
+        setError("මෙම තනතුර සඳහා පරිශීලකයෙකු දැනටමත් ලියාපදිංචි වී ඇත.");
+        return;
+      }
+
+      // Save new user
       await addDoc(collection(db, "users"), {
         position: formData.position,
         district: selectedDistrict,
@@ -200,18 +251,21 @@ export default function SignUp() {
         <h2 className="signup-title">Create Account</h2>
 
         <form onSubmit={handleSubmit} className="signup-form">
-
           {/* POSITION */}
           <label>Position</label>
-          <select name="position" value={formData.position} onChange={handleChange} required>
+          <select
+            name="position"
+            value={formData.position}
+            onChange={handleChange}
+            required
+          >
             <option value="">තනතුර තෝරන්න</option>
 
             <option value="chairman">පලාත් සංවර්ධන අධ්‍යක්ශක</option>
             <option value="districtOfficer">දිස්ත්‍රික් නිලධාරී</option>
             <option value="subjectOfficer">විෂය භාර නිලධාරී</option>
-
             <option value="village_officer">ග්‍රාම සංවර්ධන නිලධාරී</option>
-
+            <option value="divisional_secretary">ප්‍රාදේශීය ලේකම්</option>
             <option value="society_chairman">සමිති සභාපති</option>
             <option value="society_treasurer">සමිති භාණ්ඩාගාරික</option>
             <option value="society_secretary">සමිති ලේකම්</option>
@@ -258,7 +312,9 @@ export default function SignUp() {
                 <option value="">Select Division</option>
                 {selectedDistrict &&
                   districtData[selectedDistrict].map((div, idx) => (
-                    <option value={div} key={idx}>{div}</option>
+                    <option value={div} key={idx}>
+                      {div}
+                    </option>
                   ))}
               </select>
             </>
@@ -288,7 +344,9 @@ export default function SignUp() {
                 <option value="">Select Division</option>
                 {selectedDistrict &&
                   districtData[selectedDistrict].map((div, idx) => (
-                    <option value={div} key={idx}>{div}</option>
+                    <option value={div} key={idx}>
+                      {div}
+                    </option>
                   ))}
               </select>
 
@@ -300,7 +358,9 @@ export default function SignUp() {
               >
                 <option value="">Select Society</option>
                 {societies.map((soc, idx) => (
-                  <option key={idx} value={soc}>{soc}</option>
+                  <option key={idx} value={soc}>
+                    {soc}
+                  </option>
                 ))}
               </select>
             </>
@@ -308,26 +368,64 @@ export default function SignUp() {
 
           {/* USER FIELDS */}
           <label>Username</label>
-          <input type="text" name="username" value={formData.username} onChange={handleChange} required />
+          <input
+            type="text"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            required
+          />
 
           <label>Email</label>
-          <input type="email" name="email" value={formData.email} onChange={handleChange} required />
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
 
           <label>Contact Number</label>
-          <input type="tel" name="contactnumber" value={formData.contactnumber} onChange={handleChange} required />
+          <input
+            type="tel"
+            name="contactnumber"
+            value={formData.contactnumber}
+            onChange={handleChange}
+            required
+          />
 
           <label>Identity Number</label>
-          <input type="text" name="identitynumber" value={formData.identitynumber} onChange={handleChange} required />
+          <input
+            type="text"
+            name="identitynumber"
+            value={formData.identitynumber}
+            onChange={handleChange}
+            required
+          />
 
           <label>Password</label>
-          <input type="password" name="password" value={formData.password} onChange={handleChange} required />
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
 
           <label>Confirm Password</label>
-          <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required />
+          <input
+            type="password"
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            required
+          />
 
           {error && <p className="error-text">{error}</p>}
 
-          <button type="submit" className="signup-submit-btn">Sign Up</button>
+          <button type="submit" className="signup-submit-btn">
+            Sign Up
+          </button>
         </form>
       </div>
     </div>
