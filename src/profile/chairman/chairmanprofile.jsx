@@ -2,8 +2,11 @@ import React, { useEffect, useState } from "react";
 import { db } from "../../firebase.js";
 import { doc, getDoc } from "firebase/firestore";
 import "./chairmanprofile.css";
+import { useNavigate } from "react-router-dom";
 
 const Chairmanprofile = () => {
+  const navigate = useNavigate();
+
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -74,10 +77,18 @@ const Chairmanprofile = () => {
     ]);
   }, []);
 
+  const handleSignOut = () => {
+    const confirmed = window.confirm("Do you really want to sign out?");
+    if (!confirmed) return;
+
+    localStorage.removeItem("userId");
+    setUser(null);
+    navigate("/login");
+  };
+
   if (loading) return <p style={{ textAlign: "center" }}>Loading...</p>;
   if (!user) return <p style={{ textAlign: "center" }}>User not found</p>;
 
-  // Example dashboard counts (you can compute from real data)
   const totalPending = requestedLetters.length;
   const totalHistory = historyLetters.length;
   const approvedCount = historyLetters.filter(
@@ -89,6 +100,14 @@ const Chairmanprofile = () => {
       <div className="dashboard-shell">
         {/* SIDEBAR */}
         <aside className="dashboard-sidebar">
+          {/* header with sign out */}
+          <div className="sidebar-header">
+            <h2 className="sidebar-title">Chairman</h2>
+            <button className="signout-btn" onClick={handleSignOut}>
+              Sign Out
+            </button>
+          </div>
+
           <div className="sidebar-profile-card">
             <div className="sidebar-avatar">
               <img

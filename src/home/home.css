@@ -1,118 +1,261 @@
-/* ==============================
-   Home Page Background Section
-   ============================== */
+/* ========= PAGE WRAPPER ========= */
 
-.home-container {
+.home-page {
+  margin: 0;
+  padding: 0;
+}
+
+/* ========= HERO SECTION ========= */
+
+.home-hero {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  min-height: 100vh; /* full viewport height */
+  min-height: 80vh;
+  padding-top: 80px; /* space under fixed navbar */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  color: #fff;
-  overflow: hidden;
-}
-
-/* ✅ Dark overlay to make text readable */
-.home-container .overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.45); /* darken the background */
-  z-index: 1;
-}
-
-/* ✅ Text container on top of overlay */
-.right-container {
-  position: relative;
-  z-index: 2;
-  max-width: 700px;
-  padding: 2rem;
-}
-
-.page-title {
-  font-size: 2.2rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-  color: #ffffff;
-}
-
-p {
-  font-size: 1.1rem;
-  line-height: 1.6;
-}
-
-/* ✅ Primary Button */
-.primary-btn {
-  display: inline-block;
-  background: linear-gradient(135deg, #1565c0, #42a5f5);
-  color: #fff;
-  padding: 12px 28px;
-  border-radius: 25px;
-  text-decoration: none;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-}
-
-.primary-btn:hover {
-  background: linear-gradient(135deg, #0d47a1, #1e88e5);
-  transform: translateY(-3px);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-}
-
-/* ✅ Login Button */
-.login-btn {
-  display: inline-block;
-  background: linear-gradient(135deg, #1565c065, #42a4f594);
-  color: #ffffff;
-  padding: 12px 28px;
-  border-radius: 25px;
-  text-decoration: none;
-  font-weight: 600;
-  margin-left: 15px;
-  transition: all 0.3s ease;
-  border: 2px solid #ffffff;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-
-
-}
-
-.login-btn:hover {
-  background: linear-gradient(135deg, #0d47a1, #1e88e5);
-  transform: translateY(-3px);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
-}
-
-/* ✅ Button Group */
-.button-group {
-  margin-top: 20px;
+  color: #f9fafb;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
 }
 
-/* ✅ Responsive */
-@media (max-width: 768px) {
-  .page-title {
-    font-size: 1.6rem;
+.home-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    rgba(6, 20, 41, 0.95),
+    rgba(17, 68, 148, 0.85),
+    rgba(21, 128, 61, 0.65)
+  );
+  z-index: 1;
+}
+
+.home-hero-inner {
+  position: relative;
+  z-index: 2;
+  max-width: 1200px;
+  width: 100%;
+  padding: 24px 20px 40px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 32px;
+  box-sizing: border-box;
+}
+
+/* Left side text */
+.home-hero-text {
+  max-width: 640px;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.8);
+  color: #e5e7eb;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.hero-title {
+  font-size: 2.3rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0 0 12px;
+  color: #f9fafb;
+}
+
+.hero-title span {
+  display: block;
+  font-size: 1.6rem;
+  font-weight: 500;
+  color: #cbd5f5;
+}
+
+.hero-subtitle {
+  font-size: 1.02rem;
+  line-height: 1.8;
+  color: #e5f2ff;
+  margin: 0 0 16px;
+}
+
+/* Actions */
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.hero-note {
+  margin-top: 14px;
+  font-size: 0.9rem;
+  color: #e2f3e9;
+}
+
+/* ========= HERO BUTTONS ========= */
+
+/* Main CTA */
+.primary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #16a34a, #22c55e); /* green */
+  color: #ffffff;
+  padding: 12px 26px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: none;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease-out,
+    box-shadow 0.2s ease-out,
+    filter 0.2s ease-out;
+  box-shadow: 0 6px 16px rgba(22, 163, 74, 0.6);
+  white-space: nowrap;
+}
+
+.primary-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+  box-shadow: 0 10px 22px rgba(21, 128, 61, 0.8);
+}
+
+/* Secondary CTA */
+.login-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #e5f2ff;
+  padding: 12px 26px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: 2px solid rgba(191, 219, 254, 0.9);
+  cursor: pointer;
+  transition:
+    transform 0.2s ease-out,
+    box-shadow 0.2s ease-out,
+    background 0.2s ease-out,
+    color 0.2s ease-out;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.5);
+  white-space: nowrap;
+}
+
+.login-btn:hover {
+  background: linear-gradient(135deg, #1d4ed8, #0f172a);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.8);
+}
+
+/* Right side glass card */
+.home-hero-image-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-glass-card {
+  width: 100%;
+  max-width: 360px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.78);
+  box-shadow: 0 18px 35px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(148, 163, 184, 0.6);
+}
+
+.image-glass-card h3 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #facc15; /* gold accent */
+}
+
+.image-glass-card p {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+  color: #e5f0ff;
+}
+
+.image-glass-card ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.9rem;
+  color: #cbd5f5;
+}
+
+.image-glass-card li {
+  margin-bottom: 4px;
+}
+
+/* ========= MAIN SECTIONS ========= */
+
+.home-main {
+  background: #f3f4ff;
+  padding: 30px 0 0;
+}
+
+.home-section {
+  padding: 10px 0 30px;
+}
+
+/* ========= RESPONSIVE ========= */
+
+@media (max-width: 900px) {
+  .home-hero-inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
   }
-  p {
-    font-size: 1rem;
+
+  .home-hero {
+    min-height: 100vh;
   }
-  .button-group {
+
+  .home-hero-text {
+    max-width: 100%;
+  }
+
+  .home-hero-image-panel {
+    display: none; /* hide glass card on smaller screens for simplicity */
+  }
+}
+
+@media (max-width: 600px) {
+  .hero-title {
+    font-size: 1.9rem;
+  }
+
+  .hero-title span {
+    font-size: 1.35rem;
+  }
+
+  .hero-subtitle {
+    font-size: 0.96rem;
+  }
+
+  .hero-actions {
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
   }
+
+  .primary-btn,
   .login-btn {
-    margin-left: 0;
+    width: 100%;
+    max-width: 260px;
+    text-align: center;
+    margin: 0 auto;
   }
 }

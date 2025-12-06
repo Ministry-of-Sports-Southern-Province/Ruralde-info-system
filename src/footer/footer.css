@@ -1,12 +1,12 @@
 /* === Footer Base === */
 .footer {
-  background: linear-gradient(135deg, #0a1a5c, #1c6dd0);
+  background: linear-gradient(135deg, #020617, #0f172a, #114494);
   color: #f1f5f9;
-  padding: 60px 0 30px; /* ⬅️ Removed left/right padding that caused extra space */
+  padding: 60px 0 30px;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 -4px 20px rgba(6, 20, 41, 0.45);
   width: 100%;
-  overflow-x: hidden; /* ✅ Hide horizontal scrollbar */
+  overflow-x: hidden;
 }
 
 /* === Footer Container === */
@@ -17,17 +17,17 @@
   flex-wrap: wrap;
   gap: 40px;
 
-  max-width: 1200px; /* ✅ Consistent centered width */
+  max-width: 1200px;
   width: 100%;
   margin: 0 auto;
-  padding: 0 20px; /* ✅ Balanced internal spacing */
+  padding: 0 20px;
   box-sizing: border-box;
 }
 
 /* === Left Section (About) === */
 .footer-left {
   flex: 1;
-  padding-left: 70px;
+  padding-left: 40px;
   min-width: 250px;
 }
 
@@ -35,11 +35,11 @@
   font-size: 22px;
   margin-bottom: 15px;
   color: #ffffff;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
 }
 
 .footer-left p {
-  color: #dbe2ef;
+  color: #cbd5f5;
   font-size: 15px;
   line-height: 1.7;
 }
@@ -73,7 +73,6 @@
 .footer-right {
   flex: 1;
   min-width: 250px;
- 
 }
 
 .footer-right h3 {
@@ -101,28 +100,28 @@
 }
 
 .social-icons li a:hover {
-  color: #ffffff;
+  color: #fbbf24; /* warm gold accent */
   transform: translateX(5px);
 }
 
 /* === Footer Bottom === */
 .footer-bottom {
   text-align: center;
-  margin-top: 50px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  margin-top: 40px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(148, 163, 184, 0.5);
   font-size: 14px;
-  color: #dbe2ef;
+  color: #cbd5f5;
 }
 
 .footer-bottom a {
-  color: #f9fafb;
+  color: #e5f2ff;
   text-decoration: none;
   transition: color 0.3s ease;
 }
 
 .footer-bottom a:hover {
-  color: #ffd700;
+  color: #fbbf24;
 }
 
 .footer-bottom .highlight {
@@ -130,8 +129,9 @@
   font-weight: 700;
 }
 
-/* === Global Fix (no scroll) === */
-html, body {
+/* === Global Fix (no horizontal scroll) === */
+html,
+body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
@@ -143,14 +143,14 @@ html, body {
     flex-direction: column;
     align-items: center;
     text-align: center;
-   padding-right: 90px;
-    
+    padding: 0 16px;
   }
 
   .footer-left,
   .footer-center,
   .footer-right {
     min-width: 100%;
+    padding-left: 0;
   }
 
   .social-icons li {

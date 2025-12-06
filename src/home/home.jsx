@@ -8,50 +8,83 @@ import Footer from "../footer/footer";
 
 export default function Home() {
   return (
-    <div className="page container">
-      {/* ✅ Hero Section with Background Image */}
-      <div
-        className="home-container"
-        style={{
-          backgroundImage: `url(${backgroundImage})`,
-        }}
+    <div className="home-page">
+      {/* ========= HERO SECTION ========= */}
+      <section
+        className="home-hero"
+        style={{ backgroundImage: `url(${backgroundImage})` }}
       >
-        {/* Overlay for readability */}
-        <div className="overlay"></div>
+        <div className="home-hero-overlay" />
 
-        {/* ✅ Text Section */}
-        <div className="right-container">
-          <h1 className="page-title">ආරම්භක පිටුව / Home</h1>
-          <p>
-            Welcome to the <strong>Grama Samurdhi Portal</strong>. Discover
-            services, community resources, and forms that help you take action
-            easily.
-          </p>
+        <div className="home-hero-inner">
+          {/* Left: text content */}
+          <div className="home-hero-text">
+            <div className="hero-badge">
+              දක්ෂිණ පළාත – ග්‍රාම සංවර්ධන දෙපාර්තමේන්තුව
+            </div>
 
-          <div className="button-group">
-            <Link to="/startup" className="primary-btn">
-              Get Started
-            </Link>
+            <h1 className="hero-title">
+              Grama Samurdhi
+              <span> Rural Development Management System</span>
+            </h1>
 
-             <Link to="/login" className="login-btn">
-              Login
-            </Link>
+            <p className="hero-subtitle">
+              A unified platform to coordinate <strong>provincial, district,</strong>{" "}
+              and <strong>village‑level</strong> rural development activities in
+              the Southern Province, improving transparency and service delivery
+              to rural communities.
+            </p>
+
+            <div className="hero-actions">
+              <Link to="/startup" className="primary-btn">
+                Get Started
+              </Link>
+
+              <Link to="/login" className="login-btn">
+                Login to Your Account
+              </Link>
+            </div>
+
+            <p className="hero-note">
+              සේවා වින්දීමට සහ ඔබගේ ග්‍රාම සංවර්ධන යෝජනා ඉදිරිපත් කිරීමට{" "}
+              <strong>ඔබගේ ගිණුමෙන් පිවිසෙන්න.</strong>
+            </p>
+          </div>
+
+          {/* Right: subtle image panel (optional, can be hidden on mobile) */}
+          <div className="home-hero-image-panel">
+            <div className="image-glass-card">
+              <h3>Southern Province Focus</h3>
+              <p>
+                Covering <strong>Galle</strong>, <strong>Matara</strong>, and{" "}
+                <strong>Hambantota</strong> districts with district officers,
+                subject officers, and village‑level societies connected through
+                one system.
+              </p>
+              <ul>
+                <li>Streamlined project approvals</li>
+                <li>Centralized society records</li>
+                <li>Improved monitoring & reporting</li>
+              </ul>
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* ✅ About and Contact Sections */}
-      <section id="about-section">
-        <About />
       </section>
 
-      <section id="contact-section">
-        <Contact />
-      </section>
+      {/* ========= MAIN SECTIONS ========= */}
+      <main className="home-main">
+        <section id="about-section" className="home-section">
+          <About />
+        </section>
 
-      <section id="footer-section">
+        <section id="contact-section" className="home-section">
+          <Contact />
+        </section>
+      </main>
+
+      <footer id="footer-section">
         <Footer />
-      </section>
+      </footer>
     </div>
   );
 }

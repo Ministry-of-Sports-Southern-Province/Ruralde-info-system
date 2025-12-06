@@ -2,8 +2,11 @@ import React, { useEffect, useState } from "react";
 import { db } from "../../firebase.js";
 import { doc, getDoc } from "firebase/firestore";
 import "../subject/subject.css";
+import { useNavigate } from "react-router-dom";
 
 const Subject = () => {
+  const navigate = useNavigate();
+
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -11,6 +14,9 @@ const Subject = () => {
   const [requestedLetters, setRequestedLetters] = useState([]);
   const [historyLetters, setHistoryLetters] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
+
+  // NEW: state for custom sign-out modal
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -75,6 +81,22 @@ const Subject = () => {
     ]);
   }, []);
 
+  // open modal instead of direct logout
+  const handleSignOutClick = () => {
+    setShowSignOutModal(true);
+  };
+
+  const handleConfirmSignOut = () => {
+    localStorage.removeItem("userId");
+    setUser(null);
+    setShowSignOutModal(false);
+    navigate("/login");
+  };
+
+  const handleCancelSignOut = () => {
+    setShowSignOutModal(false);
+  };
+
   if (loading) return <p className="loading-text">Loading profile...</p>;
   if (error) return <p className="error-text">{error}</p>;
   if (!user) return null;
@@ -87,9 +109,44 @@ const Subject = () => {
 
   return (
     <div className="subject-dashboard">
+      {/* SIGN OUT MODAL */}
+      {showSignOutModal && (
+        <div className="modal-backdrop">
+          <div className="modal-card">
+            <h3 className="modal-title">Confirm Sign Out</h3>
+            <p className="modal-message">
+              Are you sure you want to sign out from your account?
+            </p>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="modal-btn modal-btn-cancel"
+                onClick={handleCancelSignOut}
+              >
+                No, Stay Logged In
+              </button>
+              <button
+                type="button"
+                className="modal-btn modal-btn-confirm"
+                onClick={handleConfirmSignOut}
+              >
+                Yes, Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="subject-shell">
         {/* SIDEBAR */}
         <aside className="subject-sidebar">
+          <div className="sidebar-header">
+            <h2 className="sidebar-title">Subject Officer</h2>
+            <button className="signout-btn" onClick={handleSignOutClick}>
+              Sign Out
+            </button>
+          </div>
+
           <div className="sidebar-profile-card">
             <div className="sidebar-avatar">
               <img
@@ -113,7 +170,8 @@ const Subject = () => {
                 <strong>Society:</strong> {user.society || "N/A"}
               </p>
               <p>
-                <strong>Contact:</strong> {user.contactnumber}</p>
+                <strong>Contact:</strong> {user.contactnumber}
+              </p>
               <p>
                 <strong>Email:</strong> {user.email}
               </p>
@@ -167,9 +225,7 @@ const Subject = () => {
                         <p className="letter-sub">
                           Society: {letter.society}
                         </p>
-                        <p className="letter-sub">
-                          Date: {letter.date}
-                        </p>
+                        <p className="letter-sub">Date: {letter.date}</p>
                       </div>
                       <span
                         className={`badge ${
@@ -242,9 +298,7 @@ const Subject = () => {
                           <p className="letter-sub">
                             Society: {letter.society}
                           </p>
-                          <p className="letter-sub">
-                            Date: {letter.date}
-                          </p>
+                          <p className="letter-sub">Date: {letter.date}</p>
                         </div>
                         <span
                           className={`badge ${
