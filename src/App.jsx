@@ -22,7 +22,7 @@ import Startup from "./startup/startup";
 import Login from "./login/login";
 import SignUp from "./login/signup";
 import Footer from "./footer/footer";
-
+import Project from "./projects/project";
 function App() {
   return (
     <BrowserRouter>
@@ -51,6 +51,7 @@ function App() {
         <Route path="/districtOfficer" element={<DistrictOfficer />}></Route>
         <Route path="/societyOfficer" element={<SocietyOfficer />}></Route>
         <Route path="/subject" element={<Subject />}></Route>
+        <Route path="/project" element={<Project />}></Route>
 
         <Route path="/"></Route>
 

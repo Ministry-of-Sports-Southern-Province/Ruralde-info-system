@@ -131,6 +131,9 @@ export default function Navbar() {
           <Link to="/about" onClick={() => setMenuOpen(false)}>
             About
           </Link>
+ <Link to="/project" onClick={() => setMenuOpen(false)}>
+           Our Projects
+          </Link>
 
           {/* Applications dropdown */}
           <div

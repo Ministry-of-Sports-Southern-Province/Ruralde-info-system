@@ -5,6 +5,7 @@ import backgroundImage from "../assets/dp 05.jpg";
 import About from "../about/about";
 import Contact from "../contact/contact";
 import Footer from "../footer/footer";
+import Project from "../projects/project";
 
 export default function Home() {
   return (
@@ -75,6 +76,10 @@ export default function Home() {
       <main className="home-main">
         <section id="about-section" className="home-section">
           <About />
+        </section>
+
+<section id="project-section" className="home-section">
+          <Project />
         </section>
 
         <section id="contact-section" className="home-section">
