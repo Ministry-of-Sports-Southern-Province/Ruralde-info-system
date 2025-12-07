@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "../startup/startup.css";
 
-import { db } from "../firebase"; // adjust path if needed
+import { db } from "../firebase";
 import { collection, getDocs } from "firebase/firestore";
 
 const Startup = () => {
@@ -179,21 +179,18 @@ const Startup = () => {
         const list = snapshot.docs.map((doc) => {
           const data = doc.data();
 
-          // Try multiple keys for the society name
           const name =
             data["සමිතියේ නම"] ||
             data["ග්‍රාම සංවර්ධන සමිතිය"] ||
             data["ග්‍රාම නිලධාරී වසම"] ||
-            data["name"] || // optional generic field
-            doc.id; // last fallback
+            data["name"] ||
+            doc.id;
 
-          // Registration number: key is exactly "ලි.ප.අ"
           const regNo = data["ලි.ප.අ"] || "";
 
           return { id: doc.id, name, regNo };
         });
 
-        console.log("Loaded societies for", selectedDistrict, selectedSecretary, list);
         setSocieties(list);
         setSelectedSocietyId("");
         setRegistrationNumber("");
@@ -211,102 +208,117 @@ const Startup = () => {
   const handleSocietyChange = (id) => {
     setSelectedSocietyId(id);
     const found = societies.find((s) => s.id === id);
-    console.log("Chosen society:", found);
     setRegistrationNumber(found?.regNo || "");
   };
 
   return (
-    <div className="develop-container">
-      <h2 className="form-title">ග්‍රාම සංවර්ධන සමිතිය සඳහා අයදුම් කිරීම</h2>
+    <section className="develop-wrapper">
+      <div className="develop-container">
+        <h2 className="form-title">
+          ග්‍රාම සංවර්ධන සමිතිය සඳහා අයදුම් කිරීම
+          <span className="form-subtitle">
+            / Application for Rural Development Society
+          </span>
+        </h2>
 
-      <form className="develop-form">
-        {/* District */}
-        <div className="form-group">
-          <label>01. දිස්ත්රික්කය:</label>
-          <select
-            value={selectedDistrict}
-            onChange={(e) => handleDistrictChange(e.target.value)}
-          >
-            <option value="">තෝරන්න</option>
-            {Object.keys(districtData).map((district) => (
-              <option key={district} value={district}>
-                {district === "Galle"
-                  ? "ගාල්ල"
-                  : district === "Matara"
-                  ? "මාතර"
-                  : "හම්බන්තොට"}
-              </option>
-            ))}
-          </select>
-        </div>
+        <p className="form-intro">
+          කරුණාකර පහත තොරතුරු නිවැරදිව පිළිතුරු දී{" "}
+          <strong>දිස්ත්‍රික්කය, ප්‍රාදේශීය ලේකම් කොට්ඨාසය</strong> සහ{" "}
+          <strong>සමිතියේ ලියාපදිංචි අංකය</strong> තහවුරු කරගන්න. පසුนั้น
+          ඔබට අවශ්‍ය සේවාව තෝරා ගත හැක.
+        </p>
 
-        {/* Secretary Division */}
-        <div className="form-group">
-          <label>02. ප්‍රාදේශීය ලේකම් කොට්ඨාසය:</label>
-          <select
-            value={selectedSecretary}
-            onChange={(e) => setSelectedSecretary(e.target.value)}
-            disabled={!selectedDistrict}
-          >
-            <option value="">තෝරන්න</option>
-            {selectedDistrict &&
-              districtData[selectedDistrict].map((sec, idx) => (
-                <option key={idx} value={sec}>
-                  {sec}
+        <form className="develop-form">
+          {/* District */}
+          <div className="form-group">
+            <label>01. දිස්ත්රික්කය:</label>
+            <select
+              value={selectedDistrict}
+              onChange={(e) => handleDistrictChange(e.target.value)}
+            >
+              <option value="">තෝරන්න</option>
+              {Object.keys(districtData).map((district) => (
+                <option key={district} value={district}>
+                  {district === "Galle"
+                    ? "ගාල්ල"
+                    : district === "Matara"
+                    ? "මාතර"
+                    : "හම්බන්තොට"}
                 </option>
               ))}
-          </select>
-        </div>
+            </select>
+          </div>
 
-        {/* Society Name */}
-        <div className="form-group">
-          <label>03. ග්‍රාම සංවර්ධන සමිතියේ නම:</label>
-          <select
-            value={selectedSocietyId}
-            onChange={(e) => handleSocietyChange(e.target.value)}
-            disabled={
-              !selectedDistrict ||
-              !selectedSecretary ||
-              societies.length === 0
-            }
-          >
-            <option value="">තෝරන්න</option>
-            {societies.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </div>
+          {/* Secretary Division */}
+          <div className="form-group">
+            <label>02. ප්‍රාදේශීය ලේකම් කොට්ඨාසය:</label>
+            <select
+              value={selectedSecretary}
+              onChange={(e) => setSelectedSecretary(e.target.value)}
+              disabled={!selectedDistrict}
+            >
+              <option value="">තෝරන්න</option>
+              {selectedDistrict &&
+                districtData[selectedDistrict].map((sec, idx) => (
+                  <option key={idx} value={sec}>
+                    {sec}
+                  </option>
+                ))}
+            </select>
+          </div>
 
-        {/* Registration Number */}
-        <div className="form-group">
-          <label>04. ලියාපදිංචි අංකය:</label>
-          <input
-            type="text"
-            placeholder="Registration Number"
-            value={registrationNumber}
-            readOnly
-          />
-        </div>
+          {/* Society Name */}
+          <div className="form-group">
+            <label>03. ග්‍රාම සංවර්ධන සමිතියේ නම:</label>
+            <select
+              value={selectedSocietyId}
+              onChange={(e) => handleSocietyChange(e.target.value)}
+              disabled={
+                !selectedDistrict ||
+                !selectedSecretary ||
+                societies.length === 0
+              }
+            >
+              <option value="">තෝරන්න</option>
+              {societies.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* Services */}
-        <h5>
-          කරුණාකර පහත සඳහන් සේවාවන් අතරින් ඔබට අවශ්‍ය සේවාව තෝරා ගන්න:
-        </h5>
-        <div className="service-links">
-          <Link to="/student" className="service-button">
-            1. "ගැමිසෙත" ශිෂ්‍යත්වය සඳහා අයදුම් කිරීම
-          </Link>
-          <Link to="/develop" className="service-button">
-            2. මුදල් නිදහස් කර ගැනීමට අයදුම් කිරීම
-          </Link>
-          <Link to="/society" className="service-button">
-            3. ණය සඳහා අයදුම් කිරීම
-          </Link>
-        </div>
-      </form>
-    </div>
+          {/* Registration Number */}
+          <div className="form-group">
+            <label>04. ලියාපදිංචි අංකය:</label>
+            <input
+              type="text"
+              placeholder="Registration Number"
+              value={registrationNumber}
+              readOnly
+            />
+          </div>
+
+          {/* Services */}
+          <div className="services-block">
+            <h5 className="services-title">
+              කරුණාකර පහත සඳහන් සේවාවන් අතරින් ඔබට අවශ්‍ය සේවාව තෝරා ගන්න:
+            </h5>
+            <div className="service-links">
+              <Link to="/student" className="service-button">
+                1. "ගැමිසෙත" ශිෂ්‍යත්වය සඳහා අයදුම් කිරීම
+              </Link>
+              <Link to="/develop" className="service-button">
+                2. මුදල් නිදහස් කර ගැනීමට අයදුම් කිරීම
+              </Link>
+              <Link to="/society" className="service-button">
+                3. ණය සඳහා අයදුම් කිරීම
+              </Link>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
   );
 };
 

@@ -1,250 +1,213 @@
-/* member.css - Professional Blue Theme */
-
-/* Container */
-.member-container {
-  max-width: 1000px;
-  margin: 30px auto;
-  padding: 30px;
-  background: linear-gradient(135deg, #e3f2fd, #ffffff);
-  border-radius: 16px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #333;
+/* Wrapper */
+.member-wrapper {
+  width: 100%;
+  padding: 80px 20px 60px;
+  margin-top: 80px;
+  background: #eef2ff;
 }
 
-/* Title */
+/* Main card */
+.member-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow:
+    0 18px 35px rgba(15, 23, 42, 0.15),
+    0 0 0 1px rgba(148, 163, 184, 0.25);
+  padding: 26px 26px 30px;
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Header */
+.member-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
 .member-title {
   text-align: center;
-  font-size: 20px;
-  font-weight: 800;
-  margin-bottom: 30px;
-  color: #1565c0;
-  text-transform: uppercase;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #114494;
+  margin: 4px 0 8px;
+}
+
+.member-intro {
+  text-align: center;
+  font-size: 0.95rem;
+  color: #4b5563;
+  margin-bottom: 18px;
 }
 
 /* Table */
+.member-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 10px;
+}
+
 .member-table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 30px;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  min-width: 900px; /* allows horizontal scroll on small screens */
 }
 
 .member-table th,
 .member-table td {
-  border: 1px solid #90caf9;
-  padding: 12px 15px;
-  text-align: center;
-  font-size: 0.95rem;
+  border: 1px solid #e5e7eb;
+  padding: 6px 8px;
+  font-size: 0.9rem;
+  text-align: left;
 }
 
 .member-table th {
-  background: linear-gradient(135deg, #1976d2, #42a5f5);
-  color: #fff;
-  font-weight: 700;
-  text-transform: uppercase;
+  background: #e5edff;
+  color: #0f172a;
+  font-weight: 600;
 }
 
-.member-table tr:nth-child(even) {
-  background-color: #e3f2fd;
-}
-
-.member-table tr:hover {
-  background-color: #bbdefb;
-  transition: 0.3s;
-}
-
-/* Inputs inside table */
 .member-table input {
-  width: 95%;
-  padding: 8px 10px;
-  border: 1px solid #90caf9;
+  width: 100%;
+  padding: 5px 6px;
   border-radius: 6px;
-  font-size: 0.95rem;
+  border: 1px solid #d1d5db;
+  font-size: 0.9rem;
   outline: none;
-  box-sizing: border-box;
-  transition: all 0.25s ease-in-out;
-  text-align: center;
 }
 
 .member-table input:focus {
-  border-color: #1565c0;
-  box-shadow: 0 0 6px rgba(25, 118, 210, 0.4);
+  border-color: #2563eb;
 }
 
-/* --- Add/Delete Buttons --- */
+/* Table Actions */
 .table-actions {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
+  margin: 8px 0 16px;
+  text-align: right;
+}
+
+.add-btn,
+.delete-btn {
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.85rem;
+  cursor: pointer;
 }
 
 .add-btn {
-  padding: 10px 18px;
-  background: linear-gradient(135deg, #43a047, #66bb6a);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
-  transition: all 0.3s ease;
+  background: #16a34a;
+  color: #ffffff;
 }
 
 .add-btn:hover {
-  background: linear-gradient(135deg, #2e7d32, #388e3c);
-  transform: translateY(-2px);
+  background: #15803d;
 }
 
 .delete-btn {
-  background: #e53935;
-  border: none;
-  color: #fff;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s;
+  background: #ef4444;
+  color: #ffffff;
 }
 
 .delete-btn:hover {
-  background: #c62828;
+  background: #b91c1c;
 }
 
-/* Certification Paragraph */
-.certification p {
-  margin-top: 20px;
-  margin-bottom: 20px;
-  line-height: 1.6;
-  font-size: 1rem;
-  color: #333;
+/* Certification text */
+.certification {
+  margin-top: 16px;
+  font-size: 0.93rem;
+  color: #374151;
+  line-height: 1.7;
 }
 
-/* Signature Section */
-.signature-section,
-.final-signature {
+/* Signature sections */
+.signature-section {
   display: flex;
+  gap: 16px;
   flex-wrap: wrap;
-  justify-content: space-between;
-  margin-top: 25px;
-  gap: 25px;
+  margin: 14px 0 10px;
 }
 
 .signature-field {
+  flex: 1;
+  min-width: 180px;
   text-align: center;
-  flex: 1 1 22%;
-  margin: 10px 10px 0 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  font-size: 0.9rem;
+  color: #0f172a;
 }
 
 .signature-line {
-  width: 200px;
-  height: 2px;
-  border-bottom: 2px dotted #1565c0;
-  margin: 8px auto;
+  height: 1px;
+  background: #9ca3af;
+  margin-bottom: 4px;
 }
 
-/* Date Input for Signature Fields */
 .date-input {
-  width: 130px;
-  text-align: center;
-  padding: 6px 8px;
-  font-size: 0.9rem;
-  border: 1.5px solid #1565c0;
+  margin-top: 4px;
+  width: 100%;
+  max-width: 140px;
+  padding: 4px 6px;
+  font-size: 0.85rem;
   border-radius: 6px;
-  background-color: #f9f9ff;
-  margin-top: 6px;
-  transition: 0.25s;
+  border: 1px solid #d1d5db;
 }
 
-.date-input:focus {
-  border-color: #1976d2;
-  box-shadow: 0 0 6px rgba(25, 118, 210, 0.4);
-  outline: none;
-}
-
-.date-input::placeholder {
-  color: #999;
-  font-style: italic;
-}
-
-/* Final Signature */
+/* Final signature */
 .final-signature {
-  flex-direction: column;
-  align-items: center;
-  margin-top: 25px;
+  margin-top: 12px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #0f172a;
 }
 
 .final-signature .signature-line {
-  width: 250px;
+  margin: 0 auto 4px;
+  width: 200px;
 }
 
-/* Submit Button */
+/* Submit button */
 .submit-btn-container {
+  margin-top: 16px;
   text-align: center;
-  margin-top: 30px;
 }
 
 .submit-btn {
-  padding: 12px 35px;
-  font-size: 1rem;
-  font-weight: 700;
-  color: #fff;
-  background: linear-gradient(135deg, #1976d2, #42a5f5);
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: #ffffff;
+  padding: 9px 26px;
+  border-radius: 999px;
   border: none;
-  border-radius: 10px;
+  font-size: 0.96rem;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 5px 15px rgba(25, 118, 210, 0.3);
-  transition: all 0.3s ease;
-  text-transform: uppercase;
+  box-shadow: 0 6px 16px rgba(22, 163, 74, 0.6);
+  transition: all 0.2s ease;
 }
 
 .submit-btn:hover {
-  background: linear-gradient(135deg, #1565c0, #1e88e5);
+  background: linear-gradient(135deg, #15803d, #22c55e);
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(25, 118, 210, 0.4);
 }
 
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .member-table th,
-  .member-table td {
-    padding: 10px 8px;
-    font-size: 0.9rem;
+/* Responsive */
+@media (max-width: 768px) {
+  .member-wrapper {
+    padding: 60px 12px 40px;
+    margin-top: 70px;
   }
 
-  .signature-field {
-    flex: 1 1 45%;
-    margin-bottom: 15px;
-  }
-
-  .signature-line {
-    width: 150px;
-  }
-}
-
-@media (max-width: 600px) {
   .member-container {
-    padding: 20px;
+    padding: 22px 14px 24px;
   }
 
   .member-title {
-    font-size: 1.3rem;
-  }
-
-  .submit-btn {
-    width: 100%;
-    padding: 12px 0;
-  }
-
-  .date-input {
-    width: 100%;
+    font-size: 1.4rem;
   }
 }
