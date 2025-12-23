@@ -6,8 +6,6 @@ import {
   collection,
   addDoc,
   getDocs,
-  query,
-  where,
   serverTimestamp,
 } from "firebase/firestore";
 
@@ -37,6 +35,44 @@ const divisionIdMap = {
   "හික්කඩුව": "hikkaduwa",
   "හම්බන්තොට": "hambantota",
   // TODO: add all actual division ids you use
+};
+
+// === RURAL DEVELOPMENT OFFICERS (LOCAL MAPPING) ===
+// You MUST fill this with real data for each division you use.
+const ruralDevOfficers = {
+  Galle: {
+    "අක්මීමණ": {
+      name: "රූරාල් ඩෙව්. නිලධාරි - අක්මීමණ",
+      phone: "07X-XXXXXXX",
+      email: "akmeemana.rdo@example.com",
+      officeAddress: "අක්මීමණ ප්‍රාදේශීය ලේකම් කාර්යාලය",
+    },
+    "හික්කඩුව": {
+      name: "රූරාල් ඩෙව්. නිලධාරි - හික්කඩුව",
+      phone: "07X-XXXXXXX",
+      email: "hikkaduwa.rdo@example.com",
+      officeAddress: "හික්කඩුව ප්‍රාදේශීය ලේකම් කාර්යාලය",
+    },
+    // ... add all Galle divisions you need
+  },
+  Matara: {
+    "තිහගොඩ": {
+      name: "රූරාල් ඩෙව්. නිලධාරි - තිහගොඩ",
+      phone: "07X-XXXXXXX",
+      email: "tihagoda.rdo@example.com",
+      officeAddress: "තිහගොඩ ප්‍රාදේශීය ලේකම් ਕාර්යාලය",
+    },
+    // ... add Matara divisions
+  },
+  Hambantota: {
+    "හම්බන්තොට": {
+      name: "රූරාල් ඩෙව්. නිලධාරි - හම්බන්තොට",
+      phone: "07X-XXXXXXX",
+      email: "hambantota.rdo@example.com",
+      officeAddress: "හම්බන්තොට ප්‍රාදේශීය ලේකම් කාර්යාලය",
+    },
+    // ... add Hambantota divisions
+  },
 };
 
 // Build number like: දපස/ග්‍රාසං/ගා/අක්/23
@@ -154,10 +190,14 @@ const Register = () => {
 
   const [loading, setLoading] = useState(false);
 
+  // NEW: rural dev officer state to display after registration
+  const [ruralOfficer, setRuralOfficer] = useState(null);
+
   const handleDistrictChange = (district) => {
     setSelectedDistrict(district);
     setSelectedSecretary("");
     setSocietyData((prev) => ({ ...prev, registerNo: "" }));
+    setRuralOfficer(null); // clear previous officer info
   };
 
   const handleSocietyChange = (e) => {
@@ -258,6 +298,12 @@ const Register = () => {
         registerNo: autoRegisterNo,
       }));
 
+      // 4) get rural dev officer for this district + division
+      const officerForDivision =
+        ruralDevOfficers?.[selectedDistrict]?.[selectedSecretary] || null;
+
+      setRuralOfficer(officerForDivision);
+
       alert(
         `සමිතිය ලියාපදිංචි කිරීම සාර්ථකයි!\nනව ලියාපදිංචි අංකය: ${autoRegisterNo}`
       );
@@ -288,7 +334,7 @@ const Register = () => {
           {/* 01. District & 02. Division */}
           <div className="form-row">
             <div className="form-group">
-              <label>01. දිස්ත්රික්කය:</label>
+              <label>01. දිස්ට්‍රික්කය:</label>
               <select
                 value={selectedDistrict}
                 onChange={(e) => handleDistrictChange(e.target.value)}
@@ -305,7 +351,10 @@ const Register = () => {
               <label>02. ප්‍රාදේශීය ලේකම් කොට්ඨාසය:</label>
               <select
                 value={selectedSecretary}
-                onChange={(e) => setSelectedSecretary(e.target.value)}
+                onChange={(e) => {
+                  setSelectedSecretary(e.target.value);
+                  setRuralOfficer(null); // change division -> clear previous officer
+                }}
                 disabled={!selectedDistrict}
                 required
               >
@@ -614,6 +663,17 @@ const Register = () => {
             </button>
           </div>
         </form>
+
+        {/* RURAL DEVELOPMENT OFFICER INFO (shown after successful register) */}
+        {ruralOfficer && (
+          <div className="rdo-card">
+            <h3>මෙම ප්‍රාදේශීය ලේකම් කොට්ඨාසයේ ග්‍රාම සංවර්ධන නිලධාරියා</h3>
+            <p><strong>නම:</strong> {ruralOfficer.name}</p>
+            <p><strong>දුරකථන:</strong> {ruralOfficer.phone}</p>
+            <p><strong>ඊමේල්:</strong> {ruralOfficer.email}</p>
+            <p><strong>කාර්යාල ලිපිනය:</strong> {ruralOfficer.officeAddress}</p>
+          </div>
+        )}
       </div>
     </section>
   );

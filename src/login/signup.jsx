@@ -1,10 +1,12 @@
-
 import React, { useState, useEffect } from "react";
 import "../login/signup.css";
 import { db } from "../firebase.js";
 import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
 export default function SignUp() {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     position: "",
     district: "",
@@ -82,7 +84,7 @@ export default function SignUp() {
     ],
   };
 
-  // Mapping to DB IDs
+  // Mapping Sinhala → divisionId for Firestore "villages" path
   const divisionMap = {
     "හික්කඩුව": "hikkaduwa",
     "හබරාදුව": "habaraduwa",
@@ -144,7 +146,6 @@ export default function SignUp() {
     "society_secretary",
   ];
 
-  // Reset when district changes
   const handleDistrictChange = (district) => {
     setSelectedDistrict(district);
     setSelectedSecretary("");
@@ -152,7 +153,6 @@ export default function SignUp() {
     setSelectedSociety("");
   };
 
-  // Input handling
   const handleChange = (e) => {
     let { name, value } = e.target;
 
@@ -167,7 +167,7 @@ export default function SignUp() {
     setFormData({ ...formData, [name]: value });
   };
 
-  // Fetch Societies
+  // Fetch Societies for selected district + division (for society_* positions)
   useEffect(() => {
     const fetchVillages = async () => {
       if (!selectedDistrict || !selectedSecretary) {
@@ -177,6 +177,11 @@ export default function SignUp() {
 
       try {
         const divisionId = divisionMap[selectedSecretary];
+        if (!divisionId) {
+          setSocieties([]);
+          return;
+        }
+
         const villagesRef = collection(
           db,
           "districts",
@@ -187,7 +192,10 @@ export default function SignUp() {
         );
 
         const snapshot = await getDocs(villagesRef);
-        if (snapshot.empty) return;
+        if (snapshot.empty) {
+          setSocieties([]);
+          return;
+        }
 
         const names = snapshot.docs.map((doc) => {
           const data = doc.data();
@@ -202,34 +210,67 @@ export default function SignUp() {
         setSocieties(names);
       } catch (err) {
         console.log(err);
+        setSocieties([]);
       }
     };
 
     fetchVillages();
   }, [selectedDistrict, selectedSecretary]);
 
-  // Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    try {
-      // Check if this position already exists
-      const usersRef = collection(db, "users");
-      const q = query(usersRef, where("position", "==", formData.position));
-      const existing = await getDocs(q);
+    if (formData.password !== formData.confirmPassword) {
+      setError("Password and Confirm Password do not match.");
+      return;
+    }
 
-      if (!existing.empty) {
-        setError("මෙම තනතුර සඳහා පරිශීලකයෙකු දැනටමත් ලියාපදිංචි වී ඇත.");
-        return;
+    try {
+      const usersRef = collection(db, "users");
+
+      // === 1) CHECK UNIQNESS RULES ===
+
+      if (formData.position === "village_officer") {
+        // Only one rural dev officer per (district + division)
+        if (!selectedDistrict || !selectedSecretary) {
+          setError("කරුණාකර දිස්ත්‍රික්කය සහ ප්‍රාදේශීය ලේකම් කොට්ඨාසය තෝරන්න.");
+          return;
+        }
+
+        const q = query(
+          usersRef,
+          where("position", "==", "village_officer"),
+          where("district", "==", selectedDistrict),
+          where("division", "==", selectedSecretary)
+        );
+
+        const existing = await getDocs(q);
+        if (!existing.empty) {
+          setError(
+            "මෙම ප්‍රාදේශීය ලේකම් කොට්ඨාසය සඳහා ග්‍රාම සංවර්ධන නිලධාරීවරයෙකු දැනටමත් ලියාපදිංචි වී ඇත."
+          );
+          return;
+        }
+      } else {
+        // Global uniqueness per position (as you had)
+        const q = query(
+          usersRef,
+          where("position", "==", formData.position)
+        );
+        const existing = await getDocs(q);
+        if (!existing.empty) {
+          setError("මෙම තනතුර සඳහා පරිශීලකයෙකු දැනටමත් ලියාපදිංචි වී ඇත.");
+          return;
+        }
       }
 
-      // Save new user
+      // === 2) SAVE NEW USER ===
       await addDoc(collection(db, "users"), {
         position: formData.position,
-        district: selectedDistrict,
-        division: selectedSecretary,
-        society: selectedSociety,
+        district: selectedDistrict || null,
+        division: selectedSecretary || null,
+        society: selectedSociety || null,
         username: formData.username,
         email: formData.email,
         contactnumber: formData.contactnumber,
@@ -239,6 +280,7 @@ export default function SignUp() {
       });
 
       alert("User Registered Successfully!");
+      navigate("/login");
     } catch (err) {
       console.error(err);
       setError("Error saving data!");
@@ -290,6 +332,38 @@ export default function SignUp() {
 
           {/* VILLAGE OFFICER – DISTRICT + SECRETARY DIVISION */}
           {formData.position === "village_officer" && (
+            <>
+              <label>District</label>
+              <select
+                value={selectedDistrict}
+                onChange={(e) => handleDistrictChange(e.target.value)}
+                required
+              >
+                <option value="">තෝරන්න</option>
+                <option value="Galle">ගාල්ල</option>
+                <option value="Matara">මාතර</option>
+                <option value="Hambantota">හම්බන්තොට</option>
+              </select>
+
+              <label>Secretary Division</label>
+              <select
+                value={selectedSecretary}
+                onChange={(e) => setSelectedSecretary(e.target.value)}
+                required
+              >
+                <option value="">Select Division</option>
+                {selectedDistrict &&
+                  districtData[selectedDistrict].map((div, idx) => (
+                    <option value={div} key={idx}>
+                      {div}
+                    </option>
+                  ))}
+              </select>
+            </>
+          )}
+
+          {/* DIVISIONAL SECRETARY – DISTRICT + SECRETARY DIVISION */}
+          {formData.position === "divisional_secretary" && (
             <>
               <label>District</label>
               <select

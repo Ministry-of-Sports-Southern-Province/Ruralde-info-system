@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { db } from "../../firebase";
+import { db } from "../../firebase.js";
 import {
   doc,
   getDoc,
@@ -7,26 +7,25 @@ import {
   query,
   where,
   getDocs,
-  addDoc,
   updateDoc,
 } from "firebase/firestore";
-import "../districtOfficer/districtOfficer.css";
+import "../devsecretary/divisionalsecretary.css";
 import { useNavigate } from "react-router-dom";
 
-const DistrictOfficer = () => {
+const DivisionalSecretary = () => {
   const navigate = useNavigate();
 
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const [error, setError] = useState("");
 
-  const [requests, setRequests] = useState([]);
+  const [requests, setRequests] = useState([]); // secretaryRequests for this division
   const [loadingRequests, setLoadingRequests] = useState(false);
 
   const [showHistory, setShowHistory] = useState(false);
 
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [doNote, setDoNote] = useState("");
+  const [dsNote, setDsNote] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [actionSuccess, setActionSuccess] = useState("");
   const [actionError, setActionError] = useState("");
@@ -41,7 +40,7 @@ const DistrictOfficer = () => {
       }
 
       try {
-        // 1) Load district officer user
+        // 1) Load divisional secretary user
         const docRef = doc(db, "users", userId);
         const docSnap = await getDoc(docRef);
 
@@ -55,23 +54,29 @@ const DistrictOfficer = () => {
         setUser(userData);
         setLoadingUser(false);
 
-        // 2) Load registration references from RDOs for this district
-        if (userData.district) {
+        // 2) Load forwarded registrations for this district + division
+        if (userData.district && userData.division) {
           setLoadingRequests(true);
           try {
-            const reqRef = collection(db, "districtRequests");
-            const qReq = query(
-              reqRef,
-              where("district", "==", userData.district)
+            const secRef = collection(db, "secretaryRequests");
+            const qSec = query(
+              secRef,
+              where("district", "==", userData.district),
+              where("division", "==", userData.division)
             );
-
-            const snap = await getDocs(qReq);
+            const snap = await getDocs(qSec);
 
             const all = [];
             snap.forEach((reqDoc) => {
               const d = reqDoc.data();
               all.push({
                 id: reqDoc.id,
+
+                // from DO
+                district: d.district || "N/A",
+                division: d.division || "N/A",
+
+                // society
                 societyId: d.societyId || null,
                 societyName: d.societyName || "Unnamed Society",
                 registerNo: d.registerNo || "N/A",
@@ -82,19 +87,23 @@ const DistrictOfficer = () => {
                   typeof d.memberCount === "number" ? d.memberCount : null,
                 positions: d.positions || null,
 
-                district: d.district || "N/A",
-                division: d.division || "N/A",
+                // RDO signature
+                ruralOfficerId: d.ruralOfficerId || "N/A",
+                ruralOfficerName: d.ruralOfficerName || "Unknown RDO",
+                ruralOfficerPosition: d.ruralOfficerPosition || "",
+                ruralOfficerDecision: d.ruralOfficerDecision || "Pending",
+                ruralOfficerNote: d.ruralOfficerNote || "",
 
-                officerId: d.referredByOfficerId || "N/A",
-                officerName: d.referredByName || "Unknown Officer",
-                officerPosition: d.officerPosition || "village_officer",
-
-                status: d.status || "Pending", // RDO decision
-                note: d.note || "",
-
-                districtStatus: d.districtStatus || "Pending",
+                // DO signature
+                districtOfficerId: d.districtOfficerId || "N/A",
+                districtOfficerName: d.districtOfficerName || "Unknown DO",
+                districtOfficerEmail: d.districtOfficerEmail || "",
+                districtDecision: d.districtDecision || "Pending",
                 districtNote: d.districtNote || "",
 
+                // Divisional Secretary decision
+                secretaryStatus: d.secretaryStatus || "Pending", // AcceptedByDS / RejectedByDS / ForwardedToSubject / Pending
+                secretaryNote: d.secretaryNote || "",
                 createdAt:
                   d.createdAt && d.createdAt.toDate
                     ? d.createdAt.toDate().toLocaleString()
@@ -108,14 +117,14 @@ const DistrictOfficer = () => {
 
             setRequests(all);
           } catch (err) {
-            console.error("Error loading district requests:", err);
-            setError("Failed to load requests for this district.");
+            console.error("Error loading secretary requests:", err);
+            setError("Failed to load requests for this division.");
           } finally {
             setLoadingRequests(false);
           }
         }
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching divisional secretary:", err);
         setError("Failed to fetch user data.");
         setLoadingUser(false);
       }
@@ -134,22 +143,22 @@ const DistrictOfficer = () => {
 
   const handleSelectRequest = (req) => {
     setSelectedRequest(req);
-    setDoNote(req.districtNote || "");
+    setDsNote(req.secretaryNote || "");
     setActionError("");
     setActionSuccess("");
   };
 
-  // === DO Accept / Decline: Only once ===
-  const handleDoDecision = async (decision) => {
+  // DS Accept / Reject – only one time
+  const handleDsDecision = async (decision) => {
     if (!selectedRequest || !user) return;
 
     if (
-      selectedRequest.districtStatus === "AcceptedByDO" ||
-      selectedRequest.districtStatus === "DeclinedByDO" ||
-      selectedRequest.districtStatus === "ForwardedToSecretary"
+      selectedRequest.secretaryStatus === "AcceptedByDS" ||
+      selectedRequest.secretaryStatus === "RejectedByDS" ||
+      selectedRequest.secretaryStatus === "ForwardedToSubject"
     ) {
       setActionError(
-        "මෙම ලියාපදිංචිය සදහා දිස්ත්‍රික් තීරණය දැනටමත් ලබා දී ඇත."
+        "මෙම ලියාපදිංචිය සදහා ප්‍රාදේශීය ලේකම් තීරණය දැනටමත් ලබා දී ඇත."
       );
       return;
     }
@@ -159,13 +168,13 @@ const DistrictOfficer = () => {
     setActionLoading(true);
 
     try {
-      const docRef = doc(db, "districtRequests", selectedRequest.id);
+      const docRef = doc(db, "secretaryRequests", selectedRequest.id);
       const newStatus =
-        decision === "accept" ? "AcceptedByDO" : "DeclinedByDO";
+        decision === "accept" ? "AcceptedByDS" : "RejectedByDS";
 
       await updateDoc(docRef, {
-        districtStatus: newStatus,
-        districtNote: doNote || "",
+        secretaryStatus: newStatus,
+        secretaryNote: dsNote || "",
       });
 
       setRequests((prev) =>
@@ -173,8 +182,8 @@ const DistrictOfficer = () => {
           r.id === selectedRequest.id
             ? {
                 ...r,
-                districtStatus: newStatus,
-                districtNote: doNote || "",
+                secretaryStatus: newStatus,
+                secretaryNote: dsNote || "",
               }
             : r
         )
@@ -184,35 +193,35 @@ const DistrictOfficer = () => {
         prev
           ? {
               ...prev,
-              districtStatus: newStatus,
-              districtNote: doNote || "",
+              secretaryStatus: newStatus,
+              secretaryNote: dsNote || "",
             }
           : prev
       );
 
       setActionSuccess(
         decision === "accept"
-          ? "සමිතිය දිස්ත්‍රික් මට්ටමින් (Accepted) ලෙස සළකනු ලැබීය."
-          : "සමිතිය දිස්ත්‍රික් මට්ටමින් (Declined) ලෙස සළකනු ලැබීය."
+          ? "සමිතිය ප්‍රාදේශීය මට්ටමින් (Accepted) ලෙස සළකනු ලැබීය."
+          : "සමිතිය ප්‍රාදේශීය මට්ටමින් (Rejected) ලෙස සළකනු ලැබීය."
       );
     } catch (err) {
-      console.error("Error updating DO decision:", err);
-      setActionError("දිස්ත්‍රික් තීරණය සුරක්ෂිත කිරීමට නොහැකි විය.");
+      console.error("Error updating DS decision:", err);
+      setActionError("ප්‍රාදේශීය තීරණය සුරක්ෂිත කිරීමට නොහැකි විය.");
     } finally {
       setActionLoading(false);
     }
   };
 
-  // === Forward to Secretary: only after DO has decided ===
-  const handleForwardToSecretary = async () => {
+  // Forward to Subject Officer – only after DS has decided
+  const handleForwardToSubjectOfficer = async () => {
     if (!selectedRequest || !user) return;
 
     if (
-      selectedRequest.districtStatus !== "AcceptedByDO" &&
-      selectedRequest.districtStatus !== "DeclinedByDO"
+      selectedRequest.secretaryStatus !== "AcceptedByDS" &&
+      selectedRequest.secretaryStatus !== "RejectedByDS"
     ) {
       setActionError(
-        "කරුණාකර පළමුව Accept හෝ Decline තීරණයක් ලබා දී පසුව යොමු කරන්න."
+        "කරුණාකර පළමුව Accept හෝ Reject තීරණයක් ලබා දී පසුව යොමු කරන්න."
       );
       return;
     }
@@ -222,102 +231,74 @@ const DistrictOfficer = () => {
     setActionLoading(true);
 
     try {
-      await addDoc(collection(db, "secretaryRequests"), {
-        societyId: selectedRequest.societyId,
-        societyName: selectedRequest.societyName,
-        registerNo: selectedRequest.registerNo,
-        societyAddress: selectedRequest.societyAddress,
-        societyPhone: selectedRequest.societyPhone,
-        societyEmail: selectedRequest.societyEmail,
-        memberCount: selectedRequest.memberCount,
-        positions: selectedRequest.positions,
-
-        district: selectedRequest.district,
-        division: selectedRequest.division,
-
-        ruralOfficerId: selectedRequest.officerId,
-        ruralOfficerName: selectedRequest.officerName,
-        ruralOfficerPosition: selectedRequest.officerPosition,
-        ruralOfficerDecision: selectedRequest.status,
-        ruralOfficerNote: selectedRequest.note,
-
-        districtOfficerId: user.identitynumber || null,
-        districtOfficerName: user.username || null,
-        districtOfficerEmail: user.email || null,
-        districtDecision: selectedRequest.districtStatus,
-        districtNote: selectedRequest.districtNote || doNote || "",
-
-        status: "Pending",
-        createdAt: new Date(),
-      });
-
-      const docRef = doc(db, "districtRequests", selectedRequest.id);
+      // Here we just update secretaryRequests to mark forwarded.
+      // If you want, you could also create a 'subjectRequests' collection.
+      const docRef = doc(db, "secretaryRequests", selectedRequest.id);
       await updateDoc(docRef, {
-        districtStatus: "ForwardedToSecretary",
+        secretaryStatus: "ForwardedToSubject",
       });
 
       setRequests((prev) =>
         prev.map((r) =>
           r.id === selectedRequest.id
-            ? { ...r, districtStatus: "ForwardedToSecretary" }
+            ? { ...r, secretaryStatus: "ForwardedToSubject" }
             : r
         )
       );
 
       setSelectedRequest((prev) =>
-        prev ? { ...prev, districtStatus: "ForwardedToSecretary" } : prev
+        prev ? { ...prev, secretaryStatus: "ForwardedToSubject" } : prev
       );
 
       setActionSuccess(
-        "සමිතිය පිළිබඳ ලේඛනය ප්‍රාදේශීය ලේකම් වෙත යොමු කිරීම සාර්ථකයි."
+        "සමිතිය පිළිබඳ ලේඛනය විෂය භාර නිලධාරී වෙත යොමු කිරීම සාර්ථකයි."
       );
     } catch (err) {
-      console.error("Error forwarding to secretary:", err);
+      console.error("Error forwarding to subject officer:", err);
       setActionError(
-        "ප්‍රාදේශීය ලේකම් වෙත යොමු කිරීමේදී දෝෂයක් සිදු විය. නැවත උත්සහ කරන්න."
+        "විෂය භාර නිලධාරී වෙත යොමු කිරීමේදී දෝෂයක් සිදු විය. නැවත උත්සහ කරන්න."
       );
     } finally {
       setActionLoading(false);
     }
   };
 
-  if (loadingUser) return <p className="district-loading">Loading profile...</p>;
-  if (error) return <p className="district-error">{error}</p>;
+  if (loadingUser) return <p className="ds-loading">Loading profile...</p>;
+  if (error) return <p className="ds-error">{error}</p>;
   if (!user) return null;
 
   const latestRequests = requests;
   const historyRequests = requests;
-
   const totalPending = latestRequests.length;
   const totalHistory = historyRequests.length;
-  const acceptedByRdoCount = requests.filter(
-    (l) => l.status === "Accepted"
+  const acceptedCount = historyRequests.filter(
+    (r) => r.secretaryStatus === "AcceptedByDS"
   ).length;
 
   return (
-    <section className="district-dashboard">
-      <div className="district-shell">
+    <section className="ds-dashboard">
+      <div className="ds-shell">
         {/* LEFT: PROFILE SIDEBAR */}
-        <aside className="district-sidebar">
-          <div className="district-sidebar-topbar">
+        <aside className="ds-sidebar">
+          <div className="ds-sidebar-topbar">
             <div className="sidebar-brand">
               <p>දකුණු පළාත් ග්‍රාම සංවර්ධන දෙපාර්තමේන්තුව</p>
-              <span>District Officer Profile</span>
+              <span>Pradeshiya Lekam Profile</span>
             </div>
             <button className="signout-btn" onClick={handleSignOut}>
               Sign Out
             </button>
           </div>
 
-          <div className="district-profile-card">
-            <div className="district-avatar">
+          <div className="ds-profile-card">
+            <div className="ds-avatar">
               <div className="avatar-circle">
-                {user.username ? user.username.charAt(0).toUpperCase() : "D"}
+                {user.username ? user.username.charAt(0).toUpperCase() : "P"}
               </div>
             </div>
-            <h2 className="district-name">{user.username}</h2>
-            <p className="district-role">
-              දිස්ත්‍රික් ග්‍රාම සංවර්ධන නිලධාරී (District Officer)
+            <h2 className="ds-name">{user.username}</h2>
+            <p className="ds-role">
+              ප්‍රාදේශීය ලේකම් (Divisional Secretary)
             </p>
 
             <div className="info-row">
@@ -338,29 +319,29 @@ const DistrictOfficer = () => {
             </div>
           </div>
 
-          <div className="district-info-card">
-            <h4 className="sidebar-section-title">District Information</h4>
+          <div className="ds-info-card">
+            <h4 className="sidebar-section-title">Area Information</h4>
             <div className="info-row">
               <span className="info-label">District</span>
               <span className="info-value">{user.district || "N/A"}</span>
             </div>
             <div className="info-row">
-              <span className="info-label">Division</span>
-              <span className="info-value">{user.division || "All"}</span>
+              <span className="info-label">Secretary Division</span>
+              <span className="info-value">{user.division || "N/A"}</span>
             </div>
           </div>
 
           <div className="sidebar-stats">
             <div className="stat-card">
-              <p className="stat-label">Total Requests</p>
+              <p className="stat-label">Pending Requests</p>
               <p className="stat-value">{totalPending}</p>
             </div>
             <div className="stat-card">
-              <p className="stat-label">Accepted by RDO</p>
-              <p className="stat-value">{acceptedByRdoCount}</p>
+              <p className="stat-label">Accepted (DS)</p>
+              <p className="stat-value">{acceptedCount}</p>
             </div>
             <div className="stat-card">
-              <p className="stat-label">Total Records</p>
+              <p className="stat-label">Total History</p>
               <p className="stat-value">{totalHistory}</p>
             </div>
           </div>
@@ -368,23 +349,23 @@ const DistrictOfficer = () => {
           <div className="sidebar-notes">
             <h4>Key Responsibilities</h4>
             <ul>
-              <li>දිස්ත්‍රික් මට්ටමින් ග්‍රාම සංවර්ධන ගැටළු සමාලෝචනය කිරීම.</li>
-              <li>ග්‍රාම සංවර්ධන නිලධාරීන්ගේ වාර්තා එකලස් කිරීම.</li>
-              <li>යෝජනා අනුමත කර පළාත් අධ්‍යක්ෂවරයා හෝ ප්‍රාදේශීය ලේකම් වෙත යොමු කිරීම.</li>
+              <li>ප්‍රාදේශීය මට්ටමින් ග්‍රාම සංවර්ධන වැඩසටහන් සමනායකත්වය දැරීම.</li>
+              <li>ග්‍රාම සංවර්ධන නිලධාරීන් හා සමිතියන් සමඟ සම්බන්ධතාවය තබා ගැනීම.</li>
+              <li>දිස්ත්‍රික් හා පලාත් මට්ටමේ වාර්තා සකස් කර ඉදිරිපත් කිරීම.</li>
             </ul>
           </div>
         </aside>
 
         {/* RIGHT: REQUESTS & HISTORY + DETAIL */}
-        <main className="district-main">
-          {/* Latest Requests from Rural Officers */}
-          <section className="district-card">
-            <h3 className="card-title">Rural Officers’ Registration References</h3>
+        <main className="ds-main">
+          {/* Latest Requests (from District Officer) */}
+          <section className="ds-card">
+            <h3 className="card-title">District Officer Forwarded Registrations</h3>
             {loadingRequests ? (
               <p className="muted-text">Loading requests...</p>
             ) : latestRequests.length === 0 ? (
               <p className="muted-text">
-                No registration references from RDOs for your district.
+                No forwarded registration references for your division.
               </p>
             ) : (
               <ul className="letter-list">
@@ -400,29 +381,45 @@ const DistrictOfficer = () => {
                         <strong>{req.societyName}</strong> ({req.registerNo})
                       </p>
                       <p className="letter-sub">
-                        Division: {req.division} | From RDO: {req.officerName}
+                        From District: {req.district} | Division:{" "}
+                        {req.division}
+                      </p>
+                      <p className="letter-sub">
+                        RDO: {req.ruralOfficerName} ({req.ruralOfficerDecision})
+                      </p>
+                      <p className="letter-sub">
+                        DO: {req.districtOfficerName} ({req.districtDecision})
                       </p>
                       <p className="letter-sub">Date: {req.createdAt}</p>
-                      {req.note && (
-                        <p className="letter-sub">RDO Note: {req.note}</p>
+                      {req.ruralOfficerNote && (
+                        <p className="letter-sub">
+                          RDO Note: {req.ruralOfficerNote}
+                        </p>
                       )}
-                      {req.districtStatus &&
-                        req.districtStatus !== "Pending" && (
+                      {req.districtNote && (
+                        <p className="letter-sub">
+                          DO Note: {req.districtNote}
+                        </p>
+                      )}
+                      {req.secretaryStatus &&
+                        req.secretaryStatus !== "Pending" && (
                           <p className="letter-sub">
-                            DO Status: {req.districtStatus}
+                            DS Status: {req.secretaryStatus}
                           </p>
                         )}
                     </div>
                     <span
                       className={`badge ${
-                        req.status === "Accepted"
+                        req.secretaryStatus === "AcceptedByDS"
                           ? "badge-success"
-                          : req.status === "Declined"
+                          : req.secretaryStatus === "RejectedByDS"
                           ? "badge-danger"
+                          : req.secretaryStatus === "ForwardedToSubject"
+                          ? "badge-warning"
                           : "badge-warning"
                       }`}
                     >
-                      {req.status}
+                      {req.secretaryStatus}
                     </span>
                   </li>
                 ))}
@@ -430,9 +427,9 @@ const DistrictOfficer = () => {
             )}
           </section>
 
-          {/* Detail + DO Accept/Decline + Forward */}
+          {/* Detail + DS Accept/Reject + Forward */}
           {selectedRequest && (
-            <section className="district-card referral-card">
+            <section className="ds-card referral-card">
               <div className="referral-header">
                 <h3 className="card-title">
                   Society Registration Details – {selectedRequest.societyName}
@@ -442,7 +439,7 @@ const DistrictOfficer = () => {
                   className="btn-close-referral"
                   onClick={() => {
                     setSelectedRequest(null);
-                    setDoNote("");
+                    setDsNote("");
                     setActionError("");
                     setActionSuccess("");
                   }}
@@ -497,59 +494,69 @@ const DistrictOfficer = () => {
                 </div>
 
                 <div className="ref-society-details">
-                  <h4>Rural Development Officer Signature</h4>
+                  <h4>Officer Signatures</h4>
                   <p>
-                    <strong>Name:</strong> {selectedRequest.officerName}
+                    <strong>Rural Development Officer:</strong>{" "}
+                    {selectedRequest.ruralOfficerName} (
+                    {selectedRequest.ruralOfficerId})
                   </p>
                   <p>
-                    <strong>Identity No:</strong>{" "}
-                    {selectedRequest.officerId}
+                    <strong>RDO Decision:</strong>{" "}
+                    {selectedRequest.ruralOfficerDecision}
+                  </p>
+                  {selectedRequest.ruralOfficerNote && (
+                    <p>
+                      <strong>RDO Note:</strong>{" "}
+                      {selectedRequest.ruralOfficerNote}
+                    </p>
+                  )}
+                  <hr />
+                  <p>
+                    <strong>District Officer:</strong>{" "}
+                    {selectedRequest.districtOfficerName} (
+                    {selectedRequest.districtOfficerId})
                   </p>
                   <p>
-                    <strong>Position:</strong>{" "}
-                    {selectedRequest.officerPosition === "village_officer"
-                      ? "Rural Development Officer"
-                      : selectedRequest.officerPosition}
+                    <strong>DO Decision:</strong>{" "}
+                    {selectedRequest.districtDecision}
                   </p>
-                  <p>
-                    <strong>RDO Decision:</strong> {selectedRequest.status}
-                  </p>
-                  <p>
-                    <strong>RDO Note:</strong>{" "}
-                    {selectedRequest.note || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Date:</strong> {selectedRequest.createdAt}
-                  </p>
+                  {selectedRequest.districtNote && (
+                    <p>
+                      <strong>DO Note:</strong>{" "}
+                      {selectedRequest.districtNote}
+                    </p>
+                  )}
 
                   <div className="referral-form" style={{ marginTop: "10px" }}>
-                    <h4>District Officer Decision</h4>
+                    <h4>Divisional Secretary Decision</h4>
                     <p className="muted-text">
-                      District level decision can be taken only once.
+                      You can Accept or Reject only once, then optionally
+                      forward to the Subject Officer.
                     </p>
 
-                    <label>District Officer Note</label>
+                    <label>Divisional Secretary Note</label>
                     <textarea
-                      value={doNote}
-                      onChange={(e) => setDoNote(e.target.value)}
+                      value={dsNote}
+                      onChange={(e) => setDsNote(e.target.value)}
                       rows={3}
-                      placeholder="Enter your note or recommendation..."
+                      placeholder="Enter your note..."
                       disabled={
-                        selectedRequest.districtStatus === "AcceptedByDO" ||
-                        selectedRequest.districtStatus === "DeclinedByDO" ||
-                        selectedRequest.districtStatus === "ForwardedToSecretary"
+                        selectedRequest.secretaryStatus === "AcceptedByDS" ||
+                        selectedRequest.secretaryStatus === "RejectedByDS" ||
+                        selectedRequest.secretaryStatus ===
+                          "ForwardedToSubject"
                       }
                     />
 
                     {actionError && (
-                      <p className="district-error">{actionError}</p>
+                      <p className="ds-error">{actionError}</p>
                     )}
                     {actionSuccess && (
-                      <p className="district-success">{actionSuccess}</p>
+                      <p className="ds-success">{actionSuccess}</p>
                     )}
 
-                    {/* Accept/Decline visible only if DO has not decided yet */}
-                    {selectedRequest.districtStatus === "Pending" && (
+                    {/* Accept / Reject visible only if DS has not yet decided */}
+                    {selectedRequest.secretaryStatus === "Pending" && (
                       <div
                         className="referral-actions"
                         style={{ marginTop: 8 }}
@@ -558,43 +565,43 @@ const DistrictOfficer = () => {
                           type="button"
                           className="btn-decline"
                           disabled={actionLoading}
-                          onClick={() => handleDoDecision("decline")}
+                          onClick={() => handleDsDecision("reject")}
                         >
-                          {actionLoading ? "Processing..." : "Decline"}
+                          {actionLoading ? "Processing..." : "Reject"}
                         </button>
                         <button
                           type="button"
                           className="btn-accept"
                           disabled={actionLoading}
-                          onClick={() => handleDoDecision("accept")}
+                          onClick={() => handleDsDecision("accept")}
                         >
                           {actionLoading ? "Processing..." : "Accept"}
                         </button>
                       </div>
                     )}
 
-                    {/* Forward button visible only AFTER DO has decided */}
-                    {(selectedRequest.districtStatus === "AcceptedByDO" ||
-                      selectedRequest.districtStatus === "DeclinedByDO" ||
-                      selectedRequest.districtStatus ===
-                        "ForwardedToSecretary") && (
+                    {/* Forward button visible only AFTER DS has decided */}
+                    {(selectedRequest.secretaryStatus === "AcceptedByDS" ||
+                      selectedRequest.secretaryStatus === "RejectedByDS" ||
+                      selectedRequest.secretaryStatus ===
+                        "ForwardedToSubject") && (
                       <button
                         type="button"
                         className="btn-accept"
                         style={{ marginTop: 8 }}
                         disabled={
                           actionLoading ||
-                          selectedRequest.districtStatus ===
-                            "ForwardedToSecretary"
+                          selectedRequest.secretaryStatus ===
+                            "ForwardedToSubject"
                         }
-                        onClick={handleForwardToSecretary}
+                        onClick={handleForwardToSubjectOfficer}
                       >
                         {actionLoading
                           ? "Forwarding..."
-                          : selectedRequest.districtStatus ===
-                            "ForwardedToSecretary"
-                          ? "Already Forwarded to Secretary"
-                          : "Forward to Divisional Secretary"}
+                          : selectedRequest.secretaryStatus ===
+                            "ForwardedToSubject"
+                          ? "Already Forwarded to Subject Officer"
+                          : "Forward to Subject Officer"}
                       </button>
                     )}
                   </div>
@@ -604,9 +611,9 @@ const DistrictOfficer = () => {
           )}
 
           {/* HISTORY */}
-          <section className="district-card">
+          <section className="ds-card">
             <div className="history-header">
-              <h3 className="card-title">All Registration References History</h3>
+              <h3 className="card-title">Registration History (DS)</h3>
               <button
                 type="button"
                 className="toggle-btn"
@@ -636,29 +643,29 @@ const DistrictOfficer = () => {
                             <strong>{req.societyName}</strong> ({req.registerNo})
                           </p>
                           <p className="letter-sub">
-                            Division: {req.division} | RDO: {req.officerName}
+                            RDO: {req.ruralOfficerName} | DO:{" "}
+                            {req.districtOfficerName}
                           </p>
                           <p className="letter-sub">Date: {req.createdAt}</p>
-                          {req.note && (
-                            <p className="letter-sub">RDO Note: {req.note}</p>
-                          )}
-                          {req.districtStatus &&
-                            req.districtStatus !== "Pending" && (
+                          {req.secretaryStatus &&
+                            req.secretaryStatus !== "Pending" && (
                               <p className="letter-sub">
-                                DO Status: {req.districtStatus}
+                                DS Status: {req.secretaryStatus}
                               </p>
                             )}
                         </div>
                         <span
                           className={`badge ${
-                            req.status === "Accepted"
+                            req.secretaryStatus === "AcceptedByDS"
                               ? "badge-success"
-                              : req.status === "Declined"
+                              : req.secretaryStatus === "RejectedByDS"
                               ? "badge-danger"
+                              : req.secretaryStatus === "ForwardedToSubject"
+                              ? "badge-warning"
                               : "badge-warning"
                           }`}
                         >
-                          {req.status}
+                          {req.secretaryStatus}
                         </span>
                       </li>
                     ))}
@@ -700,4 +707,4 @@ const PositionBlock = ({ title, data }) => {
   );
 };
 
-export default DistrictOfficer;
+export default DivisionalSecretary;

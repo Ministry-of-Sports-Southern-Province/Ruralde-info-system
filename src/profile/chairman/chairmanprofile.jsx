@@ -102,7 +102,7 @@ const Chairmanprofile = () => {
         <aside className="dashboard-sidebar">
           {/* header with sign out */}
           <div className="sidebar-header">
-            <h2 className="sidebar-title">Chairman</h2>
+            <h2 className="sidebar-title">Director</h2>
             <button className="signout-btn" onClick={handleSignOut}>
               Sign Out
             </button>
@@ -117,7 +117,7 @@ const Chairmanprofile = () => {
             </div>
             <h2 className="sidebar-name">{user.username}</h2>
             <p className="sidebar-role">
-              පලාත් සංවර්ධන අධ්‍යක්ෂක <span>(Chairman)</span>
+              පලාත් සංවර්ධන අධ්‍යක්ෂක <span>(Director)</span>
             </p>
 
             <div className="sidebar-info">

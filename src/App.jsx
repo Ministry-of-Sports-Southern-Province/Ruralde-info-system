@@ -17,7 +17,9 @@ import Treasurer from "./register/treasurer";
 import Chairmanprofile from "./profile/chairman/chairmanprofile";
 import DistrictOfficer from "./profile/districtOfficer/districtOfficer";
 import SocietyOfficer from "./profile/societyOfficer/societyOfficer";
+import RuralDevOfficer from "./profile/ruraldevofficer/ruraldevofficer";
 import Subject from "./profile/subject/subject";
+import DivisionalSecrtary from "./profile/devsecretary/divisionalsecretary";
 import Startup from "./startup/startup";
 import Login from "./login/login";
 import SignUp from "./login/signup";
@@ -31,7 +33,7 @@ function App() {
 
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/ruralofficer" element={<RuralOfficer />} />
+        <Route path="/ruraldevofficer" element={<RuralDevOfficer />} />
         <Route path="/provincialofficer" element={<ProvincialOfficer />} />
         <Route path="/student" element={<Student />} />
         <Route path="/society" element={<Society />} />
@@ -52,6 +54,7 @@ function App() {
         <Route path="/societyOfficer" element={<SocietyOfficer />}></Route>
         <Route path="/subject" element={<Subject />}></Route>
         <Route path="/project" element={<Project />}></Route>
+        <Route path="/divisionalsecretary" element={<DivisionalSecrtary/>}></Route>
 
         <Route path="/"></Route>
 

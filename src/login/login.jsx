@@ -16,7 +16,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setError(""); // clear error when user types
+    setError("");
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -72,6 +72,10 @@ export default function Login() {
             navigate("/ruraldevofficer");
             break;
 
+          case "divisional_secretary": // ප්‍රාදේශීය ලේකම්
+            navigate("/divisionalSecretary");
+            break;
+
           case "society_chairman": // සමිති සභාපති
           case "society_treasurer": // සමිති භාණ්ඩාගාරික
           case "society_secretary": // සමිති ලේකම්
@@ -94,7 +98,7 @@ export default function Login() {
 
   return (
     <div className="auth-page">
-      <div className="auth-bg-animation" /> {/* animated background layer */}
+      <div className="auth-bg-animation" />
       <div className="login-card">
         <h2 className="auth-title">Welcome Back</h2>
         <p className="auth-subtitle">
