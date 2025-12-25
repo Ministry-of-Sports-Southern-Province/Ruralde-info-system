@@ -72,7 +72,7 @@ const DivisionalSecretary = () => {
               all.push({
                 id: reqDoc.id,
 
-                // from DO
+                // area
                 district: d.district || "N/A",
                 division: d.division || "N/A",
 
@@ -87,23 +87,24 @@ const DivisionalSecretary = () => {
                   typeof d.memberCount === "number" ? d.memberCount : null,
                 positions: d.positions || null,
 
-                // RDO signature
+                // RDO
                 ruralOfficerId: d.ruralOfficerId || "N/A",
                 ruralOfficerName: d.ruralOfficerName || "Unknown RDO",
                 ruralOfficerPosition: d.ruralOfficerPosition || "",
                 ruralOfficerDecision: d.ruralOfficerDecision || "Pending",
                 ruralOfficerNote: d.ruralOfficerNote || "",
 
-                // DO signature
+                // DO
                 districtOfficerId: d.districtOfficerId || "N/A",
                 districtOfficerName: d.districtOfficerName || "Unknown DO",
                 districtOfficerEmail: d.districtOfficerEmail || "",
                 districtDecision: d.districtDecision || "Pending",
                 districtNote: d.districtNote || "",
 
-                // Divisional Secretary decision
-                secretaryStatus: d.secretaryStatus || "Pending", // AcceptedByDS / RejectedByDS / ForwardedToSubject / Pending
+                // DS decision
+                secretaryStatus: d.secretaryStatus || "Pending", // Pending / AcceptedByDS / RejectedByDS / ForwardedToSubject
                 secretaryNote: d.secretaryNote || "",
+
                 createdAt:
                   d.createdAt && d.createdAt.toDate
                     ? d.createdAt.toDate().toLocaleString()
@@ -180,22 +181,14 @@ const DivisionalSecretary = () => {
       setRequests((prev) =>
         prev.map((r) =>
           r.id === selectedRequest.id
-            ? {
-                ...r,
-                secretaryStatus: newStatus,
-                secretaryNote: dsNote || "",
-              }
+            ? { ...r, secretaryStatus: newStatus, secretaryNote: dsNote || "" }
             : r
         )
       );
 
       setSelectedRequest((prev) =>
         prev
-          ? {
-              ...prev,
-              secretaryStatus: newStatus,
-              secretaryNote: dsNote || "",
-            }
+          ? { ...prev, secretaryStatus: newStatus, secretaryNote: dsNote || "" }
           : prev
       );
 
@@ -231,8 +224,6 @@ const DivisionalSecretary = () => {
     setActionLoading(true);
 
     try {
-      // Here we just update secretaryRequests to mark forwarded.
-      // If you want, you could also create a 'subjectRequests' collection.
       const docRef = doc(db, "secretaryRequests", selectedRequest.id);
       await updateDoc(docRef, {
         secretaryStatus: "ForwardedToSubject",
@@ -267,8 +258,13 @@ const DivisionalSecretary = () => {
   if (error) return <p className="ds-error">{error}</p>;
   if (!user) return null;
 
-  const latestRequests = requests;
+  // Latest list: exclude forwarded items (show only Pending/Accepted/Rejected)
+  const latestRequests = requests.filter(
+    (r) => r.secretaryStatus !== "ForwardedToSubject"
+  );
+  // History: all
   const historyRequests = requests;
+
   const totalPending = latestRequests.length;
   const totalHistory = historyRequests.length;
   const acceptedCount = historyRequests.filter(
@@ -333,7 +329,7 @@ const DivisionalSecretary = () => {
 
           <div className="sidebar-stats">
             <div className="stat-card">
-              <p className="stat-label">Pending Requests</p>
+              <p className="stat-label">Pending / Not Forwarded</p>
               <p className="stat-value">{totalPending}</p>
             </div>
             <div className="stat-card">
@@ -358,14 +354,14 @@ const DivisionalSecretary = () => {
 
         {/* RIGHT: REQUESTS & HISTORY + DETAIL */}
         <main className="ds-main">
-          {/* Latest Requests (from District Officer) */}
+          {/* Latest Requests (not forwarded yet) */}
           <section className="ds-card">
             <h3 className="card-title">District Officer Forwarded Registrations</h3>
             {loadingRequests ? (
               <p className="muted-text">Loading requests...</p>
             ) : latestRequests.length === 0 ? (
               <p className="muted-text">
-                No forwarded registration references for your division.
+                No pending/decided registrations waiting to be forwarded.
               </p>
             ) : (
               <ul className="letter-list">
@@ -381,8 +377,7 @@ const DivisionalSecretary = () => {
                         <strong>{req.societyName}</strong> ({req.registerNo})
                       </p>
                       <p className="letter-sub">
-                        From District: {req.district} | Division:{" "}
-                        {req.division}
+                        From District: {req.district} | Division: {req.division}
                       </p>
                       <p className="letter-sub">
                         RDO: {req.ruralOfficerName} ({req.ruralOfficerDecision})
@@ -401,12 +396,11 @@ const DivisionalSecretary = () => {
                           DO Note: {req.districtNote}
                         </p>
                       )}
-                      {req.secretaryStatus &&
-                        req.secretaryStatus !== "Pending" && (
-                          <p className="letter-sub">
-                            DS Status: {req.secretaryStatus}
-                          </p>
-                        )}
+                      {req.secretaryStatus !== "Pending" && (
+                        <p className="letter-sub">
+                          DS Status: {req.secretaryStatus}
+                        </p>
+                      )}
                     </div>
                     <span
                       className={`badge ${
@@ -414,8 +408,6 @@ const DivisionalSecretary = () => {
                           ? "badge-success"
                           : req.secretaryStatus === "RejectedByDS"
                           ? "badge-danger"
-                          : req.secretaryStatus === "ForwardedToSubject"
-                          ? "badge-warning"
                           : "badge-warning"
                       }`}
                     >
@@ -530,8 +522,8 @@ const DivisionalSecretary = () => {
                   <div className="referral-form" style={{ marginTop: "10px" }}>
                     <h4>Divisional Secretary Decision</h4>
                     <p className="muted-text">
-                      You can Accept or Reject only once, then optionally
-                      forward to the Subject Officer.
+                      Accept or Reject one time. After that you can forward to
+                      Subject Officer.
                     </p>
 
                     <label>Divisional Secretary Note</label>
@@ -555,7 +547,7 @@ const DivisionalSecretary = () => {
                       <p className="ds-success">{actionSuccess}</p>
                     )}
 
-                    {/* Accept / Reject visible only if DS has not yet decided */}
+                    {/* Accept / Reject visible only if DS has NOT yet decided */}
                     {selectedRequest.secretaryStatus === "Pending" && (
                       <div
                         className="referral-actions"
@@ -647,12 +639,11 @@ const DivisionalSecretary = () => {
                             {req.districtOfficerName}
                           </p>
                           <p className="letter-sub">Date: {req.createdAt}</p>
-                          {req.secretaryStatus &&
-                            req.secretaryStatus !== "Pending" && (
-                              <p className="letter-sub">
-                                DS Status: {req.secretaryStatus}
-                              </p>
-                            )}
+                          {req.secretaryStatus !== "Pending" && (
+                            <p className="letter-sub">
+                              DS Status: {req.secretaryStatus}
+                            </p>
+                          )}
                         </div>
                         <span
                           className={`badge ${
@@ -689,20 +680,15 @@ const PositionBlock = ({ title, data }) => {
         <strong>නම:</strong> {d.fullName || "N/A"}
       </p>
       <p>
-        <strong>ලිපිනය:</strong> {d.address || "N/A"}
-      </p>
+        <strong>ලිපිනය:</strong> {d.address || "N/A"}</p>
       <p>
-        <strong>දුරකථන:</strong> {d.phone || "N/A"}
-      </p>
+        <strong>දුරකථන:</strong> {d.phone || "N/A"}</p>
       <p>
-        <strong>ඊමේල්:</strong> {d.email || "N/A"}
-      </p>
+        <strong>ඊමේල්:</strong> {d.email || "N/A"}</p>
       <p>
-        <strong>ජා.හැ.අංකය:</strong> {d.nic || "N/A"}
-      </p>
+        <strong>ජා.හැ.අංකය:</strong> {d.nic || "N/A"}</p>
       <p>
-        <strong>උපන් දිනය:</strong> {d.dob || "N/A"}
-      </p>
+        <strong>උපන් දිනය:</strong> {d.dob || "N/A"}</p>
     </div>
   );
 };

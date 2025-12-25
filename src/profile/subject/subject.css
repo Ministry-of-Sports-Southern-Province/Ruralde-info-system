@@ -507,3 +507,51 @@
     transform: translateY(0) scale(1);
   }
 }
+.subject-detail-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px 18px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+  margin-top: 16px;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.6fr);
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.society-card,
+.positions-card,
+.approval-chain,
+.subject-action-card {
+  background: #f9fafb;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.chain-step {
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  background: #f3f4ff;
+}
+
+.subject-step {
+  background: #ecfeff;
+}
+
+.forward-btn {
+  width: 100%;
+  margin-top: 8px;
+}
