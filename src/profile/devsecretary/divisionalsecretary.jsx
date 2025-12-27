@@ -19,16 +19,20 @@ const DivisionalSecretary = () => {
   const [loadingUser, setLoadingUser] = useState(true);
   const [error, setError] = useState("");
 
-  const [requests, setRequests] = useState([]); // secretaryRequests for this division
+  const [requests, setRequests] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
-
-  const [showHistory, setShowHistory] = useState(false);
 
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [dsNote, setDsNote] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [actionSuccess, setActionSuccess] = useState("");
   const [actionError, setActionError] = useState("");
+
+  const [showSensitiveInfo, setShowSensitiveInfo] = useState(false);
+
+  // Tabs: pending | history | analytics
+  const [activeTab, setActiveTab] = useState("pending");
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     const fetchUserAndData = async () => {
@@ -147,9 +151,9 @@ const DivisionalSecretary = () => {
     setDsNote(req.secretaryNote || "");
     setActionError("");
     setActionSuccess("");
+    setActiveTab("pending");
   };
 
-  // DS Accept / Reject – only one time
   const handleDsDecision = async (decision) => {
     if (!selectedRequest || !user) return;
 
@@ -205,7 +209,6 @@ const DivisionalSecretary = () => {
     }
   };
 
-  // Forward to Subject Officer – only after DS has decided
   const handleForwardToSubjectOfficer = async () => {
     if (!selectedRequest || !user) return;
 
@@ -258,11 +261,9 @@ const DivisionalSecretary = () => {
   if (error) return <p className="ds-error">{error}</p>;
   if (!user) return null;
 
-  // Latest list: exclude forwarded items (show only Pending/Accepted/Rejected)
   const latestRequests = requests.filter(
     (r) => r.secretaryStatus !== "ForwardedToSubject"
   );
-  // History: all
   const historyRequests = requests;
 
   const totalPending = latestRequests.length;
@@ -274,18 +275,19 @@ const DivisionalSecretary = () => {
   return (
     <section className="ds-dashboard">
       <div className="ds-shell">
-        {/* LEFT: PROFILE SIDEBAR */}
+        {/* ===== LEFT SIDEBAR ===== */}
         <aside className="ds-sidebar">
           <div className="ds-sidebar-topbar">
             <div className="sidebar-brand">
               <p>දකුණු පළාත් ග්‍රාම සංවර්ධන දෙපාර්තමේන්තුව</p>
-              <span>Pradeshiya Lekam Profile</span>
+              <span>Divisional Secretary Dashboard</span>
             </div>
             <button className="signout-btn" onClick={handleSignOut}>
               Sign Out
             </button>
           </div>
 
+          {/* Profile card */}
           <div className="ds-profile-card">
             <div className="ds-avatar">
               <div className="avatar-circle">
@@ -297,36 +299,46 @@ const DivisionalSecretary = () => {
               ප්‍රාදේශීය ලේකම් (Divisional Secretary)
             </p>
 
-            <div className="info-row">
-              <span className="info-label">Email</span>
-              <span className="info-value">{user.email || "N/A"}</span>
-            </div>
-            <div className="info-row">
-              <span className="info-label">Contact</span>
-              <span className="info-value">
-                {user.contactnumber || "N/A"}
-              </span>
-            </div>
-            <div className="info-row">
-              <span className="info-label">Identity No</span>
-              <span className="info-value">
-                {user.identitynumber || "N/A"}
-              </span>
+            <p className="ds-area-tag">
+              {user.district || "සියලුම"} / {user.division || "සියලුම"}{" "}
+              ප්‍රා.ලේ.
+            </p>
+
+            {/* Collapsible profile info */}
+            <div className="ds-info-card">
+              <button
+                type="button"
+                className="ds-info-toggle"
+                onClick={() => setShowSensitiveInfo((s) => !s)}
+              >
+                <span>පෞද්ගලික තොරතුරු (Profile Info)</span>
+                <span>{showSensitiveInfo ? "▴" : "▾"}</span>
+              </button>
+
+              {showSensitiveInfo && (
+                <div className="ds-info-body">
+                  <div className="info-row">
+                    <span className="info-label">Email</span>
+                    <span className="info-value">{user.email || "N/A"}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">Contact</span>
+                    <span className="info-value">
+                      {user.contactnumber || "N/A"}
+                    </span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">Identity No</span>
+                    <span className="info-value">
+                      {user.identitynumber || "N/A"}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="ds-info-card">
-            <h4 className="sidebar-section-title">Area Information</h4>
-            <div className="info-row">
-              <span className="info-label">District</span>
-              <span className="info-value">{user.district || "N/A"}</span>
-            </div>
-            <div className="info-row">
-              <span className="info-label">Secretary Division</span>
-              <span className="info-value">{user.division || "N/A"}</span>
-            </div>
-          </div>
-
+          {/* Stats */}
           <div className="sidebar-stats">
             <div className="stat-card">
               <p className="stat-label">Pending / Not Forwarded</p>
@@ -342,288 +354,76 @@ const DivisionalSecretary = () => {
             </div>
           </div>
 
+          {/* Notes */}
           <div className="sidebar-notes">
-            <h4>Key Responsibilities</h4>
+            <h4>ඔබගේ භූමිකාව</h4>
             <ul>
-              <li>ප්‍රාදේශීය මට්ටමින් ග්‍රාම සංවර්ධන වැඩසටහන් සමනායකත්වය දැරීම.</li>
-              <li>ග්‍රාම සංවර්ධන නිලධාරීන් හා සමිතියන් සමඟ සම්බන්ධතාවය තබා ගැනීම.</li>
-              <li>දිස්ත්‍රික් හා පලාත් මට්ටමේ වාර්තා සකස් කර ඉදිරිපත් කිරීම.</li>
+              <li>ප්‍රාදේශීය මට්ටමින් ග්‍රාම සංවර්ධන වැඩසටහන් සැලසුම් හා පාලනය.</li>
+              <li>RDO / DO මට්ටමේ නියමිත පියවර සලකා බැලීම.</li>
+              <li>විෂය භාර නිලධාරී වෙත නිසි වාර්තා යොමු කිරීම.</li>
             </ul>
           </div>
         </aside>
 
-        {/* RIGHT: REQUESTS & HISTORY + DETAIL */}
+        {/* ===== RIGHT MAIN WITH TABS ===== */}
         <main className="ds-main">
-          {/* Latest Requests (not forwarded yet) */}
-          <section className="ds-card">
-            <h3 className="card-title">District Officer Forwarded Registrations</h3>
-            {loadingRequests ? (
-              <p className="muted-text">Loading requests...</p>
-            ) : latestRequests.length === 0 ? (
-              <p className="muted-text">
-                No pending/decided registrations waiting to be forwarded.
-              </p>
-            ) : (
-              <ul className="letter-list">
-                {latestRequests.map((req) => (
-                  <li
-                    key={req.id}
-                    className="letter-item"
-                    onClick={() => handleSelectRequest(req)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <div>
-                      <p className="letter-type">
-                        <strong>{req.societyName}</strong> ({req.registerNo})
-                      </p>
-                      <p className="letter-sub">
-                        From District: {req.district} | Division: {req.division}
-                      </p>
-                      <p className="letter-sub">
-                        RDO: {req.ruralOfficerName} ({req.ruralOfficerDecision})
-                      </p>
-                      <p className="letter-sub">
-                        DO: {req.districtOfficerName} ({req.districtDecision})
-                      </p>
-                      <p className="letter-sub">Date: {req.createdAt}</p>
-                      {req.ruralOfficerNote && (
-                        <p className="letter-sub">
-                          RDO Note: {req.ruralOfficerNote}
-                        </p>
-                      )}
-                      {req.districtNote && (
-                        <p className="letter-sub">
-                          DO Note: {req.districtNote}
-                        </p>
-                      )}
-                      {req.secretaryStatus !== "Pending" && (
-                        <p className="letter-sub">
-                          DS Status: {req.secretaryStatus}
-                        </p>
-                      )}
-                    </div>
-                    <span
-                      className={`badge ${
-                        req.secretaryStatus === "AcceptedByDS"
-                          ? "badge-success"
-                          : req.secretaryStatus === "RejectedByDS"
-                          ? "badge-danger"
-                          : "badge-warning"
-                      }`}
-                    >
-                      {req.secretaryStatus}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+          {/* Tabs */}
+          <div className="ds-tab-bar">
+            <button
+              className={`ds-tab-item ${
+                activeTab === "pending" ? "ds-tab-item-active" : ""
+              }`}
+              onClick={() => setActiveTab("pending")}
+            >
+              Pending & Actions
+            </button>
+            <button
+              className={`ds-tab-item ${
+                activeTab === "history" ? "ds-tab-item-active" : ""
+              }`}
+              onClick={() => setActiveTab("history")}
+            >
+              History
+            </button>
+            <button
+              className={`ds-tab-item ${
+                activeTab === "analytics" ? "ds-tab-item-active" : ""
+              }`}
+              onClick={() => setActiveTab("analytics")}
+            >
+              Analytics
+            </button>
+          </div>
 
-          {/* Detail + DS Accept/Reject + Forward */}
-          {selectedRequest && (
-            <section className="ds-card referral-card">
-              <div className="referral-header">
+          {/* Header */}
+          <div className="ds-main-header">
+            <h1 className="ds-main-title">
+              Divisional Level Society Registration Management
+            </h1>
+            <p className="ds-main-subtitle">
+              RDO හා DO මට්ටමේ අනුමැති ලැබූ ග්‍රාම සංවර්ධන සමිතිවල ලියාපදිංචි
+              ඉල්ලීම් ප්‍රාදේශීය ලේකම් ලෙස ඔබ විසින් සමාලෝචනය කර, Accept /
+              Reject තීරණය ලබා දී, විෂය භාර නිලධාරී වෙත යොමු කිරීම මෙහිදී
+              සිදු වේ.
+            </p>
+          </div>
+
+          {/* TAB: Pending & Actions */}
+          {activeTab === "pending" && (
+            <>
+              <section className="ds-card">
                 <h3 className="card-title">
-                  Society Registration Details – {selectedRequest.societyName}
+                  District Officer Forwarded Registrations
                 </h3>
-                <button
-                  type="button"
-                  className="btn-close-referral"
-                  onClick={() => {
-                    setSelectedRequest(null);
-                    setDsNote("");
-                    setActionError("");
-                    setActionSuccess("");
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="referral-body">
-                <div className="ref-society-details">
-                  <h4>Society Information</h4>
-                  <p>
-                    <strong>Register No:</strong>{" "}
-                    {selectedRequest.registerNo}
-                  </p>
-                  <p>
-                    <strong>Address:</strong>{" "}
-                    {selectedRequest.societyAddress}
-                  </p>
-                  <p>
-                    <strong>Phone:</strong> {selectedRequest.societyPhone}
-                  </p>
-                  <p>
-                    <strong>Email:</strong> {selectedRequest.societyEmail}
-                  </p>
-                  <p>
-                    <strong>Members:</strong>{" "}
-                    {selectedRequest.memberCount ?? "N/A"}
-                  </p>
-
-                  <h4 style={{ marginTop: "10px" }}>Positions</h4>
-                  {selectedRequest.positions ? (
-                    <>
-                      <PositionBlock
-                        title="සභාපති (Chairman)"
-                        data={selectedRequest.positions.chairman}
-                      />
-                      <PositionBlock
-                        title="ලේකම් (Secretary)"
-                        data={selectedRequest.positions.secretary}
-                      />
-                      <PositionBlock
-                        title="භාණ්ඩාගාරික (Treasurer)"
-                        data={selectedRequest.positions.treasurer}
-                      />
-                    </>
-                  ) : (
-                    <p className="muted-text">
-                      Position details not available.
-                    </p>
-                  )}
-                </div>
-
-                <div className="ref-society-details">
-                  <h4>Officer Signatures</h4>
-                  <p>
-                    <strong>Rural Development Officer:</strong>{" "}
-                    {selectedRequest.ruralOfficerName} (
-                    {selectedRequest.ruralOfficerId})
-                  </p>
-                  <p>
-                    <strong>RDO Decision:</strong>{" "}
-                    {selectedRequest.ruralOfficerDecision}
-                  </p>
-                  {selectedRequest.ruralOfficerNote && (
-                    <p>
-                      <strong>RDO Note:</strong>{" "}
-                      {selectedRequest.ruralOfficerNote}
-                    </p>
-                  )}
-                  <hr />
-                  <p>
-                    <strong>District Officer:</strong>{" "}
-                    {selectedRequest.districtOfficerName} (
-                    {selectedRequest.districtOfficerId})
-                  </p>
-                  <p>
-                    <strong>DO Decision:</strong>{" "}
-                    {selectedRequest.districtDecision}
-                  </p>
-                  {selectedRequest.districtNote && (
-                    <p>
-                      <strong>DO Note:</strong>{" "}
-                      {selectedRequest.districtNote}
-                    </p>
-                  )}
-
-                  <div className="referral-form" style={{ marginTop: "10px" }}>
-                    <h4>Divisional Secretary Decision</h4>
-                    <p className="muted-text">
-                      Accept or Reject one time. After that you can forward to
-                      Subject Officer.
-                    </p>
-
-                    <label>Divisional Secretary Note</label>
-                    <textarea
-                      value={dsNote}
-                      onChange={(e) => setDsNote(e.target.value)}
-                      rows={3}
-                      placeholder="Enter your note..."
-                      disabled={
-                        selectedRequest.secretaryStatus === "AcceptedByDS" ||
-                        selectedRequest.secretaryStatus === "RejectedByDS" ||
-                        selectedRequest.secretaryStatus ===
-                          "ForwardedToSubject"
-                      }
-                    />
-
-                    {actionError && (
-                      <p className="ds-error">{actionError}</p>
-                    )}
-                    {actionSuccess && (
-                      <p className="ds-success">{actionSuccess}</p>
-                    )}
-
-                    {/* Accept / Reject visible only if DS has NOT yet decided */}
-                    {selectedRequest.secretaryStatus === "Pending" && (
-                      <div
-                        className="referral-actions"
-                        style={{ marginTop: 8 }}
-                      >
-                        <button
-                          type="button"
-                          className="btn-decline"
-                          disabled={actionLoading}
-                          onClick={() => handleDsDecision("reject")}
-                        >
-                          {actionLoading ? "Processing..." : "Reject"}
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-accept"
-                          disabled={actionLoading}
-                          onClick={() => handleDsDecision("accept")}
-                        >
-                          {actionLoading ? "Processing..." : "Accept"}
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Forward button visible only AFTER DS has decided */}
-                    {(selectedRequest.secretaryStatus === "AcceptedByDS" ||
-                      selectedRequest.secretaryStatus === "RejectedByDS" ||
-                      selectedRequest.secretaryStatus ===
-                        "ForwardedToSubject") && (
-                      <button
-                        type="button"
-                        className="btn-accept"
-                        style={{ marginTop: 8 }}
-                        disabled={
-                          actionLoading ||
-                          selectedRequest.secretaryStatus ===
-                            "ForwardedToSubject"
-                        }
-                        onClick={handleForwardToSubjectOfficer}
-                      >
-                        {actionLoading
-                          ? "Forwarding..."
-                          : selectedRequest.secretaryStatus ===
-                            "ForwardedToSubject"
-                          ? "Already Forwarded to Subject Officer"
-                          : "Forward to Subject Officer"}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* HISTORY */}
-          <section className="ds-card">
-            <div className="history-header">
-              <h3 className="card-title">Registration History (DS)</h3>
-              <button
-                type="button"
-                className="toggle-btn"
-                onClick={() => setShowHistory((prev) => !prev)}
-              >
-                {showHistory ? "Hide" : "Show"} History
-              </button>
-            </div>
-
-            {showHistory && (
-              <div className="history-content">
                 {loadingRequests ? (
-                  <p className="muted-text">Loading history...</p>
-                ) : historyRequests.length === 0 ? (
-                  <p className="muted-text">No history records.</p>
+                  <p className="muted-text">Loading requests...</p>
+                ) : latestRequests.length === 0 ? (
+                  <p className="muted-text">
+                    No pending/decided registrations waiting to be forwarded.
+                  </p>
                 ) : (
                   <ul className="letter-list">
-                    {historyRequests.map((req) => (
+                    {latestRequests.map((req) => (
                       <li
                         key={req.id}
                         className="letter-item"
@@ -635,10 +435,27 @@ const DivisionalSecretary = () => {
                             <strong>{req.societyName}</strong> ({req.registerNo})
                           </p>
                           <p className="letter-sub">
-                            RDO: {req.ruralOfficerName} | DO:{" "}
-                            {req.districtOfficerName}
+                            District: {req.district} | Division: {req.division}
+                          </p>
+                          <p className="letter-sub">
+                            RDO: {req.ruralOfficerName} (
+                            {req.ruralOfficerDecision})
+                          </p>
+                          <p className="letter-sub">
+                            DO: {req.districtOfficerName} (
+                            {req.districtDecision})
                           </p>
                           <p className="letter-sub">Date: {req.createdAt}</p>
+                          {req.ruralOfficerNote && (
+                            <p className="letter-sub">
+                              RDO Note: {req.ruralOfficerNote}
+                            </p>
+                          )}
+                          {req.districtNote && (
+                            <p className="letter-sub">
+                              DO Note: {req.districtNote}
+                            </p>
+                          )}
                           {req.secretaryStatus !== "Pending" && (
                             <p className="letter-sub">
                               DS Status: {req.secretaryStatus}
@@ -651,8 +468,6 @@ const DivisionalSecretary = () => {
                               ? "badge-success"
                               : req.secretaryStatus === "RejectedByDS"
                               ? "badge-danger"
-                              : req.secretaryStatus === "ForwardedToSubject"
-                              ? "badge-warning"
                               : "badge-warning"
                           }`}
                         >
@@ -662,9 +477,299 @@ const DivisionalSecretary = () => {
                     ))}
                   </ul>
                 )}
+              </section>
+
+              {selectedRequest && (
+                <section className="ds-card referral-card">
+                  <div className="referral-header">
+                    <h3 className="card-title">
+                      Society Registration – {selectedRequest.societyName}
+                    </h3>
+                    <button
+                      type="button"
+                      className="btn-close-referral"
+                      onClick={() => {
+                        setSelectedRequest(null);
+                        setDsNote("");
+                        setActionError("");
+                        setActionSuccess("");
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="referral-body">
+                    <div className="ref-society-details">
+                      <h4>Society Information</h4>
+                      <p>
+                        <strong>Register No:</strong>{" "}
+                        {selectedRequest.registerNo}
+                      </p>
+                      <p>
+                        <strong>Address:</strong>{" "}
+                        {selectedRequest.societyAddress}
+                      </p>
+                      <p>
+                        <strong>Phone:</strong>{" "}
+                        {selectedRequest.societyPhone}
+                      </p>
+                      <p>
+                        <strong>Email:</strong>{" "}
+                        {selectedRequest.societyEmail}
+                      </p>
+                      <p>
+                        <strong>Members:</strong>{" "}
+                        {selectedRequest.memberCount ?? "N/A"}
+                      </p>
+
+                      <h4 style={{ marginTop: "10px" }}>Positions</h4>
+                      {selectedRequest.positions ? (
+                        <>
+                          <PositionBlock
+                            title="සභාපති (Chairman)"
+                            data={selectedRequest.positions.chairman}
+                          />
+                          <PositionBlock
+                            title="ලේකම් (Secretary)"
+                            data={selectedRequest.positions.secretary}
+                          />
+                          <PositionBlock
+                            title="භාණ්ඩාගාරික (Treasurer)"
+                            data={selectedRequest.positions.treasurer}
+                          />
+                        </>
+                      ) : (
+                        <p className="muted-text">
+                          Position details not available.
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="ref-society-details">
+                      <h4>Officer Signatures</h4>
+                      <p>
+                        <strong>Rural Development Officer:</strong>{" "}
+                        {selectedRequest.ruralOfficerName} (
+                        {selectedRequest.ruralOfficerId})
+                      </p>
+                      <p>
+                        <strong>RDO Decision:</strong>{" "}
+                        {selectedRequest.ruralOfficerDecision}
+                      </p>
+                      {selectedRequest.ruralOfficerNote && (
+                        <p>
+                          <strong>RDO Note:</strong>{" "}
+                          {selectedRequest.ruralOfficerNote}
+                        </p>
+                      )}
+                      <hr />
+                      <p>
+                        <strong>District Officer:</strong>{" "}
+                        {selectedRequest.districtOfficerName} (
+                        {selectedRequest.districtOfficerId})
+                      </p>
+                      <p>
+                        <strong>DO Decision:</strong>{" "}
+                        {selectedRequest.districtDecision}
+                      </p>
+                      {selectedRequest.districtNote && (
+                        <p>
+                          <strong>DO Note:</strong>{" "}
+                          {selectedRequest.districtNote}
+                        </p>
+                      )}
+
+                      <div className="referral-form" style={{ marginTop: 10 }}>
+                        <h4>Divisional Secretary Decision</h4>
+                        <p className="muted-text">
+                          Accept / Reject තීරණය එක් වරක් පමණක් ලබා දිය යුතුය.
+                          Accept / Reject අනතුරුව &quot;Forward to Subject
+                          Officer&quot; භාවිතා කර විෂයනිලධාරී වෙත යොමු
+                          කරන්න.
+                        </p>
+
+                        <label>Divisional Secretary Note</label>
+                        <textarea
+                          value={dsNote}
+                          onChange={(e) => setDsNote(e.target.value)}
+                          rows={3}
+                          placeholder="ඔබගේ සටහන මෙහි ලියා තබන්න..."
+                          disabled={
+                            selectedRequest.secretaryStatus === "AcceptedByDS" ||
+                            selectedRequest.secretaryStatus === "RejectedByDS" ||
+                            selectedRequest.secretaryStatus ===
+                              "ForwardedToSubject"
+                          }
+                        />
+
+                        {actionError && (
+                          <p className="ds-error">{actionError}</p>
+                        )}
+                        {actionSuccess && (
+                          <p className="ds-success">{actionSuccess}</p>
+                        )}
+
+                        {selectedRequest.secretaryStatus === "Pending" && (
+                          <div
+                            className="referral-actions"
+                            style={{ marginTop: 8 }}
+                          >
+                            <button
+                              type="button"
+                              className="btn-decline"
+                              disabled={actionLoading}
+                              onClick={() => handleDsDecision("reject")}
+                            >
+                              {actionLoading ? "Processing..." : "Reject"}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-accept"
+                              disabled={actionLoading}
+                              onClick={() => handleDsDecision("accept")}
+                            >
+                              {actionLoading ? "Processing..." : "Accept"}
+                            </button>
+                          </div>
+                        )}
+
+                        {(selectedRequest.secretaryStatus === "AcceptedByDS" ||
+                          selectedRequest.secretaryStatus ===
+                            "RejectedByDS" ||
+                          selectedRequest.secretaryStatus ===
+                            "ForwardedToSubject") && (
+                          <button
+                            type="button"
+                            className="btn-accept"
+                            style={{ marginTop: 8 }}
+                            disabled={
+                              actionLoading ||
+                              selectedRequest.secretaryStatus ===
+                                "ForwardedToSubject"
+                            }
+                            onClick={handleForwardToSubjectOfficer}
+                          >
+                            {actionLoading
+                              ? "Forwarding..."
+                              : selectedRequest.secretaryStatus ===
+                                "ForwardedToSubject"
+                              ? "Already Forwarded to Subject Officer"
+                              : "Forward to Subject Officer"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              )}
+            </>
+          )}
+
+          {/* TAB: History */}
+          {activeTab === "history" && (
+            <section className="ds-card">
+              <div className="history-header">
+                <h3 className="card-title">Registration History (DS)</h3>
+                <button
+                  type="button"
+                  className="toggle-btn"
+                  onClick={() => setShowHistory((prev) => !prev)}
+                >
+                  {showHistory ? "Hide" : "Show"} History
+                </button>
               </div>
-            )}
-          </section>
+
+              {showHistory && (
+                <div className="history-content">
+                  {loadingRequests ? (
+                    <p className="muted-text">Loading history...</p>
+                  ) : historyRequests.length === 0 ? (
+                    <p className="muted-text">No history records.</p>
+                  ) : (
+                    <ul className="letter-list">
+                      {historyRequests.map((req) => (
+                        <li
+                          key={req.id}
+                          className="letter-item"
+                          onClick={() => handleSelectRequest(req)}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <div>
+                            <p className="letter-type">
+                              <strong>{req.societyName}</strong> (
+                              {req.registerNo})
+                            </p>
+                            <p className="letter-sub">
+                              District: {req.district} | Division:{" "}
+                              {req.division}
+                            </p>
+                            <p className="letter-sub">Date: {req.createdAt}</p>
+                            {req.secretaryStatus !== "Pending" && (
+                              <p className="letter-sub">
+                                DS Status: {req.secretaryStatus}
+                              </p>
+                            )}
+                          </div>
+                          <span
+                            className={`badge ${
+                              req.secretaryStatus === "AcceptedByDS"
+                                ? "badge-success"
+                                : req.secretaryStatus === "RejectedByDS"
+                                ? "badge-danger"
+                                : req.secretaryStatus === "ForwardedToSubject"
+                                ? "badge-warning"
+                                : "badge-warning"
+                            }`}
+                          >
+                            {req.secretaryStatus}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* TAB: Analytics */}
+          {activeTab === "analytics" && (
+            <section className="ds-card">
+              <h3 className="card-title">ප්‍රාදේශීය මට්ටමේ විශ්ලේෂණය</h3>
+              <p className="muted-text">
+                පහත සංඛ්‍යාත දත්ත මගින් ඔබගේ ප්‍රාදේශීය ලියාපදිංචි
+                ක්‍රියාවලිය පිළිබඳ සරල දර්ශනයක් ලබා ගත හැක.
+              </p>
+
+              <div className="ds-analytics-grid">
+                <div className="ds-analytics-card">
+                  <h4>Pending / Not Forwarded</h4>
+                  <p className="ds-analytics-number">{totalPending}</p>
+                  <p className="ds-analytics-label">
+                    දැනටමත් DS මට්ටමේ තීරණය බලා සිටින හෝ තීරණය කළ ද
+                    Subject Officer වෙත යොමු කළ නොමැති ඉල්ලීම් ගණන.
+                  </p>
+                </div>
+                <div className="ds-analytics-card">
+                  <h4>Accepted (DS)</h4>
+                  <p className="ds-analytics-number">{acceptedCount}</p>
+                  <p className="ds-analytics-label">
+                    ඔබ විසින් &quot;Accepted&quot; ලෙස සලකන ලද ලියාපදිංචි
+                    ඉල්ලීම් සංඛ්‍යාව.
+                  </p>
+                </div>
+                <div className="ds-analytics-card">
+                  <h4>Total History</h4>
+                  <p className="ds-analytics-number">{totalHistory}</p>
+                  <p className="ds-analytics-label">
+                    ඔබගේ ප්‍රාදේශීය ලේකම් කොට්ඨාසයට අදාල සියලුම ඉල්ලීම්
+                    ගණන.
+                  </p>
+                </div>
+              </div>
+            </section>
+          )}
         </main>
       </div>
     </section>
@@ -680,15 +785,20 @@ const PositionBlock = ({ title, data }) => {
         <strong>නම:</strong> {d.fullName || "N/A"}
       </p>
       <p>
-        <strong>ලිපිනය:</strong> {d.address || "N/A"}</p>
+        <strong>ලිපිනය:</strong> {d.address || "N/A"}
+      </p>
       <p>
-        <strong>දුරකථන:</strong> {d.phone || "N/A"}</p>
+        <strong>දුරකථන:</strong> {d.phone || "N/A"}
+      </p>
       <p>
-        <strong>ඊමේල්:</strong> {d.email || "N/A"}</p>
+        <strong>ඊමේල්:</strong> {d.email || "N/A"}
+      </p>
       <p>
-        <strong>ජා.හැ.අංකය:</strong> {d.nic || "N/A"}</p>
+        <strong>ජා.හැ.අංකය:</strong> {d.nic || "N/A"}
+      </p>
       <p>
-        <strong>උපන් දිනය:</strong> {d.dob || "N/A"}</p>
+        <strong>උපන් දිනය:</strong> {d.dob || "N/A"}
+      </p>
     </div>
   );
 };

@@ -20,8 +20,6 @@ const Subject = () => {
   const [requests, setRequests] = useState([]); // secretaryRequests (all)
   const [loadingRequests, setLoadingRequests] = useState(false);
 
-  const [showHistory, setShowHistory] = useState(false);
-
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [subjectNote, setSubjectNote] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
@@ -29,6 +27,10 @@ const Subject = () => {
   const [actionError, setActionError] = useState("");
 
   const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [showSensitiveInfo, setShowSensitiveInfo] = useState(false);
+
+  // Tabs: pending | requested | history | analytics
+  const [activeTab, setActiveTab] = useState("pending");
 
   // ===== LOAD USER + SECRETARY REQUESTS =====
   useEffect(() => {
@@ -165,6 +167,7 @@ const Subject = () => {
     setSubjectNote(req.subjectNote || "");
     setActionError("");
     setActionSuccess("");
+    setActiveTab("pending");
   };
 
   // ===== SUBJECT OFFICER DECISION: ACCEPT / REJECT =====
@@ -177,7 +180,7 @@ const Subject = () => {
       selectedRequest.subjectStatus === "ForwardedToDirector"
     ) {
       setActionError(
-        "මෙම ලියාපදිංචිය සදහා ඔබේ (Subject Officer) තීරණය දැනටමත් ලබා දී ඇත."
+        "මෙම ලියාපදිංචිය සඳහා ඔබගේ (විෂය නිලධාරී) තීරණය දැනටමත් ලබා දී ඇත."
       );
       return;
     }
@@ -227,8 +230,8 @@ const Subject = () => {
 
       setActionSuccess(
         decision === "accept"
-          ? "සමිතිය විෂය මට්ටමින් (Accepted) ලෙස සළකනු ලැබීය."
-          : "සමිතිය විෂය මට්ටමින් (Rejected) ලෙස සළකනු ලැබීය."
+          ? "සමිතිය විෂය මට්ටමින් (අනුමත) ලෙස සලකනු ලැබීය."
+          : "සමිතිය විෂය මට්ටමින් (ප්‍රත්‍යාකරණය) කරන ලදී."
       );
     } catch (err) {
       console.error("Error updating subject decision:", err);
@@ -289,12 +292,16 @@ const Subject = () => {
   if (error) return <p className="error-text">{error}</p>;
   if (!user) return null;
 
-  const latestRequests = requests;       // show all in inbox
-  const historyRequests = requests;      // same list in history
+  const latestRequests = requests;
+  const historyRequests = requests;
+
   const totalPending = latestRequests.length;
   const totalHistory = historyRequests.length;
   const acceptedCount = historyRequests.filter(
     (r) => r.subjectStatus === "AcceptedBySubject"
+  ).length;
+  const forwardedCount = historyRequests.filter(
+    (r) => r.subjectStatus === "ForwardedToDirector"
   ).length;
 
   return (
@@ -303,9 +310,9 @@ const Subject = () => {
       {showSignOutModal && (
         <div className="modal-backdrop">
           <div className="modal-card">
-            <h3 className="modal-title">Confirm Sign Out</h3>
+            <h3 className="modal-title">Sign Out</h3>
             <p className="modal-message">
-              Are you sure you want to sign out from your account?
+              ඔබගේ ගිනුමෙන් ඉවත්වීමට බලාපොරොත්තුද?
             </p>
             <div className="modal-actions">
               <button
@@ -313,14 +320,14 @@ const Subject = () => {
                 className="modal-btn modal-btn-cancel"
                 onClick={handleCancelSignOut}
               >
-                No, Stay Logged In
+                නැවත Dashboard හි පවතින්න
               </button>
               <button
                 type="button"
                 className="modal-btn modal-btn-confirm"
                 onClick={handleConfirmSignOut}
               >
-                Yes, Sign Out
+                ඔව්, Sign Out වන්න
               </button>
             </div>
           </div>
@@ -328,7 +335,7 @@ const Subject = () => {
       )}
 
       <div className="subject-shell">
-        {/* SIDEBAR */}
+        {/* ===== SIDEBAR ===== */}
         <aside className="subject-sidebar">
           <div className="sidebar-header">
             <div>
@@ -350,69 +357,498 @@ const Subject = () => {
               />
             </div>
             <h2 className="sidebar-name">{user.username}</h2>
-            <p className="sidebar-role">
-              විෂය භාර නිලධාරී <span>(Subject Officer)</span>
+            <p className="sidebar-role-main">
+              {user.position || "විෂය භාර නිලධාරී"}
+            </p>
+            <p className="sidebar-role-sub">
+              විෂය භාර නිලධාරී – {user.district || "සියලුම"} දිස්ත්‍රික්කය
             </p>
 
-            <div className="sidebar-info">
-              <p>
-                <strong>District:</strong> {user.district || "N/A"}
-              </p>
-              <p>
-                <strong>Division:</strong> {user.division || "N/A"}
-              </p>
-              <p>
-                <strong>Society:</strong> {user.society || "N/A"}
-              </p>
-              <p>
-                <strong>Contact:</strong> {user.contactnumber || "N/A"}
-              </p>
-              <p>
-                <strong>Email:</strong> {user.email || "N/A"}
-              </p>
+            <p className="sidebar-area-tag">
+              {user.district || "සියලුම"} / {user.division || "සියලුම"}{" "}
+              ප්‍රා.ලේ.
+            </p>
+
+            {/* Collapsible profile (sensitive) */}
+            <div className="sidebar-info-card">
+              <button
+                type="button"
+                className="sidebar-info-toggle"
+                onClick={() => setShowSensitiveInfo((s) => !s)}
+              >
+                <span>පෞද්ගලික තොරතුරු (Profile Info)</span>
+                <span>{showSensitiveInfo ? "▴" : "▾"}</span>
+              </button>
+
+              {showSensitiveInfo && (
+                <div className="sidebar-info-body">
+                  <p>
+                    <strong>ජාතික හැඳුනුම්පත් අංකය:</strong>{" "}
+                    {user.identitynumber || "N/A"}
+                  </p>
+                  <p>
+                    <strong>දුරකථන අංකය:</strong>{" "}
+                    {user.contactnumber || "N/A"}
+                  </p>
+                  <p>
+                    <strong>ඊමේල් ලිපිනය:</strong> {user.email || "N/A"}
+                  </p>
+                  <p>
+                    <strong>දිස්ත්‍රික්කය:</strong> {user.district || "N/A"}
+                  </p>
+                  <p>
+                    <strong>ප්‍රා.ලේ. කොට්ඨාසය:</strong>{" "}
+                    {user.division || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Assigned Society:</strong>{" "}
+                    {user.society || "Not Assigned"}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
           {/* QUICK STATS */}
           <div className="sidebar-stats">
             <div className="stat-card">
-              <p className="stat-label">Total Registrations</p>
+              <p className="stat-label">සම්පූර්ණ ලියාපදිංචි</p>
               <p className="stat-value">{totalPending}</p>
             </div>
             <div className="stat-card">
-              <p className="stat-label">Accepted (Subject)</p>
+              <p className="stat-label">විෂය මට්ටමින් අනුමත</p>
               <p className="stat-value">{acceptedCount}</p>
             </div>
             <div className="stat-card">
-              <p className="stat-label">Total History</p>
+              <p className="stat-label">Director වෙත යොමු කළ</p>
+              <p className="stat-value">{forwardedCount}</p>
+            </div>
+            <div className="stat-card">
+              <p className="stat-label">History</p>
               <p className="stat-value">{totalHistory}</p>
             </div>
           </div>
 
-          {/* RESPONSIBILITIES */}
+          {/* RESPONSIBILITIES / HELP */}
           <div className="sidebar-notes">
-            <h4>Officer Notes</h4>
+            <h4>ඔබගේ භූමිකාව</h4>
             <ul>
-              <li>රූරාල්, දිස්ත්‍රික්, ප්‍රාදේශීය තීරණ සලකා බලන්න.</li>
-              <li>විෂය අදාළ නීති අනුව Accept/Reject තීරණය ලබා දෙන්න.</li>
-              <li>අවසන් වශයෙන් Director වෙත යොමු කිරීම.</li>
+              <li>RDO, DO, DS තීරණ මුලින්ම සලකා බලන්න.</li>
+              <li>විෂය අදාළ නීති හා උපදෙස් අනුව Accept / Reject තීරණය ලබා දෙන්න.</li>
+              <li>අවසානයේ Director වෙත යොමු කිරීම (Forward to Director).</li>
             </ul>
           </div>
         </aside>
 
-        {/* MAIN CONTENT */}
+        {/* ===== MAIN CONTENT ===== */}
         <main className="subject-main">
-          {/* INBOX + SUMMARY */}
-          <section className="subject-grid">
-            {/* Inbox as letter-list */}
-            <div className="sub-widget">
-              <h3 className="widget-title">All Registration Letters</h3>
+          {/* Tabs */}
+          <div className="sub-tab-bar">
+            <button
+              className={`sub-tab-item ${
+                activeTab === "pending" ? "sub-tab-item-active" : ""
+              }`}
+              onClick={() => setActiveTab("pending")}
+            >
+              Pending & Actions
+            </button>
+            <button
+              className={`sub-tab-item ${
+                activeTab === "requested" ? "sub-tab-item-active" : ""
+              }`}
+              onClick={() => setActiveTab("requested")}
+            >
+              Requested Societies
+            </button>
+            <button
+              className={`sub-tab-item ${
+                activeTab === "history" ? "sub-tab-item-active" : ""
+              }`}
+              onClick={() => setActiveTab("history")}
+            >
+              History
+            </button>
+            <button
+              className={`sub-tab-item ${
+                activeTab === "analytics" ? "sub-tab-item-active" : ""
+              }`}
+              onClick={() => setActiveTab("analytics")}
+            >
+              Analytics
+            </button>
+          </div>
+
+          {/* Small header under tabs */}
+          <div className="sub-main-header">
+            <h1 className="sub-main-title">සමිති ලියාපදිංචි කළමනාකරණය</h1>
+            <p className="sub-main-subtitle">
+              මෙහි දැක්වෙන ලියාපදිංචි ඉල්ලීම් RDO / DO / DS මට්ටම් සම්පූර්ණ
+              කර ඔබගේ විෂය භාර තීරණය (Subject Decision) බලා කටයුතු
+              කරන ලදී.
+            </p>
+          </div>
+
+          {/* ===== TAB CONTENTS ===== */}
+
+          {/* 1. PENDING & ACTIONS */}
+          {activeTab === "pending" && (
+            <>
+              <section className="subject-grid">
+                <div className="sub-widget">
+                  <h3 className="widget-title">සමිති ලියාපදිංචි ලිපි</h3>
+                  <p className="muted-text">
+                    ලැයිස්තුවෙන් එකක් තෝරාගෙන ඉහත / පසුතාල විස්තර සලකා
+                    Accept හෝ Reject කිරීම සිදු කරන්න. Forward to Director
+                    ක්‍රියාවලිය ඉන්පසු භාවිතා කළ හැක.
+                  </p>
+                  {loadingRequests ? (
+                    <p className="muted-text">
+                      ලියාපදිංචි ඉල්ලීම් රදිමින්...
+                    </p>
+                  ) : latestRequests.length === 0 ? (
+                    <p className="muted-text">
+                      ලියාපදිංචි ලිපි දත්තගබඩාවෙන් හමු නොවිනි.
+                    </p>
+                  ) : (
+                    <ul className="letter-list">
+                      {latestRequests.map((req) => (
+                        <li
+                          key={req.id}
+                          className="letter-item"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => handleSelectRequest(req)}
+                        >
+                          <div>
+                            <p className="letter-type">
+                              <strong>{req.societyName}</strong> (
+                              {req.registerNo})
+                            </p>
+                            <p className="letter-sub">
+                              දිස්ත්‍රික්කය: {req.district} | ප්‍රා.ලේ.:{" "}
+                              {req.division}
+                            </p>
+                            <p className="letter-sub">
+                              Created: {req.createdAt}
+                            </p>
+                            <p className="letter-sub">
+                              DS Status: {req.secretaryStatus}
+                            </p>
+                            {req.subjectStatus !== "Pending" && (
+                              <p className="letter-sub">
+                                Subject Status: {req.subjectStatus}
+                              </p>
+                            )}
+                          </div>
+                          <span
+                            className={`badge ${
+                              req.subjectStatus === "AcceptedBySubject"
+                                ? "badge-success"
+                                : req.subjectStatus === "RejectedBySubject"
+                                ? "badge-danger"
+                                : req.subjectStatus === "ForwardedToDirector"
+                                ? "badge-warning"
+                                : "badge-info"
+                            }`}
+                          >
+                            {req.subjectStatus}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="sub-widget">
+                  <h3 className="widget-title">විෂය නිලධාරී මගපෙන්වීම</h3>
+                  <p className="muted-text">
+                    • ඉල්ලීම තෝරන්න → වම්පසින් සිදු වූ සියලු පියවර
+                    (RDO/DO/DS) බලන්න.<br />
+                    • &quot;Subject Officer Action&quot; කොටසෙන්
+                    Accept/Reject තීරණය ලබා දෙන්න.<br />
+                    • අවසානයේ &quot;Forward to Director&quot; භාවිතා කර
+                    Director වෙත යොමු කරන්න.
+                  </p>
+                </div>
+              </section>
+
+              {/* DETAIL & APPROVAL CHAIN */}
+              {selectedRequest && (
+                <section className="subject-detail-card">
+                  <div className="detail-header">
+                    <h3 className="widget-title">
+                      {selectedRequest.societyName} – විස්තර / තීරණය
+                    </h3>
+                    <button
+                      type="button"
+                      className="btn-close-referral"
+                      onClick={() => {
+                        setSelectedRequest(null);
+                        setSubjectNote("");
+                        setActionError("");
+                        setActionSuccess("");
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="detail-body">
+                    {/* Society info block */}
+                    <div className="detail-column">
+                      <div className="society-card">
+                        <h4>සමිතිය සම්බන්ධ තොරතුරු</h4>
+                        <p>
+                          <strong>ලියාපදිංචි අංකය:</strong>{" "}
+                          {selectedRequest.registerNo}
+                        </p>
+                        <p>
+                          <strong>ලිපිනය:</strong>{" "}
+                          {selectedRequest.societyAddress}
+                        </p>
+                        <p>
+                          <strong>දුරකථන:</strong>{" "}
+                          {selectedRequest.societyPhone}
+                        </p>
+                        <p>
+                          <strong>ඊමේල්:</strong>{" "}
+                          {selectedRequest.societyEmail}
+                        </p>
+                        <p>
+                          <strong>සාමාජික සංඛ්‍යාව:</strong>{" "}
+                          {selectedRequest.memberCount ?? "N/A"}
+                        </p>
+                        <p>
+                          <strong>දිස්ත්‍රික් / ප්‍රා.ලේ.:</strong>{" "}
+                          {selectedRequest.district} /{" "}
+                          {selectedRequest.division}
+                        </p>
+                      </div>
+
+                      <div className="positions-card">
+                        <h4>තනතුරු (Positions)</h4>
+                        {selectedRequest.positions ? (
+                          <>
+                            <PositionBlock
+                              title="සභාපති (Chairman)"
+                              data={selectedRequest.positions.chairman}
+                            />
+                            <PositionBlock
+                              title="ලේකම් (Secretary)"
+                              data={selectedRequest.positions.secretary}
+                            />
+                            <PositionBlock
+                              title="භාණ්ඩාගාරික (Treasurer)"
+                              data={selectedRequest.positions.treasurer}
+                            />
+                          </>
+                        ) : (
+                          <p className="muted-text">
+                            Position details not available.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Approval chain + subject actions */}
+                    <div className="detail-column">
+                      <div className="approval-chain">
+                        <h4>අනුමැතිය ලබා ගත් පියවර</h4>
+
+                        <div className="chain-step">
+                          <h5>Rural Development Officer</h5>
+                          <p>
+                            <strong>නම:</strong>{" "}
+                            {selectedRequest.ruralOfficerName} (
+                            {selectedRequest.ruralOfficerId})
+                          </p>
+                          <p>
+                            <strong>තීරණය:</strong>{" "}
+                            {selectedRequest.ruralOfficerDecision}
+                          </p>
+                          {selectedRequest.ruralOfficerNote && (
+                            <p>
+                              <strong>Note:</strong>{" "}
+                              {selectedRequest.ruralOfficerNote}
+                            </p>
+                          )}
+                          {selectedRequest.ruralDecisionAt && (
+                            <p>
+                              <strong>දිනය:</strong>{" "}
+                              {selectedRequest.ruralDecisionAt}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="chain-step">
+                          <h5>District Officer</h5>
+                          <p>
+                            <strong>නම:</strong>{" "}
+                            {selectedRequest.districtOfficerName} (
+                            {selectedRequest.districtOfficerId})
+                          </p>
+                          <p>
+                            <strong>තීරණය:</strong>{" "}
+                            {selectedRequest.districtDecision}
+                          </p>
+                          {selectedRequest.districtNote && (
+                            <p>
+                              <strong>Note:</strong>{" "}
+                              {selectedRequest.districtNote}
+                            </p>
+                          )}
+                          {selectedRequest.districtDecisionAt && (
+                            <p>
+                              <strong>දිනය:</strong>{" "}
+                              {selectedRequest.districtDecisionAt}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="chain-step">
+                          <h5>Divisional Secretary</h5>
+                          <p>
+                            <strong>තීරණය:</strong>{" "}
+                            {selectedRequest.secretaryStatus}
+                          </p>
+                          {selectedRequest.secretaryNote && (
+                            <p>
+                              <strong>Note:</strong>{" "}
+                              {selectedRequest.secretaryNote}
+                            </p>
+                          )}
+                          {selectedRequest.secretaryDecisionAt && (
+                            <p>
+                              <strong>දිනය:</strong>{" "}
+                              {selectedRequest.secretaryDecisionAt}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="chain-step subject-step">
+                          <h5>Subject Officer</h5>
+                          <p>
+                            <strong>ඔබගේ තීරණය:</strong>{" "}
+                            {selectedRequest.subjectStatus}
+                          </p>
+                          {selectedRequest.subjectNote && (
+                            <p>
+                              <strong>ඔබගේ සටහන:</strong>{" "}
+                              {selectedRequest.subjectNote}
+                            </p>
+                          )}
+                          {selectedRequest.subjectDecisionAt && (
+                            <p>
+                              <strong>දිනය:</strong>{" "}
+                              {selectedRequest.subjectDecisionAt}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="referral-form subject-action-card">
+                        <h4>Subject Officer Action</h4>
+                        <p className="muted-text">
+                          මෙය ඔබගේ විෂය භාර නිල තීරණය ලබා දෙන කොටසයි.
+                          Accept හෝ Reject තෝරා, අවසානයේ Director වෙත
+                          යොමු කරන්න.
+                        </p>
+
+                        <label>විෂය නිලධාරී සටහන</label>
+                        <textarea
+                          value={subjectNote}
+                          onChange={(e) => setSubjectNote(e.target.value)}
+                          rows={3}
+                          placeholder="ඔබගේ සටහන මෙහි ලියා තබන්න..."
+                          disabled={
+                            selectedRequest.subjectStatus ===
+                              "AcceptedBySubject" ||
+                            selectedRequest.subjectStatus ===
+                              "RejectedBySubject" ||
+                            selectedRequest.subjectStatus ===
+                              "ForwardedToDirector"
+                          }
+                        />
+
+                        {actionError && (
+                          <p className="error-text">{actionError}</p>
+                        )}
+                        {actionSuccess && (
+                          <p className="success-text">{actionSuccess}</p>
+                        )}
+
+                        {/* Accept/Reject visible only if Subject has not decided */}
+                        {selectedRequest.subjectStatus === "Pending" && (
+                          <div
+                            className="referral-actions"
+                            style={{ marginTop: 8 }}
+                          >
+                            <button
+                              type="button"
+                              className="btn-decline"
+                              disabled={actionLoading}
+                              onClick={() => handleSubjectDecision("reject")}
+                            >
+                              {actionLoading ? "Processing..." : "Reject"}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-accept"
+                              disabled={actionLoading}
+                              onClick={() => handleSubjectDecision("accept")}
+                            >
+                              {actionLoading ? "Processing..." : "Accept"}
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Forward to Director visible only AFTER Subject has decided */}
+                        {(selectedRequest.subjectStatus ===
+                          "AcceptedBySubject" ||
+                          selectedRequest.subjectStatus ===
+                            "RejectedBySubject" ||
+                          selectedRequest.subjectStatus ===
+                            "ForwardedToDirector") && (
+                          <button
+                            type="button"
+                            className="btn-accept forward-btn"
+                            disabled={
+                              actionLoading ||
+                              selectedRequest.subjectStatus ===
+                                "ForwardedToDirector"
+                            }
+                            onClick={handleForwardToDirector}
+                          >
+                            {actionLoading
+                              ? "Forwarding..."
+                              : selectedRequest.subjectStatus ===
+                                "ForwardedToDirector"
+                              ? "Already Forwarded to Director"
+                              : "Forward to Director"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              )}
+            </>
+          )}
+
+          {/* 2. REQUESTED TAB (list only) */}
+          {activeTab === "requested" && (
+            <section className="sub-widget">
+              <h3 className="widget-title">
+                ඉදිරිපත් කරන ලද / Forwarded සමිති
+              </h3>
+              <p className="muted-text">
+                මේ ලැයිස්තුවෙන් එකක් තෝරාගත් විට, එය &quot;Pending &
+                Actions&quot; ටැබයේ විස්තර සහ තීරණ කොටසට විවෘත වේ.
+              </p>
+
               {loadingRequests ? (
                 <p className="muted-text">Loading registrations...</p>
               ) : latestRequests.length === 0 ? (
-                <p className="muted-text">
-                  No registration letters available.
-                </p>
+                <p className="muted-text">Forwarded සමිති දත්ත නොමැත.</p>
               ) : (
                 <ul className="letter-list">
                   {latestRequests.map((req) => (
@@ -427,11 +863,68 @@ const Subject = () => {
                           <strong>{req.societyName}</strong> ({req.registerNo})
                         </p>
                         <p className="letter-sub">
-                          District: {req.district} | Division: {req.division}
+                          දිස්ත්‍රික්කය: {req.district} | ප්‍රා.ලේ.:{" "}
+                          {req.division}
                         </p>
-                        <p className="letter-sub">Date: {req.createdAt}</p>
                         <p className="letter-sub">
                           DS Status: {req.secretaryStatus}
+                        </p>
+                        <p className="letter-sub">
+                          Subject Status: {req.subjectStatus}
+                        </p>
+                      </div>
+                      <span
+                        className={`badge ${
+                          req.subjectStatus === "AcceptedBySubject"
+                            ? "badge-success"
+                            : req.subjectStatus === "RejectedBySubject"
+                            ? "badge-danger"
+                            : req.subjectStatus === "ForwardedToDirector"
+                            ? "badge-warning"
+                            : "badge-info"
+                        }`}
+                      >
+                        {req.subjectStatus}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
+
+          {/* 3. HISTORY TAB */}
+          {activeTab === "history" && (
+            <section className="sub-widget">
+              <h3 className="widget-title">Registration History</h3>
+              <p className="muted-text">
+                ඔබ විසින් දැක ගත් / තීරණය කළ සියලුම ලියාපදිංචි ඉල්ලීම්
+                මෙහිදි සටහන් වේ.
+              </p>
+
+              {loadingRequests ? (
+                <p className="muted-text">Loading history...</p>
+              ) : historyRequests.length === 0 ? (
+                <p className="muted-text">No history records.</p>
+              ) : (
+                <ul className="letter-list">
+                  {historyRequests.map((req) => (
+                    <li
+                      key={req.id}
+                      className="letter-item"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleSelectRequest(req)}
+                    >
+                      <div>
+                        <p className="letter-type">
+                          <strong>{req.societyName}</strong> ({req.registerNo})
+                        </p>
+                        <p className="letter-sub">
+                          දිස්ත්‍රික්කය: {req.district} | ප්‍රා.ලේ.:{" "}
+                          {req.division}
+                        </p>
+                        <p className="letter-sub">
+                          Created: {req.createdAt}
                         </p>
                         {req.subjectStatus !== "Pending" && (
                           <p className="letter-sub">
@@ -447,7 +940,7 @@ const Subject = () => {
                             ? "badge-danger"
                             : req.subjectStatus === "ForwardedToDirector"
                             ? "badge-warning"
-                            : "badge-warning"
+                            : "badge-info"
                         }`}
                       >
                         {req.subjectStatus}
@@ -456,358 +949,53 @@ const Subject = () => {
                   ))}
                 </ul>
               )}
-            </div>
+            </section>
+          )}
 
-            {/* Profile snapshot */}
-            <div className="sub-widget">
-              <h3 className="widget-title">Profile Snapshot</h3>
-              <div className="profile-summary-grid">
-                <div>
-                  <p className="summary-label">Identity Number</p>
-                  <p className="summary-value">{user.identitynumber}</p>
-                </div>
-                <div>
-                  <p className="summary-label">Position</p>
-                  <p className="summary-value">{user.position}</p>
-                </div>
-                <div>
-                  <p className="summary-label">Assigned Society</p>
-                  <p className="summary-value">
-                    {user.society || "Not Assigned"}
+          {/* 4. ANALYTICS TAB */}
+          {activeTab === "analytics" && (
+            <section className="sub-widget">
+              <h3 className="widget-title">විෂය මට්ටමේ විශ්ලේෂණය</h3>
+              <p className="muted-text">
+                පහත සංඛ්‍යාතයන් මගින් ඔබගේ වත්මන් කාර්ය භාරය පිළිබඳ
+                දර්ශනයක් ලබා ගත හැක. ඉදිරියේදී charts ඇතුළත් කර වැඩිදුර
+                විශ්ලේෂණ කරගන්න පුළුවන්.
+              </p>
+
+              <div className="analytics-grid">
+                <div className="analytics-card">
+                  <h4>සම්පූර්ණ ලියාපදිංචි</h4>
+                  <p className="analytics-number">{totalPending}</p>
+                  <p className="analytics-label">
+                    දැනට පද්ධතිය තුළ තිබෙන ලියාපදිංචි ඉල්ලීම් සංඛ්‍යාව.
                   </p>
                 </div>
-              </div>
-              <p className="summary-note">
-                This dashboard shows all registration letters reviewed by
-                Rural, District, and Divisional levels, now awaiting your
-                subject decision.
-              </p>
-            </div>
-          </section>
-
-          {/* DETAIL & APPROVAL CHAIN */}
-          {selectedRequest && (
-            <section className="subject-detail-card">
-              <div className="detail-header">
-                <h3 className="widget-title">
-                  Society Registration – {selectedRequest.societyName}
-                </h3>
-                <button
-                  type="button"
-                  className="btn-close-referral"
-                  onClick={() => {
-                    setSelectedRequest(null);
-                    setSubjectNote("");
-                    setActionError("");
-                    setActionSuccess("");
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="detail-body">
-                {/* Society info block */}
-                <div className="detail-column">
-                  <div className="society-card">
-                    <h4>Society Information</h4>
-                    <p>
-                      <strong>Register No:</strong>{" "}
-                      {selectedRequest.registerNo}
-                    </p>
-                    <p>
-                      <strong>Address:</strong>{" "}
-                      {selectedRequest.societyAddress}
-                    </p>
-                    <p>
-                      <strong>Phone:</strong>{" "}
-                      {selectedRequest.societyPhone}
-                    </p>
-                    <p>
-                      <strong>Email:</strong>{" "}
-                      {selectedRequest.societyEmail}
-                    </p>
-                    <p>
-                      <strong>Members:</strong>{" "}
-                      {selectedRequest.memberCount ?? "N/A"}
-                    </p>
-                    <p>
-                      <strong>District / Division:</strong>{" "}
-                      {selectedRequest.district} /{" "}
-                      {selectedRequest.division}
-                    </p>
-                  </div>
-
-                  <div className="positions-card">
-                    <h4>Positions</h4>
-                    {selectedRequest.positions ? (
-                      <>
-                        <PositionBlock
-                          title="සභාපති (Chairman)"
-                          data={selectedRequest.positions.chairman}
-                        />
-                        <PositionBlock
-                          title="ලේකම් (Secretary)"
-                          data={selectedRequest.positions.secretary}
-                        />
-                        <PositionBlock
-                          title="භාණ්ඩාගාරික (Treasurer)"
-                          data={selectedRequest.positions.treasurer}
-                        />
-                      </>
-                    ) : (
-                      <p className="muted-text">
-                        Position details not available.
-                      </p>
-                    )}
-                  </div>
+                <div className="analytics-card">
+                  <h4>විෂය මට්ටමින් අනුමත</h4>
+                  <p className="analytics-number">{acceptedCount}</p>
+                  <p className="analytics-label">
+                    ඔබ විසින් &quot;Accepted&quot; ලෙස සලකන ලද සමිති
+                    සංඛ්‍යාව.
+                  </p>
                 </div>
-
-                {/* Approval chain + subject actions */}
-                <div className="detail-column">
-                  <div className="approval-chain">
-                    <h4>Approval Chain</h4>
-
-                    <div className="chain-step">
-                      <h5>Rural Development Officer</h5>
-                      <p>
-                        <strong>Name:</strong>{" "}
-                        {selectedRequest.ruralOfficerName} (
-                        {selectedRequest.ruralOfficerId})
-                      </p>
-                      <p>
-                        <strong>Decision:</strong>{" "}
-                        {selectedRequest.ruralOfficerDecision}
-                      </p>
-                      {selectedRequest.ruralOfficerNote && (
-                        <p>
-                          <strong>Note:</strong>{" "}
-                          {selectedRequest.ruralOfficerNote}
-                        </p>
-                      )}
-                      {selectedRequest.ruralDecisionAt && (
-                        <p>
-                          <strong>Date:</strong>{" "}
-                          {selectedRequest.ruralDecisionAt}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="chain-step">
-                      <h5>District Officer</h5>
-                      <p>
-                        <strong>Name:</strong>{" "}
-                        {selectedRequest.districtOfficerName} (
-                        {selectedRequest.districtOfficerId})
-                      </p>
-                      <p>
-                        <strong>Decision:</strong>{" "}
-                        {selectedRequest.districtDecision}
-                      </p>
-                      {selectedRequest.districtNote && (
-                        <p>
-                          <strong>Note:</strong>{" "}
-                          {selectedRequest.districtNote}
-                        </p>
-                      )}
-                      {selectedRequest.districtDecisionAt && (
-                        <p>
-                          <strong>Date:</strong>{" "}
-                          {selectedRequest.districtDecisionAt}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="chain-step">
-                      <h5>Divisional Secretary</h5>
-                      <p>
-                        <strong>Decision:</strong>{" "}
-                        {selectedRequest.secretaryStatus}
-                      </p>
-                      {selectedRequest.secretaryNote && (
-                        <p>
-                          <strong>Note:</strong>{" "}
-                          {selectedRequest.secretaryNote}
-                        </p>
-                      )}
-                      {selectedRequest.secretaryDecisionAt && (
-                        <p>
-                          <strong>Date:</strong>{" "}
-                          {selectedRequest.secretaryDecisionAt}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="chain-step subject-step">
-                      <h5>Subject Officer</h5>
-                      <p>
-                        <strong>Your Decision:</strong>{" "}
-                        {selectedRequest.subjectStatus}
-                      </p>
-                      {selectedRequest.subjectNote && (
-                        <p>
-                          <strong>Your Note:</strong>{" "}
-                          {selectedRequest.subjectNote}
-                        </p>
-                      )}
-                      {selectedRequest.subjectDecisionAt && (
-                        <p>
-                          <strong>Date:</strong>{" "}
-                          {selectedRequest.subjectDecisionAt}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="referral-form subject-action-card">
-                    <h4>Subject Officer Action</h4>
-                    <p className="muted-text">
-                      Accept or Reject once, then you can forward this
-                      registration letter to the Director.
-                    </p>
-
-                    <label>Subject Officer Note</label>
-                    <textarea
-                      value={subjectNote}
-                      onChange={(e) => setSubjectNote(e.target.value)}
-                      rows={3}
-                      placeholder="Enter your note..."
-                      disabled={
-                        selectedRequest.subjectStatus ===
-                          "AcceptedBySubject" ||
-                        selectedRequest.subjectStatus ===
-                          "RejectedBySubject" ||
-                        selectedRequest.subjectStatus ===
-                          "ForwardedToDirector"
-                      }
-                    />
-
-                    {actionError && (
-                      <p className="error-text">{actionError}</p>
-                    )}
-                    {actionSuccess && (
-                      <p className="success-text">{actionSuccess}</p>
-                    )}
-
-                    {/* Accept/Reject visible only if Subject has not decided */}
-                    {selectedRequest.subjectStatus === "Pending" && (
-                      <div
-                        className="referral-actions"
-                        style={{ marginTop: 8 }}
-                      >
-                        <button
-                          type="button"
-                          className="btn-decline"
-                          disabled={actionLoading}
-                          onClick={() => handleSubjectDecision("reject")}
-                        >
-                          {actionLoading ? "Processing..." : "Reject"}
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-accept"
-                          disabled={actionLoading}
-                          onClick={() => handleSubjectDecision("accept")}
-                        >
-                          {actionLoading ? "Processing..." : "Accept"}
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Forward to Director visible only AFTER Subject has decided */}
-                    {(selectedRequest.subjectStatus ===
-                      "AcceptedBySubject" ||
-                      selectedRequest.subjectStatus ===
-                        "RejectedBySubject" ||
-                      selectedRequest.subjectStatus ===
-                        "ForwardedToDirector") && (
-                      <button
-                        type="button"
-                        className="btn-accept forward-btn"
-                        disabled={
-                          actionLoading ||
-                          selectedRequest.subjectStatus ===
-                            "ForwardedToDirector"
-                        }
-                        onClick={handleForwardToDirector}
-                      >
-                        {actionLoading
-                          ? "Forwarding..."
-                          : selectedRequest.subjectStatus ===
-                            "ForwardedToDirector"
-                          ? "Already Forwarded to Director"
-                          : "Forward to Director"}
-                      </button>
-                    )}
-                  </div>
+                <div className="analytics-card">
+                  <h4>Director වෙත යොමු කළ</h4>
+                  <p className="analytics-number">{forwardedCount}</p>
+                  <p className="analytics-label">
+                    ලියාපදිංචි කිරීම අවසන් කිරීමට Director වෙත යොමු කළ
+                    ලිපි.
+                  </p>
+                </div>
+                <div className="analytics-card">
+                  <h4>History</h4>
+                  <p className="analytics-number">{totalHistory}</p>
+                  <p className="analytics-label">
+                    ඔබගේ සෙසු ක්‍රියාවලිය පිළිබඳ සම්පූර්ණ ඉතිහාසය.
+                  </p>
                 </div>
               </div>
             </section>
           )}
-
-          {/* HISTORY */}
-          <section className="subject-history">
-            <div className="history-header">
-              <h3 className="widget-title">Registration History</h3>
-              <button
-                type="button"
-                className="toggle-btn"
-                onClick={() => setShowHistory(!showHistory)}
-              >
-                {showHistory ? "Hide" : "Show"} History
-              </button>
-            </div>
-
-            {showHistory && (
-              <div className="history-content">
-                {loadingRequests ? (
-                  <p className="muted-text">Loading history...</p>
-                ) : historyRequests.length === 0 ? (
-                  <p className="muted-text">No history records.</p>
-                ) : (
-                  <ul className="letter-list">
-                    {historyRequests.map((req) => (
-                      <li
-                        key={req.id}
-                        className="letter-item"
-                        style={{ cursor: "pointer" }}
-                        onClick={() => handleSelectRequest(req)}
-                      >
-                        <div>
-                          <p className="letter-type">
-                            <strong>{req.societyName}</strong> ({req.registerNo})
-                          </p>
-                          <p className="letter-sub">
-                            District: {req.district} | Division:{" "}
-                            {req.division}
-                          </p>
-                          <p className="letter-sub">Date: {req.createdAt}</p>
-                          {req.subjectStatus !== "Pending" && (
-                            <p className="letter-sub">
-                              Subject Status: {req.subjectStatus}
-                            </p>
-                          )}
-                        </div>
-                        <span
-                          className={`badge ${
-                            req.subjectStatus === "AcceptedBySubject"
-                              ? "badge-success"
-                              : req.subjectStatus === "RejectedBySubject"
-                              ? "badge-danger"
-                              : req.subjectStatus === "ForwardedToDirector"
-                              ? "badge-warning"
-                              : "badge-warning"
-                          }`}
-                        >
-                          {req.subjectStatus}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
-          </section>
         </main>
       </div>
     </div>
@@ -823,15 +1011,20 @@ const PositionBlock = ({ title, data }) => {
         <strong>නම:</strong> {d.fullName || "N/A"}
       </p>
       <p>
-        <strong>ලිපිනය:</strong> {d.address || "N/A"}</p>
+        <strong>ලිපිනය:</strong> {d.address || "N/A"}
+      </p>
       <p>
-        <strong>දුරකථන:</strong> {d.phone || "N/A"}</p>
+        <strong>දුරකථන:</strong> {d.phone || "N/A"}
+      </p>
       <p>
-        <strong>ඊමේල්:</strong> {d.email || "N/A"}</p>
+        <strong>ඊමේල්:</strong> {d.email || "N/A"}
+      </p>
       <p>
-        <strong>ජා.හැ.අංකය:</strong> {d.nic || "N/A"}</p>
+        <strong>ජා.හැ.අංකය:</strong> {d.nic || "N/A"}
+      </p>
       <p>
-        <strong>උපන් දිනය:</strong> {d.dob || "N/A"}</p>
+        <strong>උපන් දිනය:</strong> {d.dob || "N/A"}
+      </p>
     </div>
   );
 };

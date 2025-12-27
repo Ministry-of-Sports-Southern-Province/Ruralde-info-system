@@ -20,7 +20,7 @@ const ChairmanProfile = () => {
   const [loadingUser, setLoadingUser] = useState(true);
   const [error, setError] = useState("");
 
-  const [requests, setRequests] = useState([]); // secretaryRequests forwarded to Director
+  const [requests, setRequests] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
 
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -29,13 +29,18 @@ const ChairmanProfile = () => {
   const [actionSuccess, setActionSuccess] = useState("");
   const [actionError, setActionError] = useState("");
 
-  const [showHistory, setShowHistory] = useState(false);
+  // Tabs: pending | requested | certificates | history | analytics
+  const [activeTab, setActiveTab] = useState("pending");
+
+  const [showSensitiveInfo, setShowSensitiveInfo] = useState(false);
 
   const certificateRef = useRef(null);
   const handlePrint = useReactToPrint({
     content: () => certificateRef.current,
     documentTitle: "Society-Registration-Certificate",
   });
+
+  const [previewRequest, setPreviewRequest] = useState(null);
 
   useEffect(() => {
     const fetchUserAndData = async () => {
@@ -124,7 +129,7 @@ const ChairmanProfile = () => {
                   ? d.subjectDecisionAt.toDate().toLocaleDateString()
                   : "",
 
-              // Director decision (may already exist)
+              // Director decision
               directorStatus: d.directorStatus || "Pending",
               directorNote: d.directorNote || "",
               directorDecisionAt:
@@ -174,6 +179,7 @@ const ChairmanProfile = () => {
     setDirectorNote(req.directorNote || "");
     setActionError("");
     setActionSuccess("");
+    setActiveTab("pending");
   };
 
   const handleDirectorDecision = async (decision) => {
@@ -184,7 +190,7 @@ const ChairmanProfile = () => {
       selectedRequest.directorStatus === "RejectedByDirector"
     ) {
       setActionError(
-        "මෙම ලියාපදිංචිය සදහා අධ්‍යක්ෂක තීරණය දැනටමත් ලබා දී ඇත."
+        "මෙම ලියාපදිංචිය සඳහා අධ්‍යක්ෂක තීරණය දැනටමත් ලබාදී ඇත."
       );
       return;
     }
@@ -233,8 +239,8 @@ const ChairmanProfile = () => {
 
       setActionSuccess(
         decision === "accept"
-          ? "සමිතිය අවසන්ව (Accepted) ලෙස ලියාපදිංචි කරන ලදී."
-          : "සමිතිය අවසන්ව (Rejected) ලෙස සලකන ලදී."
+          ? "සමිතිය අවසන්ව (අනුමත) ලෙස ලියාපදිංචි කරන ලදී."
+          : "සමිතිය (ප්‍රত্যාකරණය) කරන ලදී."
       );
     } catch (err) {
       console.error("Error updating director decision:", err);
@@ -244,15 +250,24 @@ const ChairmanProfile = () => {
     }
   };
 
-  if (loadingUser) return <p style={{ textAlign: "center" }}>Loading...</p>;
-  if (error) return <p style={{ textAlign: "center", color: "red" }}>{error}</p>;
+  if (loadingUser)
+    return <p style={{ textAlign: "center" }}>Loading...</p>;
+  if (error)
+    return <p style={{ textAlign: "center", color: "red" }}>{error}</p>;
   if (!user) return <p style={{ textAlign: "center" }}>User not found</p>;
 
   const latestRequests = requests;
-  const historyRequests = requests;
+  const acceptedRequests = requests.filter(
+    (r) => r.directorStatus === "AcceptedByDirector"
+  );
+  const pendingRequests = requests.filter(
+    (r) => r.directorStatus === "Pending"
+  );
+  const rejectedRequests = requests.filter(
+    (r) => r.directorStatus === "RejectedByDirector"
+  );
 
-  const totalLatest = latestRequests.length;
-  const totalHistory = historyRequests.length;
+  const totalForwarded = requests.length;
 
   const canGenerateCertificate =
     selectedRequest && selectedRequest.directorStatus === "AcceptedByDirector";
@@ -260,7 +275,7 @@ const ChairmanProfile = () => {
   return (
     <div className="chairman-dashboard">
       <div className="dashboard-shell">
-        {/* SIDEBAR */}
+        {/* ===== LEFT SIDEBAR ===== */}
         <aside className="dashboard-sidebar">
           <div className="sidebar-header">
             <div>
@@ -282,351 +297,199 @@ const ChairmanProfile = () => {
               />
             </div>
             <h2 className="sidebar-name">{user.username}</h2>
-            <p className="sidebar-role">
-              පලාත් සංවර්ධන අධ්‍යක්ෂක <span>(Director)</span>
+            <p className="sidebar-role-main">
+              {user.position || "අධ්‍යක්ෂක"}
+            </p>
+            <p className="sidebar-role-sub">
+              පලාත් සංවර්ධන අධ්‍යක්ෂක – {user.district || "සියලුම"} දිස්ත්‍රික්කය
             </p>
 
-            <div className="sidebar-info">
-              <p>
-                <strong>District:</strong> {user.district || "All"}
-              </p>
-              <p>
-                <strong>Division:</strong> {user.division || "All"}
-              </p>
-              <p>
-                <strong>Contact:</strong> {user.contactnumber || "N/A"}
-              </p>
-              <p>
-                <strong>Email:</strong> {user.email || "N/A"}
-              </p>
+            <p className="sidebar-area-tag">
+              {user.district || "සියලුම"} / {user.division || "සියලුම"}{" "}
+              ප්‍රා.ලේ. කොට්ඨාස
+            </p>
+
+            {/* Sensitive info in collapsible block */}
+            <div className="sidebar-info-card">
+              <button
+                type="button"
+                className="sidebar-info-toggle"
+                onClick={() => setShowSensitiveInfo((s) => !s)}
+              >
+                <span>පෞද්ගලික තොරතුරු (Profile Info)</span>
+                <span>{showSensitiveInfo ? "▴" : "▾"}</span>
+              </button>
+
+              {showSensitiveInfo && (
+                <div className="sidebar-info-body">
+                  <p>
+                    <strong>ජාතික හැඳුනුම්පත් අංකය:</strong>{" "}
+                    {user.identitynumber || "N/A"}
+                  </p>
+                  <p>
+                    <strong>දුරකථන අංකය:</strong>{" "}
+                    {user.contactnumber || "N/A"}
+                  </p>
+                  <p>
+                    <strong>ඊමේල් ලිපිනය:</strong> {user.email || "N/A"}
+                  </p>
+                  <p>
+                    <strong>දිස්ත්‍රික්කය:</strong> {user.district || "All"}
+                  </p>
+                  <p>
+                    <strong>ප්‍රාදේශීය ලේකම් කොට්ඨාසය:</strong>{" "}
+                    {user.division || "All"}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Stats */}
           <div className="sidebar-stats">
             <div className="stat-card">
-              <p className="stat-label">Forwarded from Subject</p>
-              <p className="stat-value">{totalLatest}</p>
+              <p className="stat-label">Forwarded</p>
+              <p className="stat-value">{totalForwarded}</p>
             </div>
             <div className="stat-card">
-              <p className="stat-label">Total Records</p>
-              <p className="stat-value">{totalHistory}</p>
+              <p className="stat-label">Accepted</p>
+              <p className="stat-value">{acceptedRequests.length}</p>
             </div>
             <div className="stat-card">
-              <p className="stat-label">Unique Societies</p>
-              <p className="stat-value">
-                {new Set(historyRequests.map((r) => r.societyId || r.id)).size}
-              </p>
+              <p className="stat-label">Pending</p>
+              <p className="stat-value">{pendingRequests.length}</p>
+            </div>
+            <div className="stat-card">
+              <p className="stat-label">Rejected</p>
+              <p className="stat-value">{rejectedRequests.length}</p>
             </div>
           </div>
 
           <div className="sidebar-notes">
-            <h4>Key Responsibilities</h4>
+            <h4>ප්‍රධාන වගකීම්</h4>
             <ul>
-              <li>අවසාන වශයෙන් ග්‍රාම සංවර්ධන සමිති ලියාපදිංචි කිරීම.</li>
-              <li>සහතික නිකුත් කිරීම.</li>
-              <li>සමස්ත පළාත් වැඩසටහන් උසස් මට්ටමින් පාලනය.</li>
+              <li>ග්‍රාම සංවර්ධන සමිති අවසන්ව ලියාපදිංචි කිරීම.</li>
+              <li>ලියාපදිංචි සහතික නිකුත් කිරීම.</li>
+              <li>දිස්ත්‍රික්ක හා ප්‍රාදේශීය මට්ටමේ වැඩසටහන් සම්බන්ධ දේශපාලන රහිත පාලනය.</li>
             </ul>
           </div>
         </aside>
 
-        {/* MAIN */}
+        {/* ===== RIGHT MAIN DASHBOARD ===== */}
         <main className="dashboard-main">
-          {/* INBOX */}
+          {/* Tabs at top */}
+          <div className="tab-bar">
+            <button
+              className={`tab-item ${
+                activeTab === "pending" ? "tab-item-active" : ""
+              }`}
+              onClick={() => setActiveTab("pending")}
+            >
+              බොහෝ කාර්ය (Pending & Actions)
+            </button>
+            <button
+              className={`tab-item ${
+                activeTab === "requested" ? "tab-item-active" : ""
+              }`}
+              onClick={() => setActiveTab("requested")}
+            >
+              ඉදිරිපත් කළ සමිති (Requested)
+            </button>
+            <button
+              className={`tab-item ${
+                activeTab === "certificates" ? "tab-item-active" : ""
+              }`}
+              onClick={() => setActiveTab("certificates")}
+            >
+              සහතික (Certificates)
+            </button>
+            <button
+              className={`tab-item ${
+                activeTab === "history" ? "tab-item-active" : ""
+              }`}
+              onClick={() => setActiveTab("history")}
+            >
+              ඉතිහාසය (History)
+            </button>
+            <button
+              className={`tab-item ${
+                activeTab === "analytics" ? "tab-item-active" : ""
+              }`}
+              onClick={() => setActiveTab("analytics")}
+            >
+              විශ්ලේෂණ (Analytics)
+            </button>
+          </div>
+
+          {/* Main header under tabs */}
+          <div className="main-header">
+            <div>
+              <h1 className="main-title">ග්‍රාම සංවර්ධන සමිති ලියාපදිංචි කිරීම</h1>
+              <p className="main-subtitle">
+                මෙහි ඇති සියලුම ඉල්ලීම් ග්‍රාම නිලධාරී, දිස්ත්‍රික් ලේකම්,
+                ප්‍රාදේශීය ලේකම් හා විෂය අංශ නිලධාරී මට්ටම් පියවර සම්පූර්ණ කර
+                අවසන් දේශීය තීරණය සඳහා අධ්‍යක්ෂවරයා වෙත එවනු ලැබූ ය.
+              </p>
+            </div>
+          </div>
+
+          {/* Small context widgets */}
           <section className="dashboard-grid">
             <div className="dash-widget">
-              <h3 className="widget-title">Forwarded Registration Letters</h3>
-              {loadingRequests ? (
-                <p className="muted-text">Loading registrations...</p>
-              ) : latestRequests.length === 0 ? (
-                <p className="muted-text">
-                  No registrations forwarded by Subject Officers.
-                </p>
-              ) : (
-                <ul className="letter-list">
-                  {latestRequests.map((req) => (
-                    <li
-                      key={req.id}
-                      className="letter-item"
-                      style={{ cursor: "pointer" }}
-                      onClick={() => handleSelectRequest(req)}
-                    >
-                      <div>
-                        <p className="letter-type">
-                          <strong>{req.societyName}</strong> ({req.registerNo})
-                        </p>
-                        <p className="letter-sub">
-                          District: {req.district} | Division: {req.division}
-                        </p>
-                        <p className="letter-sub">
-                          Subject Status: {req.subjectStatus}
-                        </p>
-                        <p className="letter-sub">
-                          Director Status: {req.directorStatus}
-                        </p>
-                      </div>
-                      <span className="badge badge-info">Forwarded</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <h3 className="widget-title">ඔබගේ කාර්ය භාරය</h3>
+              <p className="muted-text">
+                • &quot;Pending & Actions&quot; ටැබය මගින් තවම අනුමති ලබා
+                දෙනලද නොවන ඉල්ලීම් විවෘත කර Accept / Reject කළ හැක.<br />
+                • &quot;Certificates&quot; ටැබය මගින් දැනටමත් අනුමත වූ
+                සමිතිවල ලියාපදිංචි සහතික බාගත කරගත හැක.<br />
+                • ඉතිහාසය හා විශ්ලේෂණ ටැබ මගින් සමස්ත ක්‍රියාවලිය සැලකිල්ලට
+                ගත හැක.
+              </p>
             </div>
-
             <div className="dash-widget">
-              <h3 className="widget-title">Profile Summary</h3>
+              <h3 className="widget-title">වහාම දැනගත යුතු සංක්ෂිප්ත තොරතුරු</h3>
               <div className="profile-summary-grid">
                 <div>
-                  <p className="summary-label">Identity Number</p>
-                  <p className="summary-value">{user.identitynumber}</p>
+                  <p className="summary-label">සම්පූර්ණ ඉදිරිපත් කිරීම්</p>
+                  <p className="summary-value">{totalForwarded}</p>
                 </div>
                 <div>
-                  <p className="summary-label">Position</p>
-                  <p className="summary-value">{user.position}</p>
+                  <p className="summary-label">අනුමත සමිති</p>
+                  <p className="summary-value">{acceptedRequests.length}</p>
                 </div>
                 <div>
-                  <p className="summary-label">Assigned Area</p>
-                  <p className="summary-value">
-                    {user.district || "All"} / {user.division || "All"}
-                  </p>
+                  <p className="summary-label">අපේක්ෂිත (Pending)</p>
+                  <p className="summary-value">{pendingRequests.length}</p>
+                </div>
+                <div>
+                  <p className="summary-label">ප්‍රත්‍යාකරණ</p>
+                  <p className="summary-value">{rejectedRequests.length}</p>
                 </div>
               </div>
-              <p className="summary-note">
-                These registrations have completed Rural, District, Divisional,
-                and Subject Officer approvals. Your decision will finalize
-                registration and enable certificate generation.
-              </p>
             </div>
           </section>
 
-          {/* DETAIL + DECISION + CERTIFICATE */}
-          {selectedRequest && (
+          {/* ========== TAB CONTENTS ========== */}
+
+          {/* 1. PENDING & ACTIONS: Registrations + detail/decision */}
+          {activeTab === "pending" && (
             <>
-              <section className="director-detail-card">
-                <div className="detail-header">
-                  <h3 className="widget-title">
-                    Society Registration – {selectedRequest.societyName}
-                  </h3>
-                  <button
-                    type="button"
-                    className="btn-close-referral"
-                    onClick={() => {
-                      setSelectedRequest(null);
-                      setDirectorNote("");
-                      setActionError("");
-                      setActionSuccess("");
-                    }}
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <div className="detail-body">
-                  {/* Society info */}
-                  <div className="detail-column">
-                    <div className="society-card">
-                      <h4>Society Information</h4>
-                      <p>
-                        <strong>Register No:</strong>{" "}
-                        {selectedRequest.registerNo}
-                      </p>
-                      <p>
-                        <strong>Address:</strong>{" "}
-                        {selectedRequest.societyAddress}
-                      </p>
-                      <p>
-                        <strong>Phone:</strong>{" "}
-                        {selectedRequest.societyPhone}
-                      </p>
-                      <p>
-                        <strong>Email:</strong>{" "}
-                        {selectedRequest.societyEmail}
-                      </p>
-                      <p>
-                        <strong>Members:</strong>{" "}
-                        {selectedRequest.memberCount ?? "N/A"}
-                      </p>
-                      <p>
-                        <strong>District / Division:</strong>{" "}
-                        {selectedRequest.district} /{" "}
-                        {selectedRequest.division}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Approval chain + Director decision */}
-                  <div className="detail-column">
-                    <div className="approval-chain">
-                      <h4>Approval Chain</h4>
-
-                      <div className="chain-step">
-                        <h5>Rural Development Officer</h5>
-                        <p>
-                          <strong>Name:</strong>{" "}
-                          {selectedRequest.ruralOfficerName} (
-                          {selectedRequest.ruralOfficerId})
-                        </p>
-                        <p>
-                          <strong>Decision:</strong>{" "}
-                          {selectedRequest.ruralOfficerDecision}
-                        </p>
-                        {selectedRequest.ruralDecisionAt && (
-                          <p>
-                            <strong>Date:</strong>{" "}
-                            {selectedRequest.ruralDecisionAt}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="chain-step">
-                        <h5>District Officer</h5>
-                        <p>
-                          <strong>Name:</strong>{" "}
-                          {selectedRequest.districtOfficerName} (
-                          {selectedRequest.districtOfficerId})
-                        </p>
-                        <p>
-                          <strong>Decision:</strong>{" "}
-                          {selectedRequest.districtDecision}
-                        </p>
-                        {selectedRequest.districtDecisionAt && (
-                          <p>
-                            <strong>Date:</strong>{" "}
-                            {selectedRequest.districtDecisionAt}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="chain-step">
-                        <h5>Divisional Secretary</h5>
-                        <p>
-                          <strong>Decision:</strong>{" "}
-                          {selectedRequest.secretaryStatus}
-                        </p>
-                        {selectedRequest.secretaryDecisionAt && (
-                          <p>
-                            <strong>Date:</strong>{" "}
-                            {selectedRequest.secretaryDecisionAt}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="chain-step">
-                        <h5>Subject Officer</h5>
-                        <p>
-                          <strong>Decision:</strong>{" "}
-                          {selectedRequest.subjectStatus}
-                        </p>
-                        {selectedRequest.subjectDecisionAt && (
-                          <p>
-                            <strong>Date:</strong>{" "}
-                            {selectedRequest.subjectDecisionAt}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="director-decision-card">
-                      <h4>Director Final Decision</h4>
-                      <p className="muted-text">
-                        Accept or Reject once. After Accepted, you can generate
-                        a formal certificate (PDF).
-                      </p>
-
-                      <label>Director Note</label>
-                      <textarea
-                        value={directorNote}
-                        onChange={(e) => setDirectorNote(e.target.value)}
-                        rows={3}
-                        placeholder="Enter your note..."
-                        disabled={
-                          selectedRequest.directorStatus ===
-                            "AcceptedByDirector" ||
-                          selectedRequest.directorStatus ===
-                            "RejectedByDirector"
-                        }
-                      />
-
-                      {actionError && (
-                        <p className="director-error">{actionError}</p>
-                      )}
-                      {actionSuccess && (
-                        <p className="director-success">{actionSuccess}</p>
-                      )}
-
-                      {selectedRequest.directorStatus === "Pending" && (
-                        <div
-                          className="referral-actions"
-                          style={{ marginTop: 8 }}
-                        >
-                          <button
-                            type="button"
-                            className="btn-decline"
-                            disabled={actionLoading}
-                            onClick={() => handleDirectorDecision("reject")}
-                          >
-                            {actionLoading ? "Processing..." : "Reject"}
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-accept"
-                            disabled={actionLoading}
-                            onClick={() => handleDirectorDecision("accept")}
-                          >
-                            {actionLoading ? "Processing..." : "Accept"}
-                          </button>
-                        </div>
-                      )}
-
-                      {canGenerateCertificate && (
-                        <button
-                          type="button"
-                          className="btn-accept"
-                          style={{ marginTop: 10, width: "100%" }}
-                          onClick={handlePrint}
-                        >
-                          Download Registration Certificate (PDF)
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              {/* CERTIFICATE PREVIEW, HIDDEN, USED ONLY FOR PDF */}
-              {canGenerateCertificate && (
-                <div
-                  style={{ position: "absolute", left: -9999, top: 0 }}
-                  ref={certificateRef}
-                >
-                  <CertificateView
-                    director={user}
-                    request={selectedRequest}
-                  />
-                </div>
-              )}
-            </>
-          )}
-
-          {/* HISTORY */}
-          <section className="dashboard-history">
-            <div className="history-header">
-              <h3 className="widget-title">Forwarded Registrations History</h3>
-              <button
-                type="button"
-                className="toggle-btn"
-                onClick={() => setShowHistory(!showHistory)}
-              >
-                {showHistory ? "Hide" : "Show"} History
-              </button>
-            </div>
-
-            {showHistory && (
-              <div className="history-content">
-                {historyRequests.length === 0 ? (
-                  <p className="muted-text">No history records.</p>
+              <section className="dash-widget">
+                <h3 className="widget-title">සමිති ලියාපදිංචි ඉල්ලීම්</h3>
+                <p className="muted-text">
+                  පහත ලැයිස්තුවෙන් එකක් තෝරාගෙන එහි විස්තර බැලී Accept හෝ
+                  Reject කිරීම සිදු කරන්න. ඔබගේ තීරණය නවම සදහා එක් වරක්
+                  පමණක් ලබා දිය යුතුය.
+                </p>
+                {loadingRequests ? (
+                  <p className="muted-text">ලියාපදිංචි ඉල්ලීම් රදිමින්...</p>
+                ) : latestRequests.length === 0 ? (
+                  <p className="muted-text">
+                    දැනට විෂය අංශ නිලධාරීන් විසින් ඔබ වෙත යැවූ ඉල්ලීම් නොමැත.
+                  </p>
                 ) : (
                   <ul className="letter-list">
-                    {historyRequests.map((req) => (
+                    {latestRequests.map((req) => (
                       <li
                         key={req.id}
                         className="letter-item"
@@ -638,22 +501,504 @@ const ChairmanProfile = () => {
                             <strong>{req.societyName}</strong> ({req.registerNo})
                           </p>
                           <p className="letter-sub">
-                            District: {req.district} | Division:{" "}
+                            දිස්ත්‍රික්කය: {req.district} | ප්‍රා.ලේ.:{" "}
                             {req.division}
                           </p>
-                          <p className="letter-sub">Date: {req.createdAt}</p>
+                          <p className="letter-sub">
+                            Subject Status: {req.subjectStatus}
+                          </p>
                           <p className="letter-sub">
                             Director Status: {req.directorStatus}
                           </p>
                         </div>
-                        <span className="badge badge-info">History</span>
+                        <span className="badge badge-info">Forwarded</span>
                       </li>
                     ))}
                   </ul>
                 )}
+              </section>
+
+              {selectedRequest && (
+                <>
+                  <section className="director-detail-card">
+                    <div className="detail-header">
+                      <h3 className="widget-title">
+                        {selectedRequest.societyName} – විස්තර / තීරණය
+                      </h3>
+                      <button
+                        type="button"
+                        className="btn-close-referral"
+                        onClick={() => {
+                          setSelectedRequest(null);
+                          setDirectorNote("");
+                          setActionError("");
+                          setActionSuccess("");
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    <div className="detail-body">
+                      {/* Society info */}
+                      <div className="detail-column">
+                        <div className="society-card">
+                          <h4>සමිතිය සම්බන්ධ තොරතුරු</h4>
+                          <p>
+                            <strong>ලියාපදිංචි අංකය:</strong>{" "}
+                            {selectedRequest.registerNo}
+                          </p>
+                          <p>
+                            <strong>ලිපිනය:</strong>{" "}
+                            {selectedRequest.societyAddress}
+                          </p>
+                          <p>
+                            <strong>දුරකථන:</strong>{" "}
+                            {selectedRequest.societyPhone}
+                          </p>
+                          <p>
+                            <strong>ඊමේල්:</strong>{" "}
+                            {selectedRequest.societyEmail}
+                          </p>
+                          <p>
+                            <strong>සාමාජික සංඛ්‍යාව:</strong>{" "}
+                            {selectedRequest.memberCount ?? "N/A"}
+                          </p>
+                          <p>
+                            <strong>දිස්ත්‍රික් / ප්‍රා.ලේ. කොට්ඨාසය:</strong>{" "}
+                            {selectedRequest.district} /{" "}
+                            {selectedRequest.division}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Approval chain + Director decision */}
+                      <div className="detail-column">
+                        <div className="approval-chain">
+                          <h4>අනුමැතිය ලබා ගත් පියවර</h4>
+
+                          <div className="chain-step">
+                            <h5>Rural Development Officer</h5>
+                            <p>
+                              <strong>නම:</strong>{" "}
+                              {selectedRequest.ruralOfficerName} (
+                              {selectedRequest.ruralOfficerId})
+                            </p>
+                            <p>
+                              <strong>තීරණය:</strong>{" "}
+                              {selectedRequest.ruralOfficerDecision}
+                            </p>
+                            {selectedRequest.ruralDecisionAt && (
+                              <p>
+                                <strong>දිනය:</strong>{" "}
+                                {selectedRequest.ruralDecisionAt}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="chain-step">
+                            <h5>District Officer</h5>
+                            <p>
+                              <strong>නම:</strong>{" "}
+                              {selectedRequest.districtOfficerName} (
+                              {selectedRequest.districtOfficerId})
+                            </p>
+                            <p>
+                              <strong>තීරණය:</strong>{" "}
+                              {selectedRequest.districtDecision}
+                            </p>
+                            {selectedRequest.districtDecisionAt && (
+                              <p>
+                                <strong>දිනය:</strong>{" "}
+                                {selectedRequest.districtDecisionAt}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="chain-step">
+                            <h5>Divisional Secretary</h5>
+                            <p>
+                              <strong>තීරණය:</strong>{" "}
+                              {selectedRequest.secretaryStatus}
+                            </p>
+                            {selectedRequest.secretaryDecisionAt && (
+                              <p>
+                                <strong>දිනය:</strong>{" "}
+                                {selectedRequest.secretaryDecisionAt}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="chain-step">
+                            <h5>Subject Officer</h5>
+                            <p>
+                              <strong>තීරණය:</strong>{" "}
+                              {selectedRequest.subjectStatus}
+                            </p>
+                            {selectedRequest.subjectDecisionAt && (
+                              <p>
+                                <strong>දිනය:</strong>{" "}
+                                {selectedRequest.subjectDecisionAt}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="director-decision-card">
+                          <h4>අධ්‍යක්ෂවරයාගේ අවසන් තීරණය</h4>
+                          <p className="muted-text">
+                            මෙහි දී Accept / Reject එකක් තෝරාගන්න. එකම
+                            ඉල්ලීමක සදහා අධ්‍යක්ෂවරයාගේ තීරණය එක් වරක්
+                            පමණක් ලබා දිය යුතුය. Accept කළ පසු ලියාපදිංචි
+                            සහතිකය (PDF) බාගත කරගත හැක.
+                          </p>
+
+                          <label>අධ්‍යක්ෂවරයාගේ සටහන</label>
+                          <textarea
+                            value={directorNote}
+                            onChange={(e) => setDirectorNote(e.target.value)}
+                            rows={3}
+                            placeholder="ඔබගේ සටහන මෙහි ලියා තබන්න..."
+                            disabled={
+                              selectedRequest.directorStatus ===
+                                "AcceptedByDirector" ||
+                              selectedRequest.directorStatus ===
+                                "RejectedByDirector"
+                            }
+                          />
+
+                          {actionError && (
+                            <p className="director-error">{actionError}</p>
+                          )}
+                          {actionSuccess && (
+                            <p className="director-success">{actionSuccess}</p>
+                          )}
+
+                          {selectedRequest.directorStatus === "Pending" && (
+                            <div
+                              className="referral-actions"
+                              style={{ marginTop: 8 }}
+                            >
+                              <button
+                                type="button"
+                                className="btn-decline"
+                                disabled={actionLoading}
+                                onClick={() =>
+                                  handleDirectorDecision("reject")
+                                }
+                              >
+                                {actionLoading ? "Processing..." : "Reject"}
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-accept"
+                                disabled={actionLoading}
+                                onClick={() =>
+                                  handleDirectorDecision("accept")
+                                }
+                              >
+                                {actionLoading ? "Processing..." : "Accept"}
+                              </button>
+                            </div>
+                          )}
+
+                          {/* CERTIFICATE-SUMMARY PREVIEW SHOWN BEFORE DOWNLOAD */}
+                          {canGenerateCertificate && (
+                            <div className="certificate-preview-block">
+                              <h4 className="certificate-preview-title">
+                                සුභ පැතුම්!
+                              </h4>
+                              <p className="certificate-preview-subtitle">
+                                පහත සඳහන් සමිතිය දකුණු පළාත් ග්‍රාම
+                                සංවර්ධන දෙපාර්තමේන්තුව යටතේ නිසි ලෙස
+                                ලියාපදිංචි කරන ලද බව මෙයින් තහවුරු කරයි.
+                              </p>
+
+                              <div className="certificate-preview-body">
+                                <p>
+                                  <strong>සමිතිය නාමය:</strong>{" "}
+                                  {selectedRequest.societyName}
+                                </p>
+                                <p>
+                                  <strong>ලියාපදිංචි අංකය:</strong>{" "}
+                                  {selectedRequest.registerNo}
+                                </p>
+                                <p>
+                                  <strong>දිස්ත්‍රික් / ප්‍රා.ලේ.:</strong>{" "}
+                                  {selectedRequest.district} /{" "}
+                                  {selectedRequest.division}
+                                </p>
+                                <p>
+                                  <strong>ලිපිනය:</strong>{" "}
+                                  {selectedRequest.societyAddress}
+                                </p>
+                                <p>
+                                  <strong>සම්බන්ධතා:</strong>{" "}
+                                  {selectedRequest.societyPhone} |{" "}
+                                  {selectedRequest.societyEmail}
+                                </p>
+                                <p>
+                                  <strong>සාමාජික සංඛ්‍යාව:</strong>{" "}
+                                  {selectedRequest.memberCount ?? "N/A"}
+                                </p>
+                                <p>
+                                  <strong>අධ්‍යක්ෂ තීරණ දිනය:</strong>{" "}
+                                  {selectedRequest.directorDecisionAt ||
+                                    new Date().toLocaleDateString()}
+                                </p>
+                              </div>
+
+                              <p className="certificate-preview-footer-text">
+                                ඉහත තොරතුරු නිවැරදි බව තහවුරු කර
+                                &quot;Download&quot; බටනය ඔබා
+                                ලියාපදිංචි සහතිකය (PDF) බාගත කරගන්න.
+                              </p>
+                            </div>
+                          )}
+
+                          {canGenerateCertificate && (
+                            <button
+                              type="button"
+                              className="btn-accept"
+                              style={{ marginTop: 10, width: "100%" }}
+                              onClick={handlePrint}
+                            >
+                              ලියාපදිංචි සහතිකය (PDF) බාගත කරන්න
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Hidden printable certificate */}
+                  {canGenerateCertificate && (
+                    <div
+                      style={{ position: "absolute", left: -9999, top: 0 }}
+                      ref={certificateRef}
+                    >
+                      <CertificateView director={user} request={selectedRequest} />
+                    </div>
+                  )}
+                </>
+              )}
+            </>
+          )}
+
+          {/* 2. REQUESTED SOCIETIES TAB (list only) */}
+          {activeTab === "requested" && (
+            <section className="dash-widget">
+              <h3 className="widget-title">
+                ඉදිරිපත් කරන ලද / Forwarded සමිති ලැයිස්තුව
+              </h3>
+              <p className="muted-text">
+                මෙය සරල දර්ශනයක් වන අතර, එක් එකක් මත ක්ලික් කිරීමෙන් එම
+                ඉල්ලීම &quot;Pending & Actions&quot; ටැබයට විවෘත වේ.
+              </p>
+
+              {latestRequests.length === 0 ? (
+                <p className="muted-text">Forwarded සමිති නොමැත.</p>
+              ) : (
+                <ul className="letter-list">
+                  {latestRequests.map((req) => (
+                    <li
+                      key={req.id}
+                      className="letter-item"
+                      onClick={() => handleSelectRequest(req)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <div>
+                        <p className="letter-type">
+                          <strong>{req.societyName}</strong> ({req.registerNo})
+                        </p>
+                        <p className="letter-sub">
+                          දිස්ත්‍රික්කය: {req.district} | ප්‍රා.ලේ.:{" "}
+                          {req.division}
+                        </p>
+                        <p className="letter-sub">
+                          Director Status: {req.directorStatus}
+                        </p>
+                      </div>
+                      <span className="badge badge-info">Requested</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
+
+          {/* 3. CERTIFICATES TAB */}
+          {activeTab === "certificates" && (
+            <section className="dash-widget certificates-widget">
+              <div className="cert-header">
+                <div>
+                  <h3 className="widget-title">නිකුත් කළ ලියාපදිංචි සහතික</h3>
+                  <p className="muted-text">
+                    මෙහිදි අධ්‍යක්ෂවරයා විසින් දැනටමත් අනුමත කර ඇති සියලුම
+                    සමිති පෙන්වයි. කැමති එකක් තෝරාගෙන Preview සහ PDF
+                    බාගත කිරීම සිදු කළ හැක.
+                  </p>
+                </div>
               </div>
-            )}
-          </section>
+
+              {acceptedRequests.length === 0 ? (
+                <p className="muted-text">
+                  අධ්‍යක්ෂවරයා විසින් තවමත් කිසිදු සමිතියක් අනුමත කර
+                  නොමැත.
+                </p>
+              ) : (
+                <ul className="letter-list">
+                  {acceptedRequests.map((req) => (
+                    <li
+                      key={req.id}
+                      className="letter-item"
+                      onClick={() => setPreviewRequest(req)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <div>
+                        <p className="letter-type">
+                          <strong>{req.societyName}</strong> ({req.registerNo})
+                        </p>
+                        <p className="letter-sub">
+                          දිස්ත්‍රික්කය: {req.district} | ප්‍රා.ලේ.:{" "}
+                          {req.division}
+                        </p>
+                        <p className="letter-sub">
+                          Accepted on: {req.directorDecisionAt || "-"}
+                        </p>
+                      </div>
+                      <span className="badge badge-success">Accepted</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {/* Modal preview */}
+              {previewRequest && (
+                <div className="cert-modal-backdrop">
+                  <div className="cert-modal">
+                    <div className="cert-modal-header">
+                      <h4 className="widget-title">
+                        Certificate Preview – {previewRequest.societyName}
+                      </h4>
+                      <button
+                        className="btn-close-referral"
+                        onClick={() => setPreviewRequest(null)}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div className="cert-modal-body">
+                      <CertificatePreviewBlock request={previewRequest} />
+                    </div>
+                    <div className="cert-modal-footer">
+                      <button
+                        className="btn-accept"
+                        onClick={() => {
+                          setSelectedRequest(previewRequest);
+                          setTimeout(() => {
+                            handlePrint();
+                          }, 50);
+                        }}
+                      >
+                        ලියාපදිංචි සහතිකය (PDF) බාගත කරන්න
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* 4. HISTORY TAB */}
+          {activeTab === "history" && (
+            <section className="dash-widget">
+              <h3 className="widget-title">Forwarded Registrations History</h3>
+              <p className="muted-text">
+                මෙය අධ්‍යක්ෂවරයා වෙත යොමු වූ සියලුම ලියාපදිංචි ඉල්ලීම්
+                පිළිබඳ සම්පූර්ණ ඉතිහාසයයි. (අනුමත / ප්‍රත්‍යාකරණ / Pending)
+              </p>
+
+              {requests.length === 0 ? (
+                <p className="muted-text">ඉතිහාස දත්ත නොමැත.</p>
+              ) : (
+                <ul className="letter-list">
+                  {requests.map((req) => (
+                    <li
+                      key={req.id}
+                      className="letter-item"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleSelectRequest(req)}
+                    >
+                      <div>
+                        <p className="letter-type">
+                          <strong>{req.societyName}</strong> ({req.registerNo})
+                        </p>
+                        <p className="letter-sub">
+                          දිස්ත්‍රික්කය: {req.district} | ප්‍රා.ලේ.:{" "}
+                          {req.division}
+                        </p>
+                        <p className="letter-sub">ඉදිරිපත් වූ දිනය: {req.createdAt}</p>
+                        <p className="letter-sub">
+                          Director Status: {req.directorStatus}
+                        </p>
+                      </div>
+                      <span className="badge badge-info">History</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
+
+          {/* 5. ANALYTICS TAB */}
+          {activeTab === "analytics" && (
+            <section className="dash-widget">
+              <h3 className="widget-title">විශ්ලේෂණ සාරාංශය</h3>
+              <p className="muted-text">
+                මෙහි දී ඔබට සරල සංඛ්‍යාත දත්ත දැකගත හැක. අවශ්‍ය නම්
+                ඉදිරියේදී charts / filters ඇතුළත් කර ඉවත් තීරණ ගැනීම පහසු
+                කරගත හැක.
+              </p>
+
+              <div className="analytics-grid">
+                <div className="analytics-card">
+                  <h4>සම්පූර්ණ ඉදිරිපත් කිරීම්</h4>
+                  <p className="analytics-number">{totalForwarded}</p>
+                  <p className="analytics-label">
+                    මෙතෙක් අධ්‍යක්ෂවරයා වෙත යොමු වූ සමස්ත ඉල්ලීම්.
+                  </p>
+                </div>
+                <div className="analytics-card">
+                  <h4>අනුමත සමිති</h4>
+                  <p className="analytics-number">
+                    {acceptedRequests.length}
+                  </p>
+                  <p className="analytics-label">
+                    ලියාපදිංචි සහතික නිකුත් කිරීමට සුදුසු වූ සමිති.
+                  </p>
+                </div>
+                <div className="analytics-card">
+                  <h4>Pending තීරණ</h4>
+                  <p className="analytics-number">
+                    {pendingRequests.length}
+                  </p>
+                  <p className="analytics-label">
+                    දැනටමත් ඔබගේ අවසන් තීරණය බලා සිටින ඉල්ලීම් සංඛ්‍යාව.
+                  </p>
+                </div>
+                <div className="analytics-card">
+                  <h4>ප්‍රත්‍යාකරණ</h4>
+                  <p className="analytics-number">
+                    {rejectedRequests.length}
+                  </p>
+                  <p className="analytics-label">
+                    අධ්‍යක්ෂවරයා මට්ටමේ ප්‍රත්‍යාකරණය කළ ඉල්ලීම්.
+                  </p>
+                </div>
+              </div>
+            </section>
+          )}
         </main>
       </div>
     </div>
@@ -682,7 +1027,8 @@ const CertificateView = ({ director, request }) => {
             {request.district} දිස්ත්‍රික්කයේ {request.division} ප්‍රාදේශීය
             ලේකම් කොට්ඨාසය තුළ
           </strong>{" "}
-          නිසි පරිදි ලියාපදිංචි වී ඇති බවය.
+          දකුණු පළාත් ග්‍රාම සංවර්ධන දෙපාර්තමේන්තුවේ නීති රීති අනුව නිසි
+          පරිදි ලියාපදිංචි වී ඇති බවය.
         </p>
 
         <p className="certificate-text">
@@ -691,17 +1037,16 @@ const CertificateView = ({ director, request }) => {
         </p>
 
         <p className="certificate-text">
-          ඉහත සමිතිය සඳහා Rural Development Officer, District Officer,
-          Divisional Secretary හා Subject Officer මට්ටම්වූ සියලු අවශ්‍ය
-          අනුමැති ලබාගෙන, Director විසින් අවසන් වශයෙන්{" "}
-          <strong>සාර්ථකව ලියාපදිංචි කරන ලද බව</strong> මෙයින්
-          අවධාරණය කරනු ලැබේ.
+          මෙම ලියාපදිංචිය සඳහා Rural Development Officer, District Officer,
+          Divisional Secretary සහ Subject Officer මට්ටම්වූ සියලු අවශ්‍ය
+          අනුමැති ලබාගෙන, පසුකාලීනව අධ්‍යක්ෂවරයා විසින් අවසන් වශයෙන්{" "}
+          <strong>අනුමත කරන ලද බව</strong> මෙයින් තහවුරු කරනු ලැබේ.
         </p>
 
         <p className="certificate-text">
-          මෙම සමිතිය කෙරෙහි අදාළ නීති, නිර්දේශ හා ලියවිලි මගින් සම්පූර්ණව
-          පරීක්ෂා කරමින්, පිළිගත් ග්‍රාම සංවර්ධන සමිතියක් ලෙස පිළිගනු
-          ලැබේ.
+          ඉහත සමිතියට අදාල නියමයන් හා නීති රීති අනුව ක්‍රියා කරන
+          වගකීම සමිතිය සතුව තිබේ. මෙම සහතිකය වසරකට අදාළ නිල ලියාපදිංචි
+          ලේඛනයක් ලෙස සලකනු ලැබේ.
         </p>
 
         <div className="certificate-meta">
@@ -722,6 +1067,44 @@ const CertificateView = ({ director, request }) => {
   );
 };
 
+/** Used in Certificates tab modal */
+const CertificatePreviewBlock = ({ request }) => {
+  return (
+    <div className="certificate-preview-modal-block">
+      <h4 className="certificate-preview-title">Registration Summary</h4>
+      <p className="certificate-preview-subtitle">
+        මෙම සමිතිය සම්බන්ධ මූලික තොරතුරු පහත දැක්වේ.
+      </p>
+      <div className="certificate-preview-body">
+        <p>
+          <strong>සමිතිය නාමය:</strong> {request.societyName}
+        </p>
+        <p>
+          <strong>ලියාපදිංචි අංකය:</strong> {request.registerNo}
+        </p>
+        <p>
+          <strong>දිස්ත්‍රික් / ප්‍රා.ලේ.:</strong> {request.district} /{" "}
+          {request.division}
+        </p>
+        <p>
+          <strong>ලිපිනය:</strong> {request.societyAddress}
+        </p>
+        <p>
+          <strong>සම්බන්ධතා:</strong> {request.societyPhone} |{" "}
+          {request.societyEmail}
+        </p>
+        <p>
+          <strong>සාමාජික සංඛ්‍යාව:</strong> {request.memberCount ?? "N/A"}
+        </p>
+        <p>
+          <strong>අනුමත වූ දිනය:</strong>{" "}
+          {request.directorDecisionAt || "Not available"}
+        </p>
+      </div>
+    </div>
+  );
+};
+
 const PositionBlock = ({ title, data }) => {
   const d = data || {};
   return (
@@ -731,15 +1114,20 @@ const PositionBlock = ({ title, data }) => {
         <strong>නම:</strong> {d.fullName || "N/A"}
       </p>
       <p>
-        <strong>ලිපිනය:</strong> {d.address || "N/A"}</p>
+        <strong>ලිපිනය:</strong> {d.address || "N/A"}
+      </p>
       <p>
-        <strong>දුරකථන:</strong> {d.phone || "N/A"}</p>
+        <strong>දුරකථන:</strong> {d.phone || "N/A"}
+      </p>
       <p>
-        <strong>ඊමේල්:</strong> {d.email || "N/A"}</p>
+        <strong>ඊමේල්:</strong> {d.email || "N/A"}
+      </p>
       <p>
-        <strong>ජා.හැ.අංකය:</strong> {d.nic || "N/A"}</p>
+        <strong>ජා.හැ.අංකය:</strong> {d.nic || "N/A"}
+      </p>
       <p>
-        <strong>උපන් දිනය:</strong> {d.dob || "N/A"}</p>
+        <strong>උපන් දිනය:</strong> {d.dob || "N/A"}
+      </p>
     </div>
   );
 };
