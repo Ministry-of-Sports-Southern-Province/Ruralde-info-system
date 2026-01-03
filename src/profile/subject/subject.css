@@ -729,6 +729,55 @@
   color: #4b5563;
 }
 
+/* ===== DISTRICT ANALYTICS TABLE (NEW) ===== */
+
+.district-analytics-table {
+  margin-top: 18px;
+}
+
+.district-analytics-table h4 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.district-table-wrapper {
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  overflow: hidden;
+  font-size: 12px;
+}
+
+.district-table-header,
+.district-table-row {
+  display: grid;
+  grid-template-columns: 2fr repeat(4, 1fr);
+  gap: 4px;
+  padding: 6px 10px;
+  align-items: center;
+}
+
+.district-table-header {
+  background: #e5f9f0;
+  font-weight: 600;
+  color: #065f46;
+  border-bottom: 1px solid #d1fae5;
+}
+
+.district-table-row:nth-child(odd) {
+  background: #f9fafb;
+}
+
+.district-table-row:nth-child(even) {
+  background: #f3f4f6;
+}
+
+.district-table-row span {
+  white-space: nowrap;
+}
+
 /* ===== ANIMATIONS ===== */
 
 @keyframes slideInLeft {
@@ -784,5 +833,12 @@
 
   .detail-body {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* make district table more compact on small screens */
+  .district-table-header,
+  .district-table-row {
+    grid-template-columns: 1.6fr repeat(4, 0.8fr);
+    font-size: 11px;
   }
 }

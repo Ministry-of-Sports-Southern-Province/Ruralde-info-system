@@ -1,76 +1,125 @@
-/* Container */
+/* ===== PAGE WRAPPER ===== */
+
 .signup-container {
-  padding-top: 110px;
+  padding-top: 110px; /* leave room for fixed navbar */
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  box-sizing: border-box;
   background: linear-gradient(to bottom, #e6f2ff, #b3d9ff);
-  font-family: "Segoe UI", sans-serif;
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont,
+    "Roboto", sans-serif;
 }
 
-/* Box */
+/* ===== SIGNUP BOX ===== */
+
 .signup-box {
-  background: #fff;
-  padding: 40px 50px;
-  border-radius: 15px;
-  box-shadow: 0 8px 20px rgba(21, 101, 192, 0.15);
-  width: 400px;
+  background: #ffffff;
+  padding: 32px 40px;
+  border-radius: 18px;
+  box-shadow:
+    0 16px 40px rgba(15, 23, 42, 0.18),
+    0 0 0 1px rgba(148, 163, 184, 0.35);
+  width: 420px;
+  max-width: 100%;
   text-align: center;
 }
 
 .signup-title {
-  color: #1565c0;
+  color: #0d47a1;
   font-size: 1.8rem;
-  margin-bottom: 25px;
+  margin-bottom: 22px;
   font-weight: 700;
 }
 
-/* Form */
+/* Optional subtitle (if you want to add one later) */
+.signup-subtitle {
+  margin: -10px 0 16px;
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+/* ===== FORM LAYOUT ===== */
+
 .signup-form {
   display: flex;
   flex-direction: column;
   text-align: left;
 }
 
+/* Group sections for better visual hierarchy */
+.signup-section {
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.signup-section-title {
+  margin: 0 0 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0d47a1;
+}
+
+/* Labels and inputs */
+
 .signup-form label {
-  margin-bottom: 6px;
+  margin-bottom: 4px;
+  margin-top: 6px;
   color: #0d47a1;
   font-weight: 600;
+  font-size: 0.86rem;
 }
 
-.signup-form input {
-  padding: 10px 12px;
-  margin-bottom: 18px;
+.signup-form input,
+.signup-form select {
+  padding: 9px 11px;
+  margin-bottom: 12px;
   border: 1px solid #80bfff;
   border-radius: 8px;
-  font-size: 14px;
-  transition: 0.2s;
+  font-size: 0.9rem;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+  background: #ffffff;
 }
 
-.signup-form input:focus {
+.signup-form input:focus,
+.signup-form select:focus {
   outline: none;
   border-color: #1565c0;
-  box-shadow: 0 0 8px rgba(21, 101, 192, 0.3);
+  box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.2);
+  background-color: #f0f7ff;
 }
-.signup-form select {
-  padding: 10px 12px;
-  margin-bottom: 18px;
-  border: 1px solid #80bfff;
-  border-radius: 8px;
-  font-size: 14px;
-  transition: 0.2s;
+
+/* Small two-column layout for first + last name on wider screens */
+
+.signup-row {
+  display: flex;
+  gap: 10px;
+}
+
+.signup-row > div {
+  flex: 1;
 }
 
 /* Error text */
+
 .error-text {
-  color: red;
-  font-size: 13px;
+  color: #dc2626;
+  font-size: 0.8rem;
   margin-bottom: 10px;
   text-align: center;
 }
 
-/* Submit Button */
+/* ===== SUBMIT BUTTON ===== */
+
 .signup-submit-btn {
   background: linear-gradient(135deg, #0d47a1, #42a5f5);
   color: #fff;
@@ -85,15 +134,21 @@
   transition: all 0.35s ease;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 15px rgba(66, 165, 245, 0.4),
-              inset 0 0 8px rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 4px 15px rgba(66, 165, 245, 0.4),
+    inset 0 0 8px rgba(255, 255, 255, 0.2);
+  width: 100%;
+  margin-top: 4px;
 }
 
 .signup-submit-btn:hover {
-  transform: translateY(-2px) scale(1.03);
+  transform: translateY(-2px) scale(1.02);
   box-shadow: 0 6px 25px rgba(66, 165, 245, 0.6);
   background: linear-gradient(135deg, #1565c0, #64b5f6);
 }
+
+/* ===== ID PREVIEW (if you use image upload later) ===== */
+
 .id-preview {
   width: 160px;
   height: auto;
@@ -103,12 +158,57 @@
   display: block;
 }
 
+/* ===== RESPONSIVE ===== */
 
+/* Small tablets / large phones */
+@media (max-width: 768px) {
+  .signup-container {
+    padding-top: 90px;
+  }
 
-/* Responsive */
-@media (max-width: 480px) {
   .signup-box {
     width: 90%;
-    padding: 30px 25px;
+    padding: 26px 22px;
+    border-radius: 14px;
+  }
+
+  .signup-title {
+    font-size: 1.6rem;
+    margin-bottom: 18px;
+  }
+
+  .signup-row {
+    flex-direction: column;
+  }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+  .signup-container {
+    padding-top: 80px;
+  }
+
+  .signup-box {
+    width: 94%;
+    padding: 24px 18px;
+  }
+
+  .signup-title {
+    font-size: 1.4rem;
+  }
+
+  .signup-form label {
+    font-size: 0.82rem;
+  }
+
+  .signup-form input,
+  .signup-form select {
+    font-size: 0.86rem;
+    padding: 8px 10px;
+  }
+
+  .signup-submit-btn {
+    font-size: 0.95rem;
+    padding: 10px 20px;
   }
 }

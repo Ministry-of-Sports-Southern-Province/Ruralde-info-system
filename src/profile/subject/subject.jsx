@@ -127,6 +127,9 @@ const Subject = () => {
                 d.createdAt && d.createdAt.toDate
                   ? d.createdAt.toDate().toLocaleString()
                   : "",
+
+              // Keep raw district decision for analytics
+              _rawDistrictDecision: d.districtDecision || "Pending",
             });
           });
 
@@ -304,6 +307,45 @@ const Subject = () => {
     (r) => r.subjectStatus === "ForwardedToDirector"
   ).length;
 
+  // ===== DISTRICT APPROVAL ANALYTICS (for Analytics tab) =====
+  let districtApprovedCount = 0;
+  let districtRejectedCount = 0;
+  let districtPendingCount = 0;
+
+  const districtMap = {}; // { "Matara": { total, approved, rejected, pending } }
+
+  historyRequests.forEach((r) => {
+    const decision = (r._rawDistrictDecision || "Pending").toLowerCase();
+    const districtName = r.district || "N/A";
+
+    if (!districtMap[districtName]) {
+      districtMap[districtName] = {
+        district: districtName,
+        total: 0,
+        approved: 0,
+        rejected: 0,
+        pending: 0,
+      };
+    }
+
+    districtMap[districtName].total += 1;
+
+    if (decision === "accept" || decision === "accepted") {
+      districtApprovedCount += 1;
+      districtMap[districtName].approved += 1;
+    } else if (decision === "reject" || decision === "rejected") {
+      districtRejectedCount += 1;
+      districtMap[districtName].rejected += 1;
+    } else {
+      districtPendingCount += 1;
+      districtMap[districtName].pending += 1;
+    }
+  });
+
+  const districtAnalyticsRows = Object.values(districtMap).sort((a, b) =>
+    a.district.localeCompare(b.district)
+  );
+
   return (
     <div className="subject-dashboard">
       {/* SIGN OUT MODAL */}
@@ -434,8 +476,13 @@ const Subject = () => {
             <h4>ඔබගේ භූමිකාව</h4>
             <ul>
               <li>RDO, DO, DS තීරණ මුලින්ම සලකා බලන්න.</li>
-              <li>විෂය අදාළ නීති හා උපදෙස් අනුව Accept / Reject තීරණය ලබා දෙන්න.</li>
-              <li>අවසානයේ Director වෙත යොමු කිරීම (Forward to Director).</li>
+              <li>
+                විෂය අදාළ නීති හා උපදෙස් අනුව Accept / Reject තීරණය ලබා
+                දෙන්න.
+              </li>
+              <li>
+                අවසානයේ Director වෙත යොමු කිරීම (Forward to Director).
+              </li>
             </ul>
           </div>
         </aside>
@@ -562,9 +609,11 @@ const Subject = () => {
                   <h3 className="widget-title">විෂය නිලධාරී මගපෙන්වීම</h3>
                   <p className="muted-text">
                     • ඉල්ලීම තෝරන්න → වම්පසින් සිදු වූ සියලු පියවර
-                    (RDO/DO/DS) බලන්න.<br />
+                    (RDO/DO/DS) බලන්න.
+                    <br />
                     • &quot;Subject Officer Action&quot; කොටසෙන්
-                    Accept/Reject තීරණය ලබා දෙන්න.<br />
+                    Accept/Reject තීරණය ලබා දෙන්න.
+                    <br />
                     • අවසානයේ &quot;Forward to Director&quot; භාවිතා කර
                     Director වෙත යොමු කරන්න.
                   </p>
@@ -748,9 +797,8 @@ const Subject = () => {
                       <div className="referral-form subject-action-card">
                         <h4>Subject Officer Action</h4>
                         <p className="muted-text">
-                          මෙය ඔබගේ විෂය භාර නිල තීරණය ලබා දෙන කොටසයි.
-                          Accept හෝ Reject තෝරා, අවසානයේ Director වෙත
-                          යොමු කරන්න.
+                          මෙය ඔබගේ විෂය භාර නිල තීරණය ලබා දෙන කොටසයි. Accept
+                          හෝ Reject තෝරා, අවසානයේ Director වෙත යොමු කරන්න.
                         </p>
 
                         <label>විෂය නිලධාරී සටහන</label>
@@ -957,9 +1005,9 @@ const Subject = () => {
             <section className="sub-widget">
               <h3 className="widget-title">විෂය මට්ටමේ විශ්ලේෂණය</h3>
               <p className="muted-text">
-                පහත සංඛ්‍යාතයන් මගින් ඔබගේ වත්මන් කාර්ය භාරය පිළිබඳ
-                දර්ශනයක් ලබා ගත හැක. ඉදිරියේදී charts ඇතුළත් කර වැඩිදුර
-                විශ්ලේෂණ කරගන්න පුළුවන්.
+                පහත සංඛ්‍යාතයන් මගින් ඔබගේ වත්මන් කාර්ය භාරය සහ දිස්ත්‍රික්
+                මට්ටමේ තීරණ පිළිබඳ දර්ශනයක් ලබා ගත හැක. Charts ලෙස
+                පෙන්වීමේ අඩංගුව තවදුරටත් සංවර්ධනය කළ හැක.
               </p>
 
               <div className="analytics-grid">
@@ -993,6 +1041,64 @@ const Subject = () => {
                     ඔබගේ සෙසු ක්‍රියාවලිය පිළිබඳ සම්පූර්ණ ඉතිහාසය.
                   </p>
                 </div>
+              </div>
+
+              {/* === NEW: DISTRICT APPROVAL SUMMARY === */}
+              <div className="analytics-grid" style={{ marginTop: 24 }}>
+                <div className="analytics-card">
+                  <h4>දිස්ත්‍රික් මට්ටමේ අනුමත</h4>
+                  <p className="analytics-number">{districtApprovedCount}</p>
+                  <p className="analytics-label">
+                    District Officer මට්ටමේ &quot;Accept&quot; වූ ඉල්ලීම්
+                    ගණන.
+                  </p>
+                </div>
+                <div className="analytics-card">
+                  <h4>දිස්ත්‍රික් මට්ටමේ ප්‍රත්‍යාකරණ</h4>
+                  <p className="analytics-number">{districtRejectedCount}</p>
+                  <p className="analytics-label">
+                    District Officer මට්ටමේ &quot;Reject&quot; වූ ඉල්ලීම්
+                    ගණන.
+                  </p>
+                </div>
+                <div className="analytics-card">
+                  <h4>දිස්ත්‍රික් මට්ටමේ Pending</h4>
+                  <p className="analytics-number">{districtPendingCount}</p>
+                  <p className="analytics-label">
+                    ජාතික තීරණයක් ලබා නොදුන් (Pending) District Officer
+                    ඉල්ලීම්.
+                  </p>
+                </div>
+              </div>
+
+              {/* Simple chart-style table per district */}
+              <div className="district-analytics-table">
+                <h4 style={{ marginTop: 24 }}>District Approval Breakdown</h4>
+                {districtAnalyticsRows.length === 0 ? (
+                  <p className="muted-text">No district data available.</p>
+                ) : (
+                  <div className="district-table-wrapper">
+                    <div className="district-table-header">
+                      <span>District</span>
+                      <span>Total</span>
+                      <span>Approved</span>
+                      <span>Rejected</span>
+                      <span>Pending</span>
+                    </div>
+                    {districtAnalyticsRows.map((row) => (
+                      <div
+                        key={row.district}
+                        className="district-table-row"
+                      >
+                        <span>{row.district}</span>
+                        <span>{row.total}</span>
+                        <span>{row.approved}</span>
+                        <span>{row.rejected}</span>
+                        <span>{row.pending}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </section>
           )}

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../navbar/navbar.css";
-import { Menu, X, UserCircle2 } from "lucide-react";
+import { Menu, X, UserCircle2, ChevronDown } from "lucide-react";
 
 import { db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -18,11 +18,18 @@ export default function Navbar() {
   );
   const [userPosition, setUserPosition] = useState(null);
 
+  const dropdownRef = useRef(null);
+
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      // close dropdown when layout changes
+      setShowForms(false);
+    };
+
     window.addEventListener("resize", handleResize);
 
-    // On mount, try to load current user's position
     const loadUserPosition = async () => {
       const userId = localStorage.getItem("userId");
       if (!userId) {
@@ -51,7 +58,6 @@ export default function Navbar() {
 
     loadUserPosition();
 
-    // Listen to localStorage changes in other tabs(optional)
     const handleStorage = () => {
       const id = localStorage.getItem("userId");
       setIsLoggedIn(!!id);
@@ -59,27 +65,41 @@ export default function Navbar() {
     };
     window.addEventListener("storage", handleStorage);
 
+    // click‑outside to close dropdown
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowForms(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+
     return () => {
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("storage", handleStorage);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
-  const toggleForms = () => {
-    if (isMobile) setShowForms((prev) => !prev);
+  // CLICK‑ONLY TOGGLE (desktop + mobile)
+  const handleDropdownToggle = () => {
+    setShowForms((prev) => !prev);
+  };
+
+  const handleMenuToggle = () => {
+    setMenuOpen((prev) => !prev);
+    // whenever you toggle mobile menu, close dropdown
+    setShowForms(false);
   };
 
   const handleProfileClick = () => {
     const userId = localStorage.getItem("userId");
 
-    // Not logged in → go to login
     if (!userId || !isLoggedIn) {
       navigate("/login");
       setMenuOpen(false);
       return;
     }
 
-    // Logged in → go to dashboard based on position
     switch (userPosition) {
       case "chairman":
         navigate("/chairmanprofile");
@@ -99,7 +119,6 @@ export default function Navbar() {
         navigate("/societyofficer");
         break;
       default:
-        // fallback if position is missing/unknown
         navigate("/login");
         break;
     }
@@ -107,17 +126,22 @@ export default function Navbar() {
     setMenuOpen(false);
   };
 
+  const closeAllMenus = () => {
+    setMenuOpen(false);
+    setShowForms(false);
+  };
+
   return (
     <header className="nav">
       <div className="nav-inner">
-        <Link to="/" className="brand" onClick={() => setMenuOpen(false)}>
+        <Link to="/" className="brand" onClick={closeAllMenus}>
           ග්‍රාම සංවර්ධන දෙපාර්තමේන්තුව
         </Link>
 
         {/* Mobile Menu Icon */}
         <button
           className="menu-icon"
-          onClick={() => setMenuOpen(!menuOpen)}
+          onClick={handleMenuToggle}
           aria-label="Toggle menu"
         >
           {menuOpen ? <X size={28} /> : <Menu size={28} />}
@@ -125,56 +149,58 @@ export default function Navbar() {
 
         {/* Main Navigation */}
         <nav className={`nav-links ${menuOpen ? "active" : ""}`}>
-          <Link to="/" onClick={() => setMenuOpen(false)}>
+          <Link to="/" onClick={closeAllMenus}>
             Home
           </Link>
-          <Link to="/about" onClick={() => setMenuOpen(false)}>
+          <Link to="/about" onClick={closeAllMenus}>
             About
           </Link>
- <Link to="/project" onClick={() => setMenuOpen(false)}>
-           Our Projects
+          <Link to="/project" onClick={closeAllMenus}>
+            Our Projects
           </Link>
 
-          {/* Applications dropdown */}
-          <div
-            className="dropdown"
-            onMouseEnter={!isMobile ? () => setShowForms(true) : undefined}
-            onMouseLeave={!isMobile ? () => setShowForms(false) : undefined}
-            onClick={toggleForms}
-          >
-            <span className="dropdown-title">Applications ▼</span>
+          {/* Applications dropdown – CLICK ONLY */}
+          <div className="dropdown" ref={dropdownRef}>
+            <button
+              type="button"
+              className={`dropdown-title ${showForms ? "dropdown-open" : ""}`}
+              onClick={handleDropdownToggle}
+            >
+              <span>Applications</span>
+              <ChevronDown
+                size={16}
+                className={showForms ? "dropdown-icon-rotated" : ""}
+              />
+            </button>
+
             {showForms && (
               <div className="dropdown-content">
-                <Link to="/register" onClick={() => setMenuOpen(false)}>
+                <Link to="/register" onClick={closeAllMenus}>
                   සමිති ලියාපදින්චිය
                 </Link>
-                <Link to="/society" onClick={() => setMenuOpen(false)}>
+                <Link to="/society" onClick={closeAllMenus}>
                   මූල්‍ය ඉල්ලුම් පත්‍රය
                 </Link>
-                <Link to="/member" onClick={() => setMenuOpen(false)}>
+                <Link to="/member" onClick={closeAllMenus}>
                   සාමාජිකයින්ගේ තොරතුරු
                 </Link>
-                <Link to="/develop" onClick={() => setMenuOpen(false)}>
+                <Link to="/develop" onClick={closeAllMenus}>
                   ණය යෙදවුම් වාර්තාව
                 </Link>
-                <Link to="/student" onClick={() => setMenuOpen(false)}>
+                <Link to="/student" onClick={closeAllMenus}>
                   ගැමිසෙත ශිෂ්‍යත්ව අයදුම් පත්‍රය
                 </Link>
               </div>
             )}
           </div>
 
-          <Link to="/contact" onClick={() => setMenuOpen(false)}>
+          <Link to="/contact" onClick={closeAllMenus}>
             Contact Us
           </Link>
 
           {/* Right side: Sign Up + Profile icon */}
           <div className="nav-right">
-            <Link
-              to="/signup"
-              className="signup-btn"
-              onClick={() => setMenuOpen(false)}
-            >
+            <Link to="/signup" className="signup-btn" onClick={closeAllMenus}>
               Sign Up
             </Link>
 

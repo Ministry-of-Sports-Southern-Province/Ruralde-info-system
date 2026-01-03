@@ -252,3 +252,35 @@
     background: transparent;
   }
 }
+/* Make dropdown title a button-style element */
+.dropdown-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Visual feedback when open */
+.dropdown-open {
+  font-weight: 600;
+}
+
+/* Rotate the chevron when open */
+.dropdown-icon-rotated {
+  transform: rotate(180deg);
+  transition: transform 0.15s ease-out;
+}
+
+/* On mobile, you may want the dropdown-content to take full width under menu */
+@media (max-width: 768px) {
+  .dropdown-content {
+    position: static; /* instead of absolute if you used it */
+    box-shadow: none; /* up to you */
+    width: 100%;
+  }
+}

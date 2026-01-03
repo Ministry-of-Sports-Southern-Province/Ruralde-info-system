@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import "../login/signup.css";
 import { db } from "../firebase.js";
 import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
@@ -10,6 +10,8 @@ export default function SignUp() {
   const [formData, setFormData] = useState({
     position: "",
     district: "",
+    firstName: "",
+    lastName: "",
     username: "",
     email: "",
     contactnumber: "",
@@ -30,7 +32,7 @@ export default function SignUp() {
       "හික්කඩුව",
       "හබරාදුව",
       "ඇල්පිටිය",
-      "යක්කලමුල්ල",
+      "යටකලමුල්ල",
       "තවලම",
       "නාගොඩ",
       "නෙළුව",
@@ -63,7 +65,7 @@ export default function SignUp() {
       "මුලටියන",
       "වැලිපිටිය",
       "පස්ගොඩ",
-      "කඹුරුපිටිය",
+      "කැබුරුපිටිය",
       "කිරින්ද පුහුල්වැල්ල",
       "කොටපොළ",
       "මාතර",
@@ -121,7 +123,7 @@ export default function SignUp() {
     "මුලටියන": "mulatiyana",
     "වැලිපිටිය": "welipitiya",
     "පස්ගොඩ": "pasgoda",
-    "කඹුරුපිටිය": "kaburupitiya",
+    "කැබුරුපිටිය": "kaburupitiya",
     "කිරින්ද පුහුල්වැල්ල": "kirinda_puhulwella",
     "කොටපොළ": "kotapola",
     "මාතර": "matara",
@@ -229,10 +231,9 @@ export default function SignUp() {
     try {
       const usersRef = collection(db, "users");
 
-      // === 1) CHECK UNIQNESS RULES ===
+      // === 1) CHECK UNIQUENESS RULES ===
 
       if (formData.position === "village_officer") {
-        // Only one rural dev officer per (district + division)
         if (!selectedDistrict || !selectedSecretary) {
           setError("කරුණාකර දිස්ත්‍රික්කය සහ ප්‍රාදේශීය ලේකම් කොට්ඨාසය තෝරන්න.");
           return;
@@ -253,7 +254,7 @@ export default function SignUp() {
           return;
         }
       } else {
-        // Global uniqueness per position (as you had)
+        // Global uniqueness per position
         const q = query(
           usersRef,
           where("position", "==", formData.position)
@@ -271,6 +272,8 @@ export default function SignUp() {
         district: selectedDistrict || null,
         division: selectedSecretary || null,
         society: selectedSociety || null,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         username: formData.username,
         email: formData.email,
         contactnumber: formData.contactnumber,
@@ -291,209 +294,247 @@ export default function SignUp() {
     <div className="signup-container">
       <div className="signup-box">
         <h2 className="signup-title">Create Account</h2>
+        {/* <p className="signup-subtitle">Register to access the dashboard</p> */}
 
         <form onSubmit={handleSubmit} className="signup-form">
-          {/* POSITION */}
-          <label>Position</label>
-          <select
-            name="position"
-            value={formData.position}
-            onChange={handleChange}
-            required
-          >
-            <option value="">තනතුර තෝරන්න</option>
+          {/* ===== SECTION: ROLE & AREA ===== */}
+          <div className="signup-section">
+            <p className="signup-section-title">Role & Area</p>
 
-            <option value="chairman">පලාත් සංවර්ධන අධ්‍යක්ශක</option>
-            <option value="districtOfficer">දිස්ත්‍රික් නිලධාරී</option>
-            <option value="subjectOfficer">විෂය භාර නිලධාරී</option>
-            <option value="village_officer">ග්‍රාම සංවර්ධන නිලධාරී</option>
-            <option value="divisional_secretary">ප්‍රාදේශීය ලේකම්</option>
-            <option value="society_chairman">සමිති සභාපති</option>
-            <option value="society_treasurer">සමිති භාණ්ඩාගාරික</option>
-            <option value="society_secretary">සමිති ලේකම්</option>
-          </select>
+            {/* POSITION */}
+            <label>Position</label>
+            <select
+              name="position"
+              value={formData.position}
+              onChange={handleChange}
+              required
+            >
+              <option value="">තනතුර තෝරන්න</option>
 
-          {/* DISTRICT OFFICER – ONLY DISTRICT */}
-          {formData.position === "districtOfficer" && (
-            <>
-              <label>District</label>
-              <select
-                value={selectedDistrict}
-                onChange={(e) => handleDistrictChange(e.target.value)}
-                required
-              >
-                <option value="">තෝරන්න</option>
-                <option value="Galle">ගාල්ල</option>
-                <option value="Matara">මාතර</option>
-                <option value="Hambantota">හම්බන්තොට</option>
-              </select>
-            </>
-          )}
+              <option value="chairman">පලාත් සංවර්ධන අධ්‍යක්ශක</option>
+              <option value="districtOfficer">දිස්ත්‍රික් නිලධාරී</option>
+              <option value="subjectOfficer">විෂය භාර නිලධාරී</option>
+              <option value="village_officer">ග්‍රාම සංවර්ධන නිලධාරී</option>
+              <option value="divisional_secretary">ප්‍රාදේශීය ලේකම්</option>
+              <option value="society_chairman">සමිති සභාපති</option>
+              <option value="society_treasurer">සමිති භාණ්ඩාගාරික</option>
+              <option value="society_secretary">සමිති ලේකම්</option>
+            </select>
 
-          {/* VILLAGE OFFICER – DISTRICT + SECRETARY DIVISION */}
-          {formData.position === "village_officer" && (
-            <>
-              <label>District</label>
-              <select
-                value={selectedDistrict}
-                onChange={(e) => handleDistrictChange(e.target.value)}
-                required
-              >
-                <option value="">තෝරන්න</option>
-                <option value="Galle">ගාල්ල</option>
-                <option value="Matara">මාතර</option>
-                <option value="Hambantota">හම්බන්තොට</option>
-              </select>
+            {/* DISTRICT OFFICER – ONLY DISTRICT */}
+            {formData.position === "districtOfficer" && (
+              <>
+                <label>District</label>
+                <select
+                  value={selectedDistrict}
+                  onChange={(e) => handleDistrictChange(e.target.value)}
+                  required
+                >
+                  <option value="">තෝරන්න</option>
+                  <option value="Galle">ගාල්ල</option>
+                  <option value="Matara">මාතර</option>
+                  <option value="Hambantota">හම්බන්තොට</option>
+                </select>
+              </>
+            )}
 
-              <label>Secretary Division</label>
-              <select
-                value={selectedSecretary}
-                onChange={(e) => setSelectedSecretary(e.target.value)}
-                required
-              >
-                <option value="">Select Division</option>
-                {selectedDistrict &&
-                  districtData[selectedDistrict].map((div, idx) => (
-                    <option value={div} key={idx}>
-                      {div}
+            {/* VILLAGE OFFICER – DISTRICT + SECRETARY DIVISION */}
+            {formData.position === "village_officer" && (
+              <>
+                <label>District</label>
+                <select
+                  value={selectedDistrict}
+                  onChange={(e) => handleDistrictChange(e.target.value)}
+                  required
+                >
+                  <option value="">තෝරන්න</option>
+                  <option value="Galle">ගාල්ල</option>
+                  <option value="Matara">මාතර</option>
+                  <option value="Hambantota">හම්බන්තොට</option>
+                </select>
+
+                <label>Secretary Division</label>
+                <select
+                  value={selectedSecretary}
+                  onChange={(e) => setSelectedSecretary(e.target.value)}
+                  required
+                >
+                  <option value="">Select Division</option>
+                  {selectedDistrict &&
+                    districtData[selectedDistrict].map((div, idx) => (
+                      <option value={div} key={idx}>
+                        {div}
+                      </option>
+                    ))}
+                </select>
+              </>
+            )}
+
+            {/* DIVISIONAL SECRETARY – DISTRICT + SECRETARY DIVISION */}
+            {formData.position === "divisional_secretary" && (
+              <>
+                <label>District</label>
+                <select
+                  value={selectedDistrict}
+                  onChange={(e) => handleDistrictChange(e.target.value)}
+                  required
+                >
+                  <option value="">තෝරන්න</option>
+                  <option value="Galle">ගාල්ල</option>
+                  <option value="Matara">මාතර</option>
+                  <option value="Hambantota">හම්බන්තොට</option>
+                </select>
+
+                <label>Secretary Division</label>
+                <select
+                  value={selectedSecretary}
+                  onChange={(e) => setSelectedSecretary(e.target.value)}
+                  required
+                >
+                  <option value="">Select Division</option>
+                  {selectedDistrict &&
+                    districtData[selectedDistrict].map((div, idx) => (
+                      <option value={div} key={idx}>
+                        {div}
+                      </option>
+                    ))}
+                </select>
+              </>
+            )}
+
+            {/* SOCIETY POSITIONS – DISTRICT + SECRETARY + SOCIETY */}
+            {societyPositions.includes(formData.position) && (
+              <>
+                <label>District</label>
+                <select
+                  value={selectedDistrict}
+                  onChange={(e) => handleDistrictChange(e.target.value)}
+                  required
+                >
+                  <option value="">තෝරන්න</option>
+                  <option value="Galle">ගාල්ල</option>
+                  <option value="Matara">මාතර</option>
+                  <option value="Hambantota">හම්බන්තොට</option>
+                </select>
+
+                <label>Secretary Division</label>
+                <select
+                  value={selectedSecretary}
+                  onChange={(e) => setSelectedSecretary(e.target.value)}
+                  required
+                >
+                  <option value="">Select Division</option>
+                  {selectedDistrict &&
+                    districtData[selectedDistrict].map((div, idx) => (
+                      <option value={div} key={idx}>
+                        {div}
+                      </option>
+                    ))}
+                </select>
+
+                <label>Society Name</label>
+                <select
+                  value={selectedSociety}
+                  onChange={(e) => setSelectedSociety(e.target.value)}
+                  required
+                >
+                  <option value="">Select Society</option>
+                  {societies.map((soc, idx) => (
+                    <option key={idx} value={soc}>
+                      {soc}
                     </option>
                   ))}
-              </select>
-            </>
-          )}
+                </select>
+              </>
+            )}
+          </div>
 
-          {/* DIVISIONAL SECRETARY – DISTRICT + SECRETARY DIVISION */}
-          {formData.position === "divisional_secretary" && (
-            <>
-              <label>District</label>
-              <select
-                value={selectedDistrict}
-                onChange={(e) => handleDistrictChange(e.target.value)}
-                required
-              >
-                <option value="">තෝරන්න</option>
-                <option value="Galle">ගාල්ල</option>
-                <option value="Matara">මාතර</option>
-                <option value="Hambantota">හම්බන්තොට</option>
-              </select>
+          {/* ===== SECTION: PERSONAL INFORMATION ===== */}
+          <div className="signup-section">
+            <p className="signup-section-title">Personal Information</p>
 
-              <label>Secretary Division</label>
-              <select
-                value={selectedSecretary}
-                onChange={(e) => setSelectedSecretary(e.target.value)}
-                required
-              >
-                <option value="">Select Division</option>
-                {selectedDistrict &&
-                  districtData[selectedDistrict].map((div, idx) => (
-                    <option value={div} key={idx}>
-                      {div}
-                    </option>
-                  ))}
-              </select>
-            </>
-          )}
+            <div className="signup-row">
+              <div>
+                <label>First Name</label>
+                <input
+                  type="text"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div>
+                <label>Last Name</label>
+                <input
+                  type="text"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
 
-          {/* SOCIETY POSITIONS – DISTRICT + SECRETARY + SOCIETY */}
-          {societyPositions.includes(formData.position) && (
-            <>
-              <label>District</label>
-              <select
-                value={selectedDistrict}
-                onChange={(e) => handleDistrictChange(e.target.value)}
-                required
-              >
-                <option value="">තෝරන්න</option>
-                <option value="Galle">ගාල්ල</option>
-                <option value="Matara">මාතර</option>
-                <option value="Hambantota">හම්බන්තොට</option>
-              </select>
+            <label>Username</label>
+            <input
+              type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-              <label>Secretary Division</label>
-              <select
-                value={selectedSecretary}
-                onChange={(e) => setSelectedSecretary(e.target.value)}
-                required
-              >
-                <option value="">Select Division</option>
-                {selectedDistrict &&
-                  districtData[selectedDistrict].map((div, idx) => (
-                    <option value={div} key={idx}>
-                      {div}
-                    </option>
-                  ))}
-              </select>
+          {/* ===== SECTION: CONTACT & SECURITY ===== */}
+          <div className="signup-section">
+            <p className="signup-section-title">Contact & Security</p>
 
-              <label>Society Name</label>
-              <select
-                value={selectedSociety}
-                onChange={(e) => setSelectedSociety(e.target.value)}
-                required
-              >
-                <option value="">Select Society</option>
-                {societies.map((soc, idx) => (
-                  <option key={idx} value={soc}>
-                    {soc}
-                  </option>
-                ))}
-              </select>
-            </>
-          )}
+            <label>Email</label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
 
-          {/* USER FIELDS */}
-          <label>Username</label>
-          <input
-            type="text"
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-            required
-          />
+            <label>Contact Number</label>
+            <input
+              type="tel"
+              name="contactnumber"
+              value={formData.contactnumber}
+              onChange={handleChange}
+              required
+            />
 
-          <label>Email</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
+            <label>Identity Number</label>
+            <input
+              type="text"
+              name="identitynumber"
+              value={formData.identitynumber}
+              onChange={handleChange}
+              required
+            />
 
-          <label>Contact Number</label>
-          <input
-            type="tel"
-            name="contactnumber"
-            value={formData.contactnumber}
-            onChange={handleChange}
-            required
-          />
+            <label>Password</label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
 
-          <label>Identity Number</label>
-          <input
-            type="text"
-            name="identitynumber"
-            value={formData.identitynumber}
-            onChange={handleChange}
-            required
-          />
-
-          <label>Password</label>
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
-
-          <label>Confirm Password</label>
-          <input
-            type="password"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-          />
+            <label>Confirm Password</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
           {error && <p className="error-text">{error}</p>}
 

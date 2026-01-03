@@ -240,7 +240,7 @@ const ChairmanProfile = () => {
       setActionSuccess(
         decision === "accept"
           ? "සමිතිය අවසන්ව (අනුමත) ලෙස ලියාපදිංචි කරන ලදී."
-          : "සමිතිය (ප්‍රত্যාකරණය) කරන ලදී."
+          : "සමිතිය (ප්‍රත්‍යාකරණය) කරන ලදී."
       );
     } catch (err) {
       console.error("Error updating director decision:", err);
@@ -272,6 +272,36 @@ const ChairmanProfile = () => {
   const canGenerateCertificate =
     selectedRequest && selectedRequest.directorStatus === "AcceptedByDirector";
 
+  // ===== DISTRICT-WISE ANALYTICS FOR DIRECTOR =====
+  const districtStatsMap = requests.reduce((acc, r) => {
+    const key = r.district || "N/A";
+    if (!acc[key]) {
+      acc[key] = { total: 0, accepted: 0, pending: 0, rejected: 0 };
+    }
+    acc[key].total += 1;
+    if (r.directorStatus === "AcceptedByDirector") acc[key].accepted += 1;
+    else if (r.directorStatus === "RejectedByDirector") acc[key].rejected += 1;
+    else acc[key].pending += 1;
+    return acc;
+  }, {});
+
+  const districtStats = Object.entries(districtStatsMap).map(
+    ([districtName, stats]) => ({
+      districtName,
+      ...stats,
+    })
+  );
+
+  const maxTotalForBar =
+    districtStats.length > 0
+      ? Math.max(...districtStats.map((d) => d.total))
+      : 1;
+
+  const fullName =
+    (user.firstName && user.lastName
+      ? `${user.firstName} ${user.lastName}`
+      : user.username) || "Director";
+
   return (
     <div className="chairman-dashboard">
       <div className="dashboard-shell">
@@ -296,7 +326,7 @@ const ChairmanProfile = () => {
                 alt="Profile"
               />
             </div>
-            <h2 className="sidebar-name">{user.username}</h2>
+            <h2 className="sidebar-name">{fullName}</h2>
             <p className="sidebar-role-main">
               {user.position || "අධ්‍යක්ෂක"}
             </p>
@@ -309,7 +339,6 @@ const ChairmanProfile = () => {
               ප්‍රා.ලේ. කොට්ඨාස
             </p>
 
-            {/* Sensitive info in collapsible block */}
             <div className="sidebar-info-card">
               <button
                 type="button"
@@ -340,6 +369,12 @@ const ChairmanProfile = () => {
                     <strong>ප්‍රාදේශීය ලේකම් කොට්ඨාසය:</strong>{" "}
                     {user.division || "All"}
                   </p>
+                  {user.positionStartDate && (
+                    <p>
+                      <strong>තනතුර භාරගත් දිනය:</strong>{" "}
+                      {user.positionStartDate}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -370,7 +405,10 @@ const ChairmanProfile = () => {
             <ul>
               <li>ග්‍රාම සංවර්ධන සමිති අවසන්ව ලියාපදිංචි කිරීම.</li>
               <li>ලියාපදිංචි සහතික නිකුත් කිරීම.</li>
-              <li>දිස්ත්‍රික්ක හා ප්‍රාදේශීය මට්ටමේ වැඩසටහන් සම්බන්ධ දේශපාලන රහිත පාලනය.</li>
+              <li>
+                දිස්ත්‍රික්ක හා ප්‍රාදේශීය මට්ටමේ වැඩසටහන් සම්බන්ධ දේශපාලන
+                රහිත පාලනය.
+              </li>
             </ul>
           </div>
         </aside>
@@ -424,7 +462,9 @@ const ChairmanProfile = () => {
           {/* Main header under tabs */}
           <div className="main-header">
             <div>
-              <h1 className="main-title">ග්‍රාම සංවර්ධන සමිති ලියාපදිංචි කිරීම</h1>
+              <h1 className="main-title">
+                ග්‍රාම සංවර්ධන සමිති ලියාපදිංචි කිරීම
+              </h1>
               <p className="main-subtitle">
                 මෙහි ඇති සියලුම ඉල්ලීම් ග්‍රාම නිලධාරී, දිස්ත්‍රික් ලේකම්,
                 ප්‍රාදේශීය ලේකම් හා විෂය අංශ නිලධාරී මට්ටම් පියවර සම්පූර්ණ කර
@@ -447,7 +487,9 @@ const ChairmanProfile = () => {
               </p>
             </div>
             <div className="dash-widget">
-              <h3 className="widget-title">වහාම දැනගත යුතු සංක්ෂිප්ත තොරතුරු</h3>
+              <h3 className="widget-title">
+                වහාම දැනගත යුතු සංක්ෂිප්ත තොරතුරු
+              </h3>
               <div className="profile-summary-grid">
                 <div>
                   <p className="summary-label">සම්පූර්ණ ඉදිරිපත් කිරීම්</p>
@@ -471,7 +513,7 @@ const ChairmanProfile = () => {
 
           {/* ========== TAB CONTENTS ========== */}
 
-          {/* 1. PENDING & ACTIONS: Registrations + detail/decision */}
+          {/* 1. PENDING & ACTIONS */}
           {activeTab === "pending" && (
             <>
               <section className="dash-widget">
@@ -498,7 +540,8 @@ const ChairmanProfile = () => {
                       >
                         <div>
                           <p className="letter-type">
-                            <strong>{req.societyName}</strong> ({req.registerNo})
+                            <strong>{req.societyName}</strong> (
+                            {req.registerNo})
                           </p>
                           <p className="letter-sub">
                             දිස්ත්‍රික්කය: {req.district} | ප්‍රා.ලේ.:{" "}
@@ -702,7 +745,6 @@ const ChairmanProfile = () => {
                             </div>
                           )}
 
-                          {/* CERTIFICATE-SUMMARY PREVIEW SHOWN BEFORE DOWNLOAD */}
                           {canGenerateCertificate && (
                             <div className="certificate-preview-block">
                               <h4 className="certificate-preview-title">
@@ -771,7 +813,6 @@ const ChairmanProfile = () => {
                     </div>
                   </section>
 
-                  {/* Hidden printable certificate */}
                   {canGenerateCertificate && (
                     <div
                       style={{ position: "absolute", left: -9999, top: 0 }}
@@ -785,7 +826,7 @@ const ChairmanProfile = () => {
             </>
           )}
 
-          {/* 2. REQUESTED SOCIETIES TAB (list only) */}
+          {/* 2. REQUESTED SOCIETIES TAB */}
           {activeTab === "requested" && (
             <section className="dash-widget">
               <h3 className="widget-title">
@@ -873,7 +914,6 @@ const ChairmanProfile = () => {
                 </ul>
               )}
 
-              {/* Modal preview */}
               {previewRequest && (
                 <div className="cert-modal-backdrop">
                   <div className="cert-modal">
@@ -938,7 +978,9 @@ const ChairmanProfile = () => {
                           දිස්ත්‍රික්කය: {req.district} | ප්‍රා.ලේ.:{" "}
                           {req.division}
                         </p>
-                        <p className="letter-sub">ඉදිරිපත් වූ දිනය: {req.createdAt}</p>
+                        <p className="letter-sub">
+                          ඉදිරිපත් වූ දිනය: {req.createdAt}
+                        </p>
                         <p className="letter-sub">
                           Director Status: {req.directorStatus}
                         </p>
@@ -956,11 +998,11 @@ const ChairmanProfile = () => {
             <section className="dash-widget">
               <h3 className="widget-title">විශ්ලේෂණ සාරාංශය</h3>
               <p className="muted-text">
-                මෙහි දී ඔබට සරල සංඛ්‍යාත දත්ත දැකගත හැක. අවශ්‍ය නම්
-                ඉදිරියේදී charts / filters ඇතුළත් කර ඉවත් තීරණ ගැනීම පහසු
-                කරගත හැක.
+                මෙහි දී ඔබට සරල සංඛ්‍යාත දත්ත දැකගත හැක. දිස්ත්‍රික් අනුව
+                ලියාපදිංචි ඉල්ලීම් ගණන ද පහත දැක්වේ.
               </p>
 
+              {/* Overall numbers */}
               <div className="analytics-grid">
                 <div className="analytics-card">
                   <h4>සම්පූර්ණ ඉදිරිපත් කිරීම්</h4>
@@ -997,6 +1039,41 @@ const ChairmanProfile = () => {
                   </p>
                 </div>
               </div>
+
+              {/* District-wise "chart" */}
+              <h4 style={{ marginTop: 16, marginBottom: 6 }}>
+                දිස්ත්‍රික් අනුව ලියාපදිංචි ඉල්ලීම් / District-wise Summary
+              </h4>
+              {districtStats.length === 0 ? (
+                <p className="muted-text">
+                  දිස්ත්‍රික් අනුව දත්ත පෙන්වීමට ලියාපදිංචි ඉල්ලීම් නොමැත.
+                </p>
+              ) : (
+                <div className="district-analytics-table">
+                  {districtStats.map((d) => {
+                    const barWidth =
+                      maxTotalForBar > 0
+                        ? (d.total / maxTotalForBar) * 100
+                        : 0;
+                    return (
+                      <div key={d.districtName} className="district-row">
+                        <div className="district-label">{d.districtName}</div>
+                        <div className="district-bar-wrapper">
+                          <div
+                            className="district-bar"
+                            style={{ width: `${barWidth}%` }}
+                          >
+                            <span className="district-bar-text">
+                              Total: {d.total} | Accepted: {d.accepted} |
+                              Pending: {d.pending} | Rejected: {d.rejected}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </section>
           )}
         </main>
@@ -1067,7 +1144,6 @@ const CertificateView = ({ director, request }) => {
   );
 };
 
-/** Used in Certificates tab modal */
 const CertificatePreviewBlock = ({ request }) => {
   return (
     <div className="certificate-preview-modal-block">
