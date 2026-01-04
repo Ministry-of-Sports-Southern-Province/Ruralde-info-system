@@ -1,7 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../student/student.css";
+import { db } from "../firebase";
+import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
 export default function GamisaethaScholarshipForm() {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     fullName: "",
     address: "",
@@ -17,9 +22,31 @@ export default function GamisaethaScholarshipForm() {
     villageOfficerCert: "",
   });
 
+  const [societyContext, setSocietyContext] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [submitSuccess, setSubmitSuccess] = useState("");
+
+  // Load selected society context from localStorage (set in Startup.jsx)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("selectedSocietyContext");
+      if (raw) {
+        setSocietyContext(JSON.parse(raw));
+      }
+    } catch (e) {
+      console.error("Error reading selectedSocietyContext:", e);
+    }
+  }, []);
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    setFormData((prev) => {
+      if (type === "radio") {
+        return { ...prev, [name]: value };
+      }
+      return { ...prev, [name]: value };
+    });
   };
 
   const handleResultChange = (index, field, value) => {
@@ -28,10 +55,93 @@ export default function GamisaethaScholarshipForm() {
     setFormData((prev) => ({ ...prev, results: newResults }));
   };
 
-  const handleSubmit = (e) => {
+  const validateForm = () => {
+    if (!formData.fullName.trim()) return "ශිෂ්‍යයා / ශිෂ්‍යාවගේ නම අවශ්‍යයි.";
+    if (!formData.address.trim()) return "පෞද්ගලික ලිපිනය අවශ්‍යයි.";
+    if (!formData.examYear.trim()) return "විභාග වර්ෂය සටහන් කරන්න.";
+    if (!formData.examAttempt) return "විභාගයට පෙනී සිටීම (ප්‍රථම / දෙවන) තෝරන්න.";
+    if (!formData.firstSchool.trim())
+      return "ප්‍රථමවරට විභාගයට පෙනී සිටි පාසල සටහන් කරන්න.";
+
+    // At least one result row with subject
+    const hasAnySubject = formData.results.some(
+      (r) => r.subject.trim() || r.grade.trim()
+    );
+    if (!hasAnySubject) return "අවම වශයෙන් එක් විෂයක් වත් ප්‍රතිඵලයෙන් ඇතුළත් කරන්න.";
+
+    if (!formData.principalCert.trim())
+      return "විභාග පාසලේ විදුහල්පති නිර්දේශය සටහන් කරන්න.";
+    if (!formData.currentSchoolCert.trim())
+      return "උසස් පෙළ පාසලේ විදුහල්පති සහතිකය සටහන් කරන්න.";
+    if (!formData.monthlyAmount.trim())
+      return "මසකට ලබාදෙන ශිෂ්‍යත්ව මුදල සටහන් කරන්න.";
+    if (!formData.villageOfficerCert.trim())
+      return "ග්‍රාම නිලධාරී සහතිකය සටහන් කරන්න.";
+
+    return null;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Submitted Data:", formData);
-    alert("අයදුම් පත්‍රය යොමු කරන ලදි!");
+    setSubmitError("");
+    setSubmitSuccess("");
+
+    const errorMsg = validateForm();
+    if (errorMsg) {
+      setSubmitError(errorMsg);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const payload = {
+        ...formData,
+        // remove empty results rows
+        results: formData.results.filter(
+          (r) => r.subject.trim() || r.grade.trim()
+        ),
+        // attach society context if available
+        societyContext: societyContext || null,
+        status: "SubmittedToSocietyOfficer",
+        createdAt: Timestamp.now(),
+      };
+
+      await addDoc(collection(db, "scholarshipApplications"), payload);
+
+      setSubmitSuccess(
+        '"ගැමිසෙත" ශිෂ්‍යත්ව අයදුම් පත්‍රය සාර්ථකව සුරක්ෂිත කර Society Officer වෙත යොමු කරන ලදී.'
+      );
+
+      // If you want to clear the form after submit, keep this.
+      // If you want to keep the filled data, you can remove this block.
+      setFormData({
+        fullName: "",
+        address: "",
+        examYear: "",
+        examAttempt: "",
+        firstSchool: "",
+        results: Array(10).fill({ subject: "", grade: "" }),
+        principalCert: "",
+        currentSchoolCert: "",
+        monthlyAmount: "",
+        yearlyAmount: "",
+        totalAmount: "",
+        villageOfficerCert: "",
+      });
+
+      // NOTE: redirect removed as requested.
+      // User will stay on this page and only see the success message.
+      // setTimeout(() => {
+      //   navigate("/societyofficer");
+      // }, 800);
+    } catch (err) {
+      console.error("Error saving scholarship application:", err);
+      setSubmitError(
+        "අයදුම් පත්‍රය සුරක්ෂිත කිරීමේදී දෝෂයක් සිදු විය. කරුණාකර නැවත උත්සහ කරන්න."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -39,18 +149,37 @@ export default function GamisaethaScholarshipForm() {
       <div className="student-container">
         {/* Header */}
         <div className="develop-header">
-          <h3>දකුණු පළාත් ග්‍රාම සංවර්ධන දෙපාර්තමේන්තුව</h3>
-          <h3>MS-SP/RD/FO/05</h3>
+          <div>
+            <h3>දකුණු පළාත් ග්‍රාම සංවර්ධන දෙපාර්තමේන්තුව</h3>
+            <h3>MS-SP/RD/FO/05</h3>
+          </div>
+          {societyContext && (
+            <div className="society-context-chip">
+              {societyContext.district} / {societyContext.divisionName} –{" "}
+              {societyContext.societyName} ({societyContext.registerNo})
+            </div>
+          )}
         </div>
 
         <h1 className="student-title">"ගැමිසෙත" ශිෂ්‍යත්ව අයදුම් පත්‍රය</h1>
         <p className="student-intro">
-          මෙම අයදුම් පත්‍රය <strong>අ.පො.ස. (සා.පෙ)</strong> විභාගයේ
-          දක්ෂතා හෙබෙවූ සහ ආර්ථික දුර්වල පවුල්වලින් පසුවන ශිෂ්‍යයා/ශිෂ්‍යාවන්
-          සඳහා වන{" "}
+          මෙම අයදුම් පත්‍රය{" "}
+          <strong>අ.පො.ස. (සා.පෙ)</strong> විභාගයේ දක්ෂතා හෙබෙවූ සහ ආර්ථික
+          දුර්වල පවුල්වලින් පසුවන ශිෂ්‍යයා/ශිෂ්‍යාවන් සඳහා වන{" "}
           <strong>"ගැමිසෙත" ශ්‍රීමත් දක්ෂතා ශිෂ්‍යත්වය</strong> සඳහා ය.
-          කරුණාකර සියලුම කොටස් නිවැරදිව පුරවන්න.
+          කරුණාකර සියලුම කොටස් නිවැරදිව, පැහැදිලිව පුරවන්න.
         </p>
+
+        {submitError && (
+          <p className="error-text" style={{ marginBottom: 8 }}>
+            {submitError}
+          </p>
+        )}
+        {submitSuccess && (
+          <p className="success-text" style={{ marginBottom: 8 }}>
+            {submitSuccess}
+          </p>
+        )}
 
         <form className="student-form" onSubmit={handleSubmit}>
           {/* 1. Name */}
@@ -61,7 +190,7 @@ export default function GamisaethaScholarshipForm() {
               name="fullName"
               value={formData.fullName}
               onChange={handleChange}
-              placeholder="Full name in Sinhala"
+              placeholder="සිංහලට සම්පූර්ණ නම"
             />
           </div>
 
@@ -72,7 +201,7 @@ export default function GamisaethaScholarshipForm() {
               name="address"
               value={formData.address}
               onChange={handleChange}
-              placeholder="House No, Street, Village, GN Division"
+              placeholder="නිවසේ අංකය, වීථිය, ග්‍රාමය, ග්‍රාම නිලධාරී වසම"
             />
           </div>
 
@@ -85,7 +214,7 @@ export default function GamisaethaScholarshipForm() {
                 name="examYear"
                 value={formData.examYear}
                 onChange={handleChange}
-                placeholder="e.g. 2024"
+                placeholder="උදා. 2024"
               />
             </div>
 
@@ -124,13 +253,16 @@ export default function GamisaethaScholarshipForm() {
               name="firstSchool"
               value={formData.firstSchool}
               onChange={handleChange}
-              placeholder="Name of school"
+              placeholder="පාසලේ නම"
             />
           </div>
 
           {/* 5. Results */}
           <div className="section-block">
             <label>5. අ.පො.ස. (සා.පෙ) ප්‍රතිඵල:</label>
+            <p className="muted-text">
+              විෂය නාමය හා ලබාගත් සාමාර්ථය (A / B / C / S / W) සටහන් කරන්න.
+            </p>
             <div className="student-table-wrapper">
               <table className="student-table">
                 <thead>
@@ -178,7 +310,7 @@ export default function GamisaethaScholarshipForm() {
               name="principalCert"
               value={formData.principalCert}
               onChange={handleChange}
-              placeholder="Enter recommendation / අදාළ නිර්දේශ සටහන් කරන්න"
+              placeholder="අදාළ නිර්දේශ සටහන් කරන්න"
             />
           </div>
 
@@ -189,7 +321,7 @@ export default function GamisaethaScholarshipForm() {
               name="currentSchoolCert"
               value={formData.currentSchoolCert}
               onChange={handleChange}
-              placeholder="Current school certificate content"
+              placeholder="වර්තමාන පාසලේ විදුහල්පතිගේ සහතිකය / නිර්දේශය"
             />
           </div>
 
@@ -228,13 +360,17 @@ export default function GamisaethaScholarshipForm() {
               name="villageOfficerCert"
               value={formData.villageOfficerCert}
               onChange={handleChange}
-              placeholder="Certified by GN / ග්‍රාම නිලධාරී විසින් සනාථ කරනු ලැබේ."
+              placeholder="ග්‍රාම නිලධාරී විසින් සනාථ කරන ලද තොරතුරු සටහන් කරන්න."
             />
           </div>
 
           <div className="submit-btn-container">
-            <button type="submit" className="submit-btn">
-              Submit / යවන්න
+            <button
+              type="submit"
+              className="submit-btn"
+              disabled={submitting}
+            >
+              {submitting ? "Saving..." : "Submit / යවන්න"}
             </button>
           </div>
         </form>

@@ -32,6 +32,8 @@ const ChairmanProfile = () => {
   // Tabs: pending | requested | certificates | history | analytics
   const [activeTab, setActiveTab] = useState("pending");
 
+  const [statusFilter, setStatusFilter] = useState("all"); // all | pending | accepted | rejected
+
   const [showSensitiveInfo, setShowSensitiveInfo] = useState(false);
 
   const certificateRef = useRef(null);
@@ -101,7 +103,7 @@ const ChairmanProfile = () => {
               ruralOfficerDecision: d.ruralOfficerDecision || "Pending",
               ruralDecisionAt:
                 d.ruralDecisionAt && d.ruralDecisionAt.toDate
-                  ? d.ruralDecisionAt.toDate().toLocaleDateString()
+                  ? d.ruralDecisionAt.toDate().toLocaleString()
                   : "",
 
               // DO
@@ -110,7 +112,7 @@ const ChairmanProfile = () => {
               districtDecision: d.districtDecision || "Pending",
               districtDecisionAt:
                 d.districtDecisionAt && d.districtDecisionAt.toDate
-                  ? d.districtDecisionAt.toDate().toLocaleDateString()
+                  ? d.districtDecisionAt.toDate().toLocaleString()
                   : "",
 
               // DS
@@ -118,7 +120,7 @@ const ChairmanProfile = () => {
               secretaryNote: d.secretaryNote || "",
               secretaryDecisionAt:
                 d.secretaryDecisionAt && d.secretaryDecisionAt.toDate
-                  ? d.secretaryDecisionAt.toDate().toLocaleDateString()
+                  ? d.secretaryDecisionAt.toDate().toLocaleString()
                   : "",
 
               // Subject Officer
@@ -126,7 +128,7 @@ const ChairmanProfile = () => {
               subjectNote: d.subjectNote || "",
               subjectDecisionAt:
                 d.subjectDecisionAt && d.subjectDecisionAt.toDate
-                  ? d.subjectDecisionAt.toDate().toLocaleDateString()
+                  ? d.subjectDecisionAt.toDate().toLocaleString()
                   : "",
 
               // Director decision
@@ -134,12 +136,12 @@ const ChairmanProfile = () => {
               directorNote: d.directorNote || "",
               directorDecisionAt:
                 d.directorDecisionAt && d.directorDecisionAt.toDate
-                  ? d.directorDecisionAt.toDate().toLocaleDateString()
+                  ? d.directorDecisionAt.toDate().toLocaleString()
                   : "",
 
               createdAt:
                 d.createdAt && d.createdAt.toDate
-                  ? d.createdAt.toDate().toLocaleDateString()
+                  ? d.createdAt.toDate().toLocaleString()
                   : "",
             });
           });
@@ -211,7 +213,7 @@ const ChairmanProfile = () => {
         directorDecisionAt: now,
       });
 
-      const decisionAtStr = now.toLocaleDateString();
+      const decisionAtStr = now.toLocaleString();
 
       setRequests((prev) =>
         prev.map((r) =>
@@ -257,6 +259,7 @@ const ChairmanProfile = () => {
   if (!user) return <p style={{ textAlign: "center" }}>User not found</p>;
 
   const latestRequests = requests;
+
   const acceptedRequests = requests.filter(
     (r) => r.directorStatus === "AcceptedByDirector"
   );
@@ -301,6 +304,16 @@ const ChairmanProfile = () => {
     (user.firstName && user.lastName
       ? `${user.firstName} ${user.lastName}`
       : user.username) || "Director";
+
+  // apply status filter for main list
+  const filteredRequests = latestRequests.filter((r) => {
+    if (statusFilter === "pending") return r.directorStatus === "Pending";
+    if (statusFilter === "accepted")
+      return r.directorStatus === "AcceptedByDirector";
+    if (statusFilter === "rejected")
+      return r.directorStatus === "RejectedByDirector";
+    return true; // all
+  });
 
   return (
     <div className="chairman-dashboard">
@@ -423,7 +436,7 @@ const ChairmanProfile = () => {
               }`}
               onClick={() => setActiveTab("pending")}
             >
-              බොහෝ කාර්ය (Pending & Actions)
+              Pending & Actions
             </button>
             <button
               className={`tab-item ${
@@ -431,7 +444,7 @@ const ChairmanProfile = () => {
               }`}
               onClick={() => setActiveTab("requested")}
             >
-              ඉදිරිපත් කළ සමිති (Requested)
+              All Forwarded
             </button>
             <button
               className={`tab-item ${
@@ -439,7 +452,7 @@ const ChairmanProfile = () => {
               }`}
               onClick={() => setActiveTab("certificates")}
             >
-              සහතික (Certificates)
+              Certificates
             </button>
             <button
               className={`tab-item ${
@@ -447,7 +460,7 @@ const ChairmanProfile = () => {
               }`}
               onClick={() => setActiveTab("history")}
             >
-              ඉතිහාසය (History)
+              History
             </button>
             <button
               className={`tab-item ${
@@ -455,7 +468,7 @@ const ChairmanProfile = () => {
               }`}
               onClick={() => setActiveTab("analytics")}
             >
-              විශ්ලේෂණ (Analytics)
+              Analytics
             </button>
           </div>
 
@@ -516,22 +529,58 @@ const ChairmanProfile = () => {
           {/* 1. PENDING & ACTIONS */}
           {activeTab === "pending" && (
             <>
+              {/* Status filter chips for directorStatus */}
+              <div className="subject-status-filter">
+                <button
+                  className={`status-chip ${
+                    statusFilter === "all" ? "status-chip-active" : ""
+                  }`}
+                  onClick={() => setStatusFilter("all")}
+                >
+                  All ({latestRequests.length})
+                </button>
+                <button
+                  className={`status-chip ${
+                    statusFilter === "pending" ? "status-chip-active" : ""
+                  }`}
+                  onClick={() => setStatusFilter("pending")}
+                >
+                  Pending ({pendingRequests.length})
+                </button>
+                <button
+                  className={`status-chip ${
+                    statusFilter === "accepted" ? "status-chip-active" : ""
+                  }`}
+                  onClick={() => setStatusFilter("accepted")}
+                >
+                  Accepted ({acceptedRequests.length})
+                </button>
+                <button
+                  className={`status-chip ${
+                    statusFilter === "rejected" ? "status-chip-active" : ""
+                  }`}
+                  onClick={() => setStatusFilter("rejected")}
+                >
+                  Rejected ({rejectedRequests.length})
+                </button>
+              </div>
+
               <section className="dash-widget">
                 <h3 className="widget-title">සමිති ලියාපදිංචි ඉල්ලීම්</h3>
                 <p className="muted-text">
                   පහත ලැයිස්තුවෙන් එකක් තෝරාගෙන එහි විස්තර බැලී Accept හෝ
-                  Reject කිරීම සිදු කරන්න. ඔබගේ තීරණය නවම සදහා එක් වරක්
-                  පමණක් ලබා දිය යුතුය.
+                  Reject කිරීම සිදු කරන්න. ඔබගේ තීරණය එක් වරක් පමණක්
+                  ලබා දිය යුතුය.
                 </p>
                 {loadingRequests ? (
                   <p className="muted-text">ලියාපදිංචි ඉල්ලීම් රදිමින්...</p>
-                ) : latestRequests.length === 0 ? (
+                ) : filteredRequests.length === 0 ? (
                   <p className="muted-text">
-                    දැනට විෂය අංශ නිලධාරීන් විසින් ඔබ වෙත යැවූ ඉල්ලීම් නොමැත.
+                    දැනට ඔබ වෙත යොමු වූ ඉල්ලීම් නොමැත.
                   </p>
                 ) : (
                   <ul className="letter-list">
-                    {latestRequests.map((req) => (
+                    {filteredRequests.map((req) => (
                       <li
                         key={req.id}
                         className="letter-item"
@@ -554,7 +603,17 @@ const ChairmanProfile = () => {
                             Director Status: {req.directorStatus}
                           </p>
                         </div>
-                        <span className="badge badge-info">Forwarded</span>
+                        <span
+                          className={`badge ${
+                            req.directorStatus === "AcceptedByDirector"
+                              ? "badge-success"
+                              : req.directorStatus === "RejectedByDirector"
+                              ? "badge-danger"
+                              : "badge-info"
+                          }`}
+                        >
+                          {req.directorStatus}
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -826,15 +885,15 @@ const ChairmanProfile = () => {
             </>
           )}
 
-          {/* 2. REQUESTED SOCIETIES TAB */}
+          {/* 2. ALL FORWARDED TAB */}
           {activeTab === "requested" && (
             <section className="dash-widget">
               <h3 className="widget-title">
                 ඉදිරිපත් කරන ලද / Forwarded සමිති ලැයිස්තුව
               </h3>
               <p className="muted-text">
-                මෙය සරල දර්ශනයක් වන අතර, එක් එකක් මත ක්ලික් කිරීමෙන් එම
-                ඉල්ලීම &quot;Pending & Actions&quot; ටැබයට විවෘත වේ.
+                මෙය සරල දර්ශනයක් වන අතර, එක් එකක් මත ක්ලික් කිරීමෙන් එය
+                &quot;Pending & Actions&quot; ටැබයට විවෘත වේ.
               </p>
 
               {latestRequests.length === 0 ? (
@@ -845,7 +904,10 @@ const ChairmanProfile = () => {
                     <li
                       key={req.id}
                       className="letter-item"
-                      onClick={() => handleSelectRequest(req)}
+                      onClick={() => {
+                        setActiveTab("pending");
+                        handleSelectRequest(req);
+                      }}
                       style={{ cursor: "pointer" }}
                     >
                       <div>
@@ -860,7 +922,17 @@ const ChairmanProfile = () => {
                           Director Status: {req.directorStatus}
                         </p>
                       </div>
-                      <span className="badge badge-info">Requested</span>
+                      <span
+                        className={`badge ${
+                          req.directorStatus === "AcceptedByDirector"
+                            ? "badge-success"
+                            : req.directorStatus === "RejectedByDirector"
+                            ? "badge-danger"
+                            : "badge-info"
+                        }`}
+                      >
+                        {req.directorStatus}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -968,7 +1040,10 @@ const ChairmanProfile = () => {
                       key={req.id}
                       className="letter-item"
                       style={{ cursor: "pointer" }}
-                      onClick={() => handleSelectRequest(req)}
+                      onClick={() => {
+                        setActiveTab("pending");
+                        handleSelectRequest(req);
+                      }}
                     >
                       <div>
                         <p className="letter-type">
@@ -1177,33 +1252,6 @@ const CertificatePreviewBlock = ({ request }) => {
           {request.directorDecisionAt || "Not available"}
         </p>
       </div>
-    </div>
-  );
-};
-
-const PositionBlock = ({ title, data }) => {
-  const d = data || {};
-  return (
-    <div className="position-item">
-      <h5>{title}</h5>
-      <p>
-        <strong>නම:</strong> {d.fullName || "N/A"}
-      </p>
-      <p>
-        <strong>ලිපිනය:</strong> {d.address || "N/A"}
-      </p>
-      <p>
-        <strong>දුරකථන:</strong> {d.phone || "N/A"}
-      </p>
-      <p>
-        <strong>ඊමේල්:</strong> {d.email || "N/A"}
-      </p>
-      <p>
-        <strong>ජා.හැ.අංකය:</strong> {d.nic || "N/A"}
-      </p>
-      <p>
-        <strong>උපන් දිනය:</strong> {d.dob || "N/A"}
-      </p>
     </div>
   );
 };

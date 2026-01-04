@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../society/society.css";
+import { db } from "../firebase";
+import { collection, addDoc, Timestamp } from "firebase/firestore";
 
 export default function Society() {
   const [formData, setFormData] = useState({
@@ -17,6 +19,23 @@ export default function Society() {
     repaymentMonths: "",
     recommendLoan: "",
   });
+
+  const [societyContext, setSocietyContext] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [submitSuccess, setSubmitSuccess] = useState("");
+
+  // Load selected society context from Startup
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("selectedSocietyContext");
+      if (raw) {
+        setSocietyContext(JSON.parse(raw));
+      }
+    } catch (e) {
+      console.error("Error reading selectedSocietyContext:", e);
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -55,26 +74,115 @@ export default function Society() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const validateForm = () => {
+    if (!formData.borrowerName.trim())
+      return "ණය ඉල්ලුම්කරුගේ නම ඇතුළත් කරන්න.";
+    if (!formData.loanAmount.trim())
+      return "ඉල්ලුම් කරන ණය මුදල ඇතුළත් කරන්න.";
+    if (!formData.projectType.trim())
+      return "ව්‍යාපෘතිය / කර්මාන්තය සටහන් කරන්න.";
+    if (!formData.loanPurpose.trim())
+      return "ණය අවශ්‍යතාවය සටහන් කරන්න.";
+    if (!societyContext)
+      return "කරුණාකර පළමුව Startup පිටුවෙන් සමිතිය තෝරා සුරක්ෂිත කරන්න.";
+    return null;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form Data:", formData);
-    alert("ණය වාර්තාව යොමු කරන ලදි!");
+    setSubmitError("");
+    setSubmitSuccess("");
+
+    const errorMsg = validateForm();
+    if (errorMsg) {
+      setSubmitError(errorMsg);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const cleanedUsage = formData.usageDetails.filter(
+        (u) => u.purpose || u.qty || u.unitPrice || u.total
+      );
+      const cleanedIncome = formData.incomeDetails.filter(
+        (i) => i.product || i.qty || i.unitPrice || i.income
+      );
+
+      const payload = {
+        ...formData,
+        usageDetails: cleanedUsage,
+        incomeDetails: cleanedIncome,
+        // full society context from Startup (district, divisionName, societyName, registerNo, ...)
+        societyContext: societyContext,
+        status: "SubmittedToSocietyOfficer",
+        currentRole: "society_officer",
+        createdAt: Timestamp.now(),
+      };
+
+      await addDoc(collection(db, "loanApplications"), payload);
+
+      setSubmitSuccess(
+        "ණය යෙදවුම් වාර්තාව සාර්ථකව Firebase තුළ සුරක්ෂිත කර Society Officer වෙත යොමු කරන ලදී."
+      );
+
+      // reset form
+      setFormData({
+        borrowerName: "",
+        loanAmount: "",
+        projectType: "",
+        loanPurpose: "",
+        memberDeposit: "",
+        previousLoan: "",
+        previousLoanStatus: "",
+        usageDetails: [{ purpose: "", qty: "", unitPrice: "", total: "" }],
+        deficitFunding: "",
+        incomeDetails: [{ product: "", qty: "", unitPrice: "", income: "" }],
+        monthlyProfit: "",
+        repaymentMonths: "",
+        recommendLoan: "",
+      });
+    } catch (err) {
+      console.error("Error saving loan application:", err);
+      setSubmitError(
+        "ණය වාර්තාව Firebase තුළ සුරක්ෂිත කිරීමේදී දෝෂයක් සිදු විය. කරුණාකර නැවත උත්සහ කරන්න."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <section className="society-wrapper">
       <div className="society-container">
         <div className="develop-header">
-          <h3>දකුණු පළාත් ග්‍රාම සංවර්ධන දෙපාර්තමේන්තුව</h3>
-          <h3>MS-SP/RD/FO/06</h3>
+          <div>
+            <h3>දකුණු පළාත් ග්‍රාම සංවර්ධන දෙපාර්තමේන්තුව</h3>
+            <h3>MS-SP/RD/FO/06</h3>
+          </div>
+          {societyContext && (
+            <div className="society-context-chip">
+              {societyContext.district} / {societyContext.divisionName} –{" "}
+              {societyContext.societyName} ({societyContext.registerNo})
+            </div>
+          )}
         </div>
 
         <h2 className="society-title">සමිති ගිණුම - ණය යෙදවුම් වාර්තාව</h2>
         <p className="society-intro">
           මෙම පත්‍රය <strong>සමිතියෙන් ලබාදෙන ණය</strong> වාර්තා කිරීම සඳහායි.
-          ණය යොදවීමේ විස්තර, ආදායම් ගණනය සහ ග්‍රාම සංවර්ධන නිලධාරී නිර්දේශ
-          නිවැරදිව සටහන් කරන්න.
+          ණය යොදවීමේ විස්තර, ආදායම් ගණනය සහ නිර්දේශ නිවැරදිව සටහන් කරන්න.
         </p>
+
+        {submitError && (
+          <p className="society-error" style={{ marginBottom: 8 }}>
+            {submitError}
+          </p>
+        )}
+        {submitSuccess && (
+          <p className="society-success" style={{ marginBottom: 8 }}>
+            {submitSuccess}
+          </p>
+        )}
 
         <form className="society-form" onSubmit={handleSubmit}>
           {/* 1–3 basic info */}
@@ -126,7 +234,9 @@ export default function Society() {
 
           {/* 5. Member deposit */}
           <div className="form-group">
-            <label>5. ගැමිසෙත වැඩසටහන යටතේ සාමාජික තැන්පත් මුදල (රු.) :</label>
+            <label>
+              5. ගැමිසෙත වැඩසටහන යටතේ සාමාජික තැන්පත් මුදල (රු.) :
+            </label>
             <input
               type="text"
               name="memberDeposit"
@@ -327,28 +437,14 @@ export default function Society() {
                 name="repaymentMonths"
                 value={formData.repaymentMonths}
                 onChange={handleChange}
-                placeholder="වාரික ගණන"
+                placeholder="වාරික ගණන"
               />{" "}
               ගෙවීමට එකඟ වෙමි.
             </label>
           </div>
 
-          {/* Signatures */}
-          <div className="signature-section">
-            <div className="signature-field">
-              <div className="signature-line" />
-              <div>ණයලාභියාගේ අත්සන</div>
-            </div>
-          </div>
-
-          <h4 className="section-heading">
-            ග්‍රාම සංවර්ධන නිලධාරී නිර්දේශය :
-          </h4>
-          <p className="section-text">
-            ණය යෙදවුම් වාර්තාව පරීක්ෂා කලෙමි. මෙහි සඳහන් තොරතුරු ණයලාභියා
-            හා සාකච්ඡා කර නිවැරදි කලෙමි.
-          </p>
-
+          {/* 12. Recommended amount */}
+          <h4 className="section-heading">නිර්දේශිත ණය මුදල :</h4>
           <div className="form-group">
             <label>12. නිර්දේශ කරන ණය මුදල (රු.) :</label>
             <input
@@ -359,16 +455,10 @@ export default function Society() {
             />
           </div>
 
-          <div className="signature-section">
-            <div className="signature-field">
-              <div className="signature-line" />
-              <div>ග්‍රාම සංවර්ධන නිලධාරී අත්සන</div>
-            </div>
-          </div>
-
+          {/* Submit */}
           <div className="submit-btn-container">
-            <button type="submit" className="submit-btn">
-              යොමු කරන්න
+            <button type="submit" className="submit-btn" disabled={submitting}>
+              {submitting ? "Saving..." : "යොමු කරන්න (Society Officer වෙත)"}
             </button>
           </div>
         </form>

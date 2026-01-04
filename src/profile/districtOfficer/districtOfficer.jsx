@@ -13,6 +13,33 @@ import {
 import "../districtOfficer/districtOfficer.css";
 import { useNavigate } from "react-router-dom";
 
+const PositionBlock = ({ title, data }) => {
+  const d = data || {};
+  return (
+    <div className="position-item">
+      <h5>{title}</h5>
+      <p>
+        <strong>නම:</strong> {d.fullName || "N/A"}
+      </p>
+      <p>
+        <strong>ලිපිනය:</strong> {d.address || "N/A"}
+      </p>
+      <p>
+        <strong>දුරකථන:</strong> {d.phone || "N/A"}
+      </p>
+      <p>
+        <strong>ඊමේල්:</strong> {d.email || "N/A"}
+      </p>
+      <p>
+        <strong>ජා.හැ.අංකය:</strong> {d.nic || "N/A"}
+      </p>
+      <p>
+        <strong>උපන් දිනය:</strong> {d.dob || "N/A"}
+      </p>
+    </div>
+  );
+};
+
 const DistrictOfficer = () => {
   const navigate = useNavigate();
 
@@ -20,6 +47,7 @@ const DistrictOfficer = () => {
   const [loadingUser, setLoadingUser] = useState(true);
   const [error, setError] = useState("");
 
+  /** RDO registration references (your current logic) */
   const [requests, setRequests] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
 
@@ -28,6 +56,12 @@ const DistrictOfficer = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [actionSuccess, setActionSuccess] = useState("");
   const [actionError, setActionError] = useState("");
+
+  /** NEW: Forwarded loan applications from Rural Officer */
+  const [loanApps, setLoanApps] = useState([]);
+  const [loadingLoans, setLoadingLoans] = useState(false);
+  const [loanActionError, setLoanActionError] = useState("");
+  const [loanActionSuccess, setLoanActionSuccess] = useState("");
 
   const [showSignOutModal, setShowSignOutModal] = useState(false);
   const [showSensitiveInfo, setShowSensitiveInfo] = useState(false);
@@ -117,6 +151,37 @@ const DistrictOfficer = () => {
           } finally {
             setLoadingRequests(false);
           }
+
+          // 3) NEW: Load loan applications forwarded by Rural Officer
+          setLoadingLoans(true);
+          setLoanActionError("");
+          try {
+            const loanRef = collection(db, "loanApplications");
+            const qLoans = query(
+              loanRef,
+              where("currentRole", "==", "district_officer"),
+              where("societyContext.district", "==", userData.district)
+            );
+            const loanSnap = await getDocs(qLoans);
+            const list = [];
+            loanSnap.forEach((d) => {
+              const data = d.data();
+              list.push({
+                id: d.id,
+                ...data,
+                createdAt:
+                  data.createdAt && data.createdAt.toDate
+                    ? data.createdAt.toDate().toLocaleString()
+                    : "",
+              });
+            });
+            setLoanApps(list);
+          } catch (err) {
+            console.error("Error loading loan apps for DO:", err);
+            setLoanActionError("Failed to load loan applications.");
+          } finally {
+            setLoadingLoans(false);
+          }
         }
       } catch (err) {
         console.error(err);
@@ -145,7 +210,7 @@ const DistrictOfficer = () => {
     setActiveTab("pending");
   };
 
-  // === DO Accept / Decline: Only once ===
+  // === DO Accept / Decline: Only once (REGISTRATION REFS) ===
   const handleDoDecision = async (decision) => {
     if (!selectedRequest || !user) return;
 
@@ -209,7 +274,7 @@ const DistrictOfficer = () => {
     }
   };
 
-  // === Forward to Secretary: only after DO has decided ===
+  // === Forward REGISTRATION ref to Secretary (as you already do) ===
   const handleForwardToSecretary = async () => {
     if (!selectedRequest || !user) return;
 
@@ -287,7 +352,51 @@ const DistrictOfficer = () => {
     }
   };
 
-  if (loadingUser) return <p className="district-loading">Loading profile...</p>;
+  // === NEW: Approve / Reject forwarded loan applications ===
+  const handleLoanDecision = async (appId, decision) => {
+    if (!user) return;
+    setLoanActionError("");
+    setLoanActionSuccess("");
+
+    try {
+      const ref = doc(db, "loanApplications", appId);
+      const newStatus =
+        decision === "approve" ? "ApprovedByDistrictOfficer" : "RejectedByDistrictOfficer";
+
+      await updateDoc(ref, {
+        districtOfficerId: user.identitynumber || null,
+        districtOfficerName: user.username || null,
+        districtOfficerEmail: user.email || null,
+        districtDecision: newStatus,
+        currentRole: "district_officer", // stays here until you forward else where
+        lastActionBy: user.username || user.email,
+        lastActionAt: new Date(),
+      });
+
+      setLoanApps((prev) =>
+        prev.map((a) =>
+          a.id === appId
+            ? {
+                ...a,
+                districtDecision: newStatus,
+              }
+            : a
+        )
+      );
+
+      setLoanActionSuccess(
+        decision === "approve"
+          ? "Loan application marked as Approved by District Officer."
+          : "Loan application marked as Rejected by District Officer."
+      );
+    } catch (err) {
+      console.error("Error updating loan decision:", err);
+      setLoanActionError("Loan decision could not be saved.");
+    }
+  };
+
+  if (loadingUser)
+    return <p className="district-loading">Loading profile...</p>;
   if (error) return <p className="district-error">{error}</p>;
   if (!user) return null;
 
@@ -435,12 +544,13 @@ const DistrictOfficer = () => {
             <ul>
               <li>RDO මට්ටමේ තීරණ සමාලෝචනය කර දිස්ත්‍රික් මට්ටමේ තීරණය ලබා දීම.</li>
               <li>සමිතිය පිළිබඳ නිසි සටහන් District Note ලෙස සටහන් කිරීම.</li>
-              <li>අවසානයේ ප්‍රාදේශීය ලේකම් වෙත යොමු කිරීම (Forward to DS).</li>
+              <li>ලියාපදිංචි ලිපි ප්‍රාදේශීය ලේකම් වෙත යොමු කිරීම.</li>
+              <li>RDO මඟින් යොමු කරන ලද loan applications අනුමත / ප්‍රත්‍යාකාරය කිරීම.</li>
             </ul>
           </div>
         </aside>
 
-        {/* RIGHT: MAIN CONTENT WITH TABS */}
+        {/* RIGHT: MAIN TABS */}
         <main className="district-main">
           {/* Tabs */}
           <div className="do-tab-bar">
@@ -478,27 +588,25 @@ const DistrictOfficer = () => {
             </button>
           </div>
 
-          {/* Small header */}
+          {/* Header */}
           <div className="do-main-header">
-            <h1 className="do-main-title">RDO Registration References</h1>
+            <h1 className="do-main-title">District Level Workbench</h1>
             <p className="do-main-subtitle">
-              RDO මට්ටමේ අනුමැති ලබාගත් ග්‍රාම සංවර්ධන සමිති ලියාපදිංචි
-              විස්තර ඔබ විසින් දිස්ත්‍රික් මට්ටමේ සමාලෝචනය කර, අවසන් වශයෙන්
-              ප්‍රාදේශීය ලේකම් වෙත යොමු කළ යුතුය.
+              RDO ලියාපදිංචි යොමු කිරීම් සහ Rural Officer මඟින් යොමු කරන ලද
+              loan applications සම්බන්ධ තීරණ මෙහිදී ලබා දේ.
             </p>
           </div>
 
-          {/* ========== TAB CONTENTS ========== */}
-
-          {/* 1. Pending & Actions */}
+          {/* TAB: PENDING */}
           {activeTab === "pending" && (
             <>
+              {/* REGISTRATION REFERENCES from RDO */}
               <section className="district-card">
                 <h3 className="card-title">RDO Registration References</h3>
                 <p className="muted-text">
                   ලැයිස්තුවෙන් එකක් තෝරා සමාලෝචනය කිරීමෙන් පසු Accept /
-                  Decline තීරණය ලබා දී, අවසානයේ &quot;Forward to
-                  Divisional Secretary&quot; භාවිතයෙන් DS වෙත යොමු කරන්න.
+                  Decline තීරණය ලබා දී, අවසානයේ &quot;Forward to Divisional
+                  Secretary&quot; භාවිතයෙන් DS වෙත යොමු කරන්න.
                 </p>
                 {loadingRequests ? (
                   <p className="muted-text">Loading requests...</p>
@@ -555,6 +663,7 @@ const DistrictOfficer = () => {
                 )}
               </section>
 
+              {/* Detail + DO decision */}
               {selectedRequest && (
                 <section className="district-card referral-card">
                   <div className="referral-header">
@@ -732,10 +841,90 @@ const DistrictOfficer = () => {
                   </div>
                 </section>
               )}
+
+              {/* NEW: Loan applications forwarded from RDO */}
+              <section className="district-card" style={{ marginTop: 18 }}>
+                <h3 className="card-title">
+                  Loan Applications – Rural Officer → District Officer
+                </h3>
+                <p className="muted-text">
+                  Rural Officer මඟින් &quot;Forward to District Officer&quot;
+                  කරන ලද loan applications මෙම කොටසෙන් පෙන්වයි.
+                </p>
+
+                {loadingLoans ? (
+                  <p className="muted-text">Loan applications loading...</p>
+                ) : loanApps.length === 0 ? (
+                  <p className="muted-text">
+                    දැනට Rural Officer මඟින් යොමු කරන ලද loan applications
+                    නොමැත.
+                  </p>
+                ) : (
+                  <table className="do-loan-table">
+                    <thead>
+                      <tr>
+                        <th>සමිතිය</th>
+                        <th>ඉල්ලුම්කරු</th>
+                        <th>මුදල (රු.)</th>
+                        <th>ව්‍යාපෘතිය</th>
+                        <th>Submitted</th>
+                        <th>District Decision</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {loanApps.map((app) => (
+                        <tr key={app.id}>
+                          <td>
+                            {app.societyContext?.societyName || "N/A"} (
+                            {app.societyContext?.registerNo || "N/A"})
+                          </td>
+                          <td>{app.borrowerName || "-"}</td>
+                          <td>{app.loanAmount || "-"}</td>
+                          <td>{app.projectType || "-"}</td>
+                          <td>{app.createdAt || "-"}</td>
+                          <td>{app.districtDecision || "Pending"}</td>
+                          <td>
+                            <button
+                              type="button"
+                              className="btn-mini"
+                              onClick={() =>
+                                handleLoanDecision(app.id, "approve")
+                              }
+                            >
+                              Approve
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-mini btn-mini-danger"
+                              onClick={() =>
+                                handleLoanDecision(app.id, "reject")
+                              }
+                            >
+                              Reject
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+
+                {loanActionError && (
+                  <p className="district-error" style={{ marginTop: 8 }}>
+                    {loanActionError}
+                  </p>
+                )}
+                {loanActionSuccess && (
+                  <p className="district-success" style={{ marginTop: 8 }}>
+                    {loanActionSuccess}
+                  </p>
+                )}
+              </section>
             </>
           )}
 
-          {/* 2. Requested References (list only) */}
+          {/* TAB: REQUESTED */}
           {activeTab === "requested" && (
             <section className="district-card">
               <h3 className="card-title">Requested / Forwarded References</h3>
@@ -786,7 +975,7 @@ const DistrictOfficer = () => {
             </section>
           )}
 
-          {/* 3. HISTORY TAB */}
+          {/* TAB: HISTORY */}
           {activeTab === "history" && (
             <section className="district-card">
               <h3 className="card-title">All Registration References History</h3>
@@ -844,13 +1033,13 @@ const DistrictOfficer = () => {
             </section>
           )}
 
-          {/* 4. ANALYTICS TAB */}
+          {/* TAB: ANALYTICS */}
           {activeTab === "analytics" && (
             <section className="district-card">
               <h3 className="card-title">දිස්ත්‍රික් මට්ටමේ විශ්ලේෂණය</h3>
               <p className="muted-text">
-                පහත සංඛ්‍යාතයන් මගින් ඔබගේ දිස්ත්‍රික් මට්ටමේ ලියාපදිංචි
-                ක්‍රියාවලිය ගැන සරල සාරාංශයක් ලබා ගත හැක.
+                පහත සංඛ්‍යාතයන් මගින් ඔබගේ දිස්ත්‍රික් මට්ටමේ ලියාපදිංචි සහ
+                loan අයදුම් ක්‍රියාවලි පිළිබඳ සරල සාරාංශයක් ලබා ගත හැක.
               </p>
 
               <div className="do-analytics-grid">
@@ -858,7 +1047,8 @@ const DistrictOfficer = () => {
                   <h4>සම්පූර්ණ Requests</h4>
                   <p className="do-analytics-number">{totalPending}</p>
                   <p className="do-analytics-label">
-                    RDO මට්ටමේ සිට ඔබ වෙත ලැබුණු සමස්ත යොමු කිරීම්.
+                    RDO මට්ටමේ සිට ඔබ වෙත ලැබුණු සමස්ත සමාජ ලියාපදිංචි
+                    යොමු කිරීම්.
                   </p>
                 </div>
                 <div className="do-analytics-card">
@@ -885,39 +1075,20 @@ const DistrictOfficer = () => {
                     ඔබගේ දිස්ත්‍රික්කය සම්බන්ධ සම්පූර්ණ ඉතිහාස ලිපි ගණන.
                   </p>
                 </div>
+                <div className="do-analytics-card">
+                  <h4>Pending Loan Apps</h4>
+                  <p className="do-analytics-number">{loanApps.length}</p>
+                  <p className="do-analytics-label">
+                    Rural Officer මඟින් DO මට්ටමට යොමු කරන ලද loan
+                    applications ගණන.
+                  </p>
+                </div>
               </div>
             </section>
           )}
         </main>
       </div>
     </section>
-  );
-};
-
-const PositionBlock = ({ title, data }) => {
-  const d = data || {};
-  return (
-    <div className="position-item">
-      <h5>{title}</h5>
-      <p>
-        <strong>නම:</strong> {d.fullName || "N/A"}
-      </p>
-      <p>
-        <strong>ලිපිනය:</strong> {d.address || "N/A"}
-      </p>
-      <p>
-        <strong>දුරකථන:</strong> {d.phone || "N/A"}
-      </p>
-      <p>
-        <strong>ඊමේල්:</strong> {d.email || "N/A"}
-      </p>
-      <p>
-        <strong>ජා.හැ.අංකය:</strong> {d.nic || "N/A"}
-      </p>
-      <p>
-        <strong>උපන් දිනය:</strong> {d.dob || "N/A"}
-      </p>
-    </div>
   );
 };
 

@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../member/member.css";
+import { db } from "../firebase";
+import { collection, addDoc, Timestamp } from "firebase/firestore";
 
 export default function Member() {
   const [members, setMembers] = useState([
@@ -15,6 +17,23 @@ export default function Member() {
     },
   ]);
 
+  const [societyContext, setSocietyContext] = useState(null);
+  const [submitSuccess, setSubmitSuccess] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  // Load selected society context from Startup (same as other forms)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("selectedSocietyContext");
+      if (raw) {
+        setSocietyContext(JSON.parse(raw));
+      }
+    } catch (e) {
+      console.error("Error reading selectedSocietyContext:", e);
+    }
+  }, []);
+
   const handleInputChange = (index, field, value) => {
     const updatedMembers = [...members];
     updatedMembers[index][field] = value;
@@ -22,8 +41,8 @@ export default function Member() {
   };
 
   const addRow = () => {
-    setMembers([
-      ...members,
+    setMembers((prev) => [
+      ...prev,
       {
         name: "",
         address: "",
@@ -42,18 +61,92 @@ export default function Member() {
     setMembers(updatedMembers);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: send data to backend / Firestore
-    alert("Member details submitted!");
+    setSubmitError("");
+    setSubmitSuccess("");
+
+    // Basic validation: at least one member name
+    const hasAnyName = members.some((m) => m.name.trim());
+    if (!hasAnyName) {
+      setSubmitError("අවම වශයෙන් එක් සාමාජිකයෙකුගේ නම වත් ඇතුළත් කරන්න.");
+      return;
+    }
+
+    if (!societyContext) {
+      setSubmitError(
+        "කරුණාකර පළමුව Startup පිටුවේදී දිස්ත්‍රික්කය / සමිතිය තෝරා සුරක්ෂිත කරන්න."
+      );
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      // Remove completely empty rows
+      const cleanedMembers = members.filter(
+        (m) =>
+          m.name.trim() ||
+          m.address.trim() ||
+          m.nic.trim() ||
+          m.remainingBalance ||
+          m.currentProjects.trim() ||
+          m.loanPurpose.trim() ||
+          m.requestedLoan ||
+          m.signature.trim()
+      );
+
+      const payload = {
+        members: cleanedMembers,
+        societyContext: societyContext, // includes district, divisionName, societyName, registerNo...
+        status: "SubmittedToSocietyOfficer",
+        currentRole: "society_officer",
+        createdAt: Timestamp.now(),
+      };
+
+      // Save to Firestore – adjust collection name if you want
+      await addDoc(collection(db, "societyMemberLists"), payload);
+
+      setSubmitSuccess(
+        "සාමාජික තොරතුරු සාර්ථකව Firebase තුළ සුරක්ෂිත කර Society Officer වෙත යොමු කරන ලදී."
+      );
+
+      // Clear table after submit
+      setMembers([
+        {
+          name: "",
+          address: "",
+          nic: "",
+          remainingBalance: "",
+          currentProjects: "",
+          loanPurpose: "",
+          requestedLoan: "",
+          signature: "",
+        },
+      ]);
+    } catch (err) {
+      console.error("Error saving member list:", err);
+      setSubmitError(
+        "සාමාජික තොරතුරු සුරක්ෂිත කිරීමේදී දෝෂයක් සිදු විය. කරුණාකර නැවත උත්සහ කරන්න."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <section className="member-wrapper">
       <div className="member-container">
         <div className="member-header">
-          <h3>දකුණු පළාත් ග්‍රාම සංවර්ධන දෙපාර්තමේන්තුව</h3>
-          <h3>MS-SP/RD/FO/04</h3>
+          <div>
+            <h3>දකුණු පළාත් ග්‍රාම සංවර්ධන දෙපාර්තමේන්තුව</h3>
+            <h3>MS-SP/RD/FO/04</h3>
+          </div>
+          {societyContext && (
+            <div className="society-context-chip">
+              {societyContext.district} / {societyContext.divisionName} –{" "}
+              {societyContext.societyName} ({societyContext.registerNo})
+            </div>
+          )}
         </div>
 
         <h2 className="member-title">
@@ -65,6 +158,17 @@ export default function Member() {
           මුළු තොරතුරු සටහන් කරන්න. ජාතික හැඳුනුම්පත් අංක, ඉතිරි බාලන්ස්, ක්‍රියාත්මක
           ව්‍යාපෘති සහ ණය අවශ්‍ය කාරණය නිවැරදිව පුරවන්න.
         </p>
+
+        {submitError && (
+          <p className="member-error" style={{ marginBottom: 8 }}>
+            {submitError}
+          </p>
+        )}
+        {submitSuccess && (
+          <p className="member-success" style={{ marginBottom: 8 }}>
+            {submitSuccess}
+          </p>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="member-table-wrapper">
@@ -252,10 +356,10 @@ export default function Member() {
             </div>
           </div>
 
-          {/* Submit button (optional for this page) */}
+          {/* Submit button */}
           <div className="submit-btn-container">
-            <button type="submit" className="submit-btn">
-              Submit
+            <button type="submit" className="submit-btn" disabled={submitting}>
+              {submitting ? "Saving..." : "Submit"}
             </button>
           </div>
         </form>

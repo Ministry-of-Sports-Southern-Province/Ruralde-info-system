@@ -32,6 +32,9 @@ const Subject = () => {
   // Tabs: pending | requested | history | analytics
   const [activeTab, setActiveTab] = useState("pending");
 
+  // Sub-filters for pending tab: all | pending | accepted | rejected | forwarded
+  const [statusFilter, setStatusFilter] = useState("all");
+
   // ===== LOAD USER + SECRETARY REQUESTS =====
   useEffect(() => {
     const fetchUserAndData = async () => {
@@ -295,10 +298,23 @@ const Subject = () => {
   if (error) return <p className="error-text">{error}</p>;
   if (!user) return null;
 
-  const latestRequests = requests;
-  const historyRequests = requests;
+  const allRequests = requests;
 
-  const totalPending = latestRequests.length;
+  // filter for status tabs
+  const filteredRequests = allRequests.filter((r) => {
+    if (statusFilter === "pending") return r.subjectStatus === "Pending";
+    if (statusFilter === "accepted")
+      return r.subjectStatus === "AcceptedBySubject";
+    if (statusFilter === "rejected")
+      return r.subjectStatus === "RejectedBySubject";
+    if (statusFilter === "forwarded")
+      return r.subjectStatus === "ForwardedToDirector";
+    return true; // all
+  });
+
+  const historyRequests = allRequests;
+
+  const totalAll = allRequests.length;
   const totalHistory = historyRequests.length;
   const acceptedCount = historyRequests.filter(
     (r) => r.subjectStatus === "AcceptedBySubject"
@@ -455,7 +471,7 @@ const Subject = () => {
           <div className="sidebar-stats">
             <div className="stat-card">
               <p className="stat-label">සම්පූර්ණ ලියාපදිංචි</p>
-              <p className="stat-value">{totalPending}</p>
+              <p className="stat-value">{totalAll}</p>
             </div>
             <div className="stat-card">
               <p className="stat-label">විෂය මට්ටමින් අනුමත</p>
@@ -497,15 +513,7 @@ const Subject = () => {
               }`}
               onClick={() => setActiveTab("pending")}
             >
-              Pending & Actions
-            </button>
-            <button
-              className={`sub-tab-item ${
-                activeTab === "requested" ? "sub-tab-item-active" : ""
-              }`}
-              onClick={() => setActiveTab("requested")}
-            >
-              Requested Societies
+              Applications & Actions
             </button>
             <button
               className={`sub-tab-item ${
@@ -529,36 +537,103 @@ const Subject = () => {
           <div className="sub-main-header">
             <h1 className="sub-main-title">සමිති ලියාපදිංචි කළමනාකරණය</h1>
             <p className="sub-main-subtitle">
-              මෙහි දැක්වෙන ලියාපදිංචි ඉල්ලීම් RDO / DO / DS මට්ටම් සම්පූර්ණ
-              කර ඔබගේ විෂය භාර තීරණය (Subject Decision) බලා කටයුතු
-              කරන ලදී.
+              RDO → District Officer → Divisional Secretary මඟින් සම්පූර්ණ කර
+              ඔබගේ විෂය භාර තීරණය බලා සිටින ලියාපදිංචි ඉල්ලීම් මෙහි
+              පෙන්වයි.
             </p>
           </div>
 
-          {/* ===== TAB CONTENTS ===== */}
-
-          {/* 1. PENDING & ACTIONS */}
+          {/* ===== 1. APPLICATIONS & ACTIONS (with status filter tabs) ===== */}
           {activeTab === "pending" && (
             <>
+              {/* Status filter tabs */}
+              <div className="subject-status-filter">
+                <button
+                  className={`status-chip ${
+                    statusFilter === "all" ? "status-chip-active" : ""
+                  }`}
+                  onClick={() => setStatusFilter("all")}
+                >
+                  All ({totalAll})
+                </button>
+                <button
+                  className={`status-chip ${
+                    statusFilter === "pending" ? "status-chip-active" : ""
+                  }`}
+                  onClick={() => setStatusFilter("pending")}
+                >
+                  Pending (
+                  {
+                    allRequests.filter(
+                      (r) => r.subjectStatus === "Pending"
+                    ).length
+                  }
+                  )
+                </button>
+                <button
+                  className={`status-chip ${
+                    statusFilter === "accepted" ? "status-chip-active" : ""
+                  }`}
+                  onClick={() => setStatusFilter("accepted")}
+                >
+                  Accepted (
+                  {
+                    allRequests.filter(
+                      (r) => r.subjectStatus === "AcceptedBySubject"
+                    ).length
+                  }
+                  )
+                </button>
+                <button
+                  className={`status-chip ${
+                    statusFilter === "rejected" ? "status-chip-active" : ""
+                  }`}
+                  onClick={() => setStatusFilter("rejected")}
+                >
+                  Rejected (
+                  {
+                    allRequests.filter(
+                      (r) => r.subjectStatus === "RejectedBySubject"
+                    ).length
+                  }
+                  )
+                </button>
+                <button
+                  className={`status-chip ${
+                    statusFilter === "forwarded" ? "status-chip-active" : ""
+                  }`}
+                  onClick={() => setStatusFilter("forwarded")}
+                >
+                  Forwarded (
+                  {
+                    allRequests.filter(
+                      (r) => r.subjectStatus === "ForwardedToDirector"
+                    ).length
+                  }
+                  )
+                </button>
+              </div>
+
               <section className="subject-grid">
                 <div className="sub-widget">
                   <h3 className="widget-title">සමිති ලියාපදිංචි ලිපි</h3>
                   <p className="muted-text">
-                    ලැයිස්තුවෙන් එකක් තෝරාගෙන ඉහත / පසුතාල විස්තර සලකා
-                    Accept හෝ Reject කිරීම සිදු කරන්න. Forward to Director
-                    ක්‍රියාවලිය ඉන්පසු භාවිතා කළ හැක.
+                    වම්පස ලැයිස්තුව මගින් ඔබට දිස්ත්‍රික් / ප්‍රා.ලේ.
+                    අනුව ලියාපදිංචි ඉල්ලීම් තෝරාගත හැක. ඉහත /
+                    පසුතාල විස්තර සලකා Accept / Reject / Forward to Director
+                    තීරණ ලබා දෙන්න.
                   </p>
                   {loadingRequests ? (
                     <p className="muted-text">
                       ලියාපදිංචි ඉල්ලීම් රදිමින්...
                     </p>
-                  ) : latestRequests.length === 0 ? (
+                  ) : filteredRequests.length === 0 ? (
                     <p className="muted-text">
-                      ලියාපදිංචි ලිපි දත්තගබඩාවෙන් හමු නොවිනි.
+                      මෙම කොටසට අදාළ ලියාපදිංචි ලිපි හමු නොවිනි.
                     </p>
                   ) : (
                     <ul className="letter-list">
-                      {latestRequests.map((req) => (
+                      {filteredRequests.map((req) => (
                         <li
                           key={req.id}
                           className="letter-item"
@@ -616,6 +691,9 @@ const Subject = () => {
                     <br />
                     • අවසානයේ &quot;Forward to Director&quot; භාවිතා කර
                     Director වෙත යොමු කරන්න.
+                    <br />
+                    • Forwarding chain එකේ නම, තනතුර සහ දිනය යාවත්කාලීනව
+                    ගැලපේ.
                   </p>
                 </div>
               </section>
@@ -701,7 +779,7 @@ const Subject = () => {
                     {/* Approval chain + subject actions */}
                     <div className="detail-column">
                       <div className="approval-chain">
-                        <h4>අනුමැතිය ලබා ගත් පියවර</h4>
+                        <h4>අනුමැතිය / පියවර වල සටහන්</h4>
 
                         <div className="chain-step">
                           <h5>Rural Development Officer</h5>
@@ -709,6 +787,11 @@ const Subject = () => {
                             <strong>නම:</strong>{" "}
                             {selectedRequest.ruralOfficerName} (
                             {selectedRequest.ruralOfficerId})
+                          </p>
+                          <p>
+                            <strong>තනතුර:</strong>{" "}
+                            {selectedRequest.ruralOfficerPosition ||
+                              "Rural Development Officer"}
                           </p>
                           <p>
                             <strong>තීරණය:</strong>{" "}
@@ -720,12 +803,10 @@ const Subject = () => {
                               {selectedRequest.ruralOfficerNote}
                             </p>
                           )}
-                          {selectedRequest.ruralDecisionAt && (
-                            <p>
-                              <strong>දිනය:</strong>{" "}
-                              {selectedRequest.ruralDecisionAt}
-                            </p>
-                          )}
+                          <p>
+                            <strong>දිනය:</strong>{" "}
+                            {selectedRequest.ruralDecisionAt || "N/A"}
+                          </p>
                         </div>
 
                         <div className="chain-step">
@@ -734,6 +815,10 @@ const Subject = () => {
                             <strong>නම:</strong>{" "}
                             {selectedRequest.districtOfficerName} (
                             {selectedRequest.districtOfficerId})
+                          </p>
+                          <p>
+                            <strong>ඊමේල්:</strong>{" "}
+                            {selectedRequest.districtOfficerEmail || "N/A"}
                           </p>
                           <p>
                             <strong>තීරණය:</strong>{" "}
@@ -745,12 +830,10 @@ const Subject = () => {
                               {selectedRequest.districtNote}
                             </p>
                           )}
-                          {selectedRequest.districtDecisionAt && (
-                            <p>
-                              <strong>දිනය:</strong>{" "}
-                              {selectedRequest.districtDecisionAt}
-                            </p>
-                          )}
+                          <p>
+                            <strong>දිනය:</strong>{" "}
+                            {selectedRequest.districtDecisionAt || "N/A"}
+                          </p>
                         </div>
 
                         <div className="chain-step">
@@ -765,12 +848,10 @@ const Subject = () => {
                               {selectedRequest.secretaryNote}
                             </p>
                           )}
-                          {selectedRequest.secretaryDecisionAt && (
-                            <p>
-                              <strong>දිනය:</strong>{" "}
-                              {selectedRequest.secretaryDecisionAt}
-                            </p>
-                          )}
+                          <p>
+                            <strong>දිනය:</strong>{" "}
+                            {selectedRequest.secretaryDecisionAt || "N/A"}
+                          </p>
                         </div>
 
                         <div className="chain-step subject-step">
@@ -785,12 +866,10 @@ const Subject = () => {
                               {selectedRequest.subjectNote}
                             </p>
                           )}
-                          {selectedRequest.subjectDecisionAt && (
-                            <p>
-                              <strong>දිනය:</strong>{" "}
-                              {selectedRequest.subjectDecisionAt}
-                            </p>
-                          )}
+                          <p>
+                            <strong>දිනය:</strong>{" "}
+                            {selectedRequest.subjectDecisionAt || "N/A"}
+                          </p>
                         </div>
                       </div>
 
@@ -882,66 +961,7 @@ const Subject = () => {
             </>
           )}
 
-          {/* 2. REQUESTED TAB (list only) */}
-          {activeTab === "requested" && (
-            <section className="sub-widget">
-              <h3 className="widget-title">
-                ඉදිරිපත් කරන ලද / Forwarded සමිති
-              </h3>
-              <p className="muted-text">
-                මේ ලැයිස්තුවෙන් එකක් තෝරාගත් විට, එය &quot;Pending &
-                Actions&quot; ටැබයේ විස්තර සහ තීරණ කොටසට විවෘත වේ.
-              </p>
-
-              {loadingRequests ? (
-                <p className="muted-text">Loading registrations...</p>
-              ) : latestRequests.length === 0 ? (
-                <p className="muted-text">Forwarded සමිති දත්ත නොමැත.</p>
-              ) : (
-                <ul className="letter-list">
-                  {latestRequests.map((req) => (
-                    <li
-                      key={req.id}
-                      className="letter-item"
-                      style={{ cursor: "pointer" }}
-                      onClick={() => handleSelectRequest(req)}
-                    >
-                      <div>
-                        <p className="letter-type">
-                          <strong>{req.societyName}</strong> ({req.registerNo})
-                        </p>
-                        <p className="letter-sub">
-                          දිස්ත්‍රික්කය: {req.district} | ප්‍රා.ලේ.:{" "}
-                          {req.division}
-                        </p>
-                        <p className="letter-sub">
-                          DS Status: {req.secretaryStatus}
-                        </p>
-                        <p className="letter-sub">
-                          Subject Status: {req.subjectStatus}
-                        </p>
-                      </div>
-                      <span
-                        className={`badge ${
-                          req.subjectStatus === "AcceptedBySubject"
-                            ? "badge-success"
-                            : req.subjectStatus === "RejectedBySubject"
-                            ? "badge-danger"
-                            : req.subjectStatus === "ForwardedToDirector"
-                            ? "badge-warning"
-                            : "badge-info"
-                        }`}
-                      >
-                        {req.subjectStatus}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          )}
-
-          {/* 3. HISTORY TAB */}
+          {/* 2. HISTORY TAB */}
           {activeTab === "history" && (
             <section className="sub-widget">
               <h3 className="widget-title">Registration History</h3>
@@ -961,7 +981,10 @@ const Subject = () => {
                       key={req.id}
                       className="letter-item"
                       style={{ cursor: "pointer" }}
-                      onClick={() => handleSelectRequest(req)}
+                      onClick={() => {
+                        setActiveTab("pending");
+                        handleSelectRequest(req);
+                      }}
                     >
                       <div>
                         <p className="letter-type">
@@ -1000,7 +1023,7 @@ const Subject = () => {
             </section>
           )}
 
-          {/* 4. ANALYTICS TAB */}
+          {/* 3. ANALYTICS TAB */}
           {activeTab === "analytics" && (
             <section className="sub-widget">
               <h3 className="widget-title">විෂය මට්ටමේ විශ්ලේෂණය</h3>
@@ -1013,7 +1036,7 @@ const Subject = () => {
               <div className="analytics-grid">
                 <div className="analytics-card">
                   <h4>සම්පූර්ණ ලියාපදිංචි</h4>
-                  <p className="analytics-number">{totalPending}</p>
+                  <p className="analytics-number">{totalAll}</p>
                   <p className="analytics-label">
                     දැනට පද්ධතිය තුළ තිබෙන ලියාපදිංචි ඉල්ලීම් සංඛ්‍යාව.
                   </p>
@@ -1043,7 +1066,7 @@ const Subject = () => {
                 </div>
               </div>
 
-              {/* === NEW: DISTRICT APPROVAL SUMMARY === */}
+              {/* === DISTRICT APPROVAL SUMMARY === */}
               <div className="analytics-grid" style={{ marginTop: 24 }}>
                 <div className="analytics-card">
                   <h4>දිස්ත්‍රික් මට්ටමේ අනුමත</h4>
@@ -1065,8 +1088,7 @@ const Subject = () => {
                   <h4>දිස්ත්‍රික් මට්ටමේ Pending</h4>
                   <p className="analytics-number">{districtPendingCount}</p>
                   <p className="analytics-label">
-                    ජාතික තීරණයක් ලබා නොදුන් (Pending) District Officer
-                    ඉල්ලීම්.
+                    තවමත් District Officer තීරණය නොලබා ඇති ඉල්ලීම්.
                   </p>
                 </div>
               </div>

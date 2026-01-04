@@ -12,6 +12,33 @@ import {
 import "../devsecretary/divisionalsecretary.css";
 import { useNavigate } from "react-router-dom";
 
+const PositionBlock = ({ title, data }) => {
+  const d = data || {};
+  return (
+    <div className="position-item">
+      <h5>{title}</h5>
+      <p>
+        <strong>නම:</strong> {d.fullName || "N/A"}
+      </p>
+      <p>
+        <strong>ලිපිනය:</strong> {d.address || "N/A"}
+      </p>
+      <p>
+        <strong>දුරකථන:</strong> {d.phone || "N/A"}
+      </p>
+      <p>
+        <strong>ඊමේල්:</strong> {d.email || "N/A"}
+      </p>
+      <p>
+        <strong>ජා.හැ.අංකය:</strong> {d.nic || "N/A"}
+      </p>
+      <p>
+        <strong>උපන් දිනය:</strong> {d.dob || "N/A"}
+      </p>
+    </div>
+  );
+};
+
 const DivisionalSecretary = () => {
   const navigate = useNavigate();
 
@@ -261,15 +288,19 @@ const DivisionalSecretary = () => {
   if (error) return <p className="ds-error">{error}</p>;
   if (!user) return null;
 
-  const latestRequests = requests.filter(
+  // Separate out views
+  const pendingRequests = requests.filter(
     (r) => r.secretaryStatus !== "ForwardedToSubject"
   );
   const historyRequests = requests;
 
-  const totalPending = latestRequests.length;
+  const totalPending = pendingRequests.length;
   const totalHistory = historyRequests.length;
   const acceptedCount = historyRequests.filter(
     (r) => r.secretaryStatus === "AcceptedByDS"
+  ).length;
+  const forwardedCount = historyRequests.filter(
+    (r) => r.secretaryStatus === "ForwardedToSubject"
   ).length;
 
   return (
@@ -349,6 +380,10 @@ const DivisionalSecretary = () => {
               <p className="stat-value">{acceptedCount}</p>
             </div>
             <div className="stat-card">
+              <p className="stat-label">Forwarded to Subject</p>
+              <p className="stat-value">{forwardedCount}</p>
+            </div>
+            <div className="stat-card">
               <p className="stat-label">Total History</p>
               <p className="stat-value">{totalHistory}</p>
             </div>
@@ -415,15 +450,16 @@ const DivisionalSecretary = () => {
                 <h3 className="card-title">
                   District Officer Forwarded Registrations
                 </h3>
+
                 {loadingRequests ? (
                   <p className="muted-text">Loading requests...</p>
-                ) : latestRequests.length === 0 ? (
+                ) : pendingRequests.length === 0 ? (
                   <p className="muted-text">
-                    No pending/decided registrations waiting to be forwarded.
+                    No pending registrations in this division.
                   </p>
                 ) : (
                   <ul className="letter-list">
-                    {latestRequests.map((req) => (
+                    {pendingRequests.map((req) => (
                       <li
                         key={req.id}
                         className="letter-item"
@@ -456,11 +492,6 @@ const DivisionalSecretary = () => {
                               DO Note: {req.districtNote}
                             </p>
                           )}
-                          {req.secretaryStatus !== "Pending" && (
-                            <p className="letter-sub">
-                              DS Status: {req.secretaryStatus}
-                            </p>
-                          )}
                         </div>
                         <span
                           className={`badge ${
@@ -468,6 +499,8 @@ const DivisionalSecretary = () => {
                               ? "badge-success"
                               : req.secretaryStatus === "RejectedByDS"
                               ? "badge-danger"
+                              : req.secretaryStatus === "ForwardedToSubject"
+                              ? "badge-warning"
                               : "badge-warning"
                           }`}
                         >
@@ -760,6 +793,13 @@ const DivisionalSecretary = () => {
                   </p>
                 </div>
                 <div className="ds-analytics-card">
+                  <h4>Forwarded to Subject Officer</h4>
+                  <p className="ds-analytics-number">{forwardedCount}</p>
+                  <p className="ds-analytics-label">
+                    විෂය භාර නිලධාරී වෙත යොමු කරන ලද ඉල්ලීම් සංඛ්‍යාව.
+                  </p>
+                </div>
+                <div className="ds-analytics-card">
                   <h4>Total History</h4>
                   <p className="ds-analytics-number">{totalHistory}</p>
                   <p className="ds-analytics-label">
@@ -773,33 +813,6 @@ const DivisionalSecretary = () => {
         </main>
       </div>
     </section>
-  );
-};
-
-const PositionBlock = ({ title, data }) => {
-  const d = data || {};
-  return (
-    <div className="position-item">
-      <h5>{title}</h5>
-      <p>
-        <strong>නම:</strong> {d.fullName || "N/A"}
-      </p>
-      <p>
-        <strong>ලිපිනය:</strong> {d.address || "N/A"}
-      </p>
-      <p>
-        <strong>දුරකථන:</strong> {d.phone || "N/A"}
-      </p>
-      <p>
-        <strong>ඊමේල්:</strong> {d.email || "N/A"}
-      </p>
-      <p>
-        <strong>ජා.හැ.අංකය:</strong> {d.nic || "N/A"}
-      </p>
-      <p>
-        <strong>උපන් දිනය:</strong> {d.dob || "N/A"}
-      </p>
-    </div>
   );
 };
 

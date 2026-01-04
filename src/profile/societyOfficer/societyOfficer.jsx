@@ -1,10 +1,19 @@
 import React, { useEffect, useState } from "react";
 import "./societyOfficer.css";
 import { db } from "../../firebase";
-import { doc, getDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  updateDoc,
+} from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
 const positionLabels = {
+  society_officer: "Society Officer",
   society_chairman: "සභාපති / Society Chairman",
   society_secretary: "ලේකම් / Society Secretary",
   society_treasurer: "භාණ්ඩාගාරික / Society Treasurer",
@@ -14,71 +23,216 @@ const SocietyOfficer = () => {
   const navigate = useNavigate();
 
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const [error, setError] = useState("");
 
-  const [requestedLetters, setRequestedLetters] = useState([]);
-  const [historyLetters, setHistoryLetters] = useState([]);
+  // Pending applications by type
+  const [scholarshipApps, setScholarshipApps] = useState([]);
+  const [loanApps, setLoanApps] = useState([]);
+  const [fundApps, setFundApps] = useState([]);
+  const [memberLists, setMemberLists] = useState([]);
+
+  const [loadingApps, setLoadingApps] = useState(false);
+
+  const [historyApps, setHistoryApps] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
 
+  const [actionError, setActionError] = useState("");
+  const [actionSuccess, setActionSuccess] = useState("");
+
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchUserAndApps = async () => {
       const userId = localStorage.getItem("userId");
       if (!userId) {
         setError("No user logged in.");
-        setLoading(false);
+        setLoadingProfile(false);
         return;
       }
 
       try {
+        // 1. Load user profile
         const ref = doc(db, "users", userId);
         const snap = await getDoc(ref);
 
-        if (snap.exists()) {
-          setUser(snap.data());
-        } else {
+        if (!snap.exists()) {
           setError("User not found.");
+          setLoadingProfile(false);
+          return;
         }
+
+        const u = snap.data();
+        console.log("SocietyOfficer user profile:", u);
+        setUser(u);
+        setLoadingProfile(false);
+
+        if (!u.societyRegisterNo) {
+          console.warn(
+            "SocietyOfficer: 'societyRegisterNo' missing on user document. " +
+              "Startup must update this; it should match societyContext.registerNo in applications."
+          );
+        }
+        if (!u.position) {
+          console.warn(
+            "SocietyOfficer: 'position' missing on user document. " +
+              "Set position = 'society_officer', 'society_chairman', etc."
+          );
+        }
+
+        setLoadingApps(true);
+
+        const regNo = u.societyRegisterNo || null;
+        const role = u.position || null;
+
+        // ----------------------
+        // SCHOLARSHIP APPLICATIONS
+        // ----------------------
+        const schRef = collection(db, "scholarshipApplications");
+
+        // Base query: all scholarship apps (we'll filter in JS)
+        const schSnap = await getDocs(schRef);
+        const schListRaw = schSnap.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
+
+        // Filter logic:
+        const schList = schListRaw
+          .filter((app) => {
+            // If we have registerNo, prefer that
+            if (regNo && app.societyContext?.registerNo) {
+              return app.societyContext.registerNo === regNo;
+            }
+            // Backward compatibility: if no societyContext, show all for this user
+            // (you can restrict later when all data has societyContext)
+            return true;
+          })
+          .filter((app) => {
+            // If app has currentRole and we know this user's role, use it
+            if (role && app.currentRole) {
+              return app.currentRole === role;
+            }
+            // If app has no currentRole, still show it (legacy data)
+            return true;
+          })
+          .map((data) => ({
+            id: data.id,
+            type: "scholarship",
+            ...data,
+            createdAt:
+              data.createdAt && data.createdAt.toDate
+                ? data.createdAt.toDate().toLocaleString()
+                : "",
+          }));
+
+        // ----------------------
+        // LOAN APPLICATIONS
+        // ----------------------
+        const loanRef = collection(db, "loanApplications");
+        const loanSnap = await getDocs(loanRef);
+        const loanListRaw = loanSnap.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
+
+        const loanList = loanListRaw
+          .filter((app) => {
+            if (regNo && app.societyContext?.registerNo) {
+              return app.societyContext.registerNo === regNo;
+            }
+            return true;
+          })
+          .filter((app) => {
+            if (role && app.currentRole) {
+              return app.currentRole === role;
+            }
+            return true;
+          })
+          .map((data) => ({
+            id: data.id,
+            type: "loan",
+            ...data,
+            createdAt:
+              data.createdAt && data.createdAt.toDate
+                ? data.createdAt.toDate().toLocaleString()
+                : "",
+          }));
+
+        // ----------------------
+        // FUND RELEASE APPLICATIONS
+        // ----------------------
+        const fundRef = collection(db, "fundReleaseApplications");
+        const fundSnap = await getDocs(fundRef);
+        const fundListRaw = fundSnap.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
+
+        const fundList = fundListRaw
+          .filter((app) => {
+            if (regNo && app.societyContext?.registerNo) {
+              return app.societyContext.registerNo === regNo;
+            }
+            return true;
+          })
+          .filter((app) => {
+            if (role && app.currentRole) {
+              return app.currentRole === role;
+            }
+            return true;
+          })
+          .map((data) => ({
+            id: data.id,
+            type: "fund",
+            ...data,
+            createdAt:
+              data.createdAt && data.createdAt.toDate
+                ? data.createdAt.toDate().toLocaleString()
+                : "",
+          }));
+
+        // ----------------------
+        // MEMBER LISTS (FO/04)
+        // ----------------------
+        const memberRef = collection(db, "societyMemberLists");
+        const qMember = regNo
+          ? query(memberRef, where("societyContext.registerNo", "==", regNo))
+          : memberRef;
+        const memberSnap = await getDocs(qMember);
+        const memberListObjs = memberSnap.docs.map((d) => {
+          const data = d.data();
+          return {
+            id: d.id,
+            ...data,
+            createdAt:
+              data.createdAt && data.createdAt.toDate
+                ? data.createdAt.toDate().toLocaleString()
+                : "",
+          };
+        });
+
+        console.log("Loaded for this profile:", {
+          regNo,
+          role,
+          scholarshipApps: schList.length,
+          loanApps: loanList.length,
+          fundApps: fundList.length,
+          memberLists: memberListObjs.length,
+        });
+
+        setScholarshipApps(schList);
+        setLoanApps(loanList);
+        setFundApps(fundList);
+        setMemberLists(memberListObjs);
+        setHistoryApps([]); // still placeholder
       } catch (err) {
-        console.error("Error loading society officer:", err);
-        setError("Failed to fetch user data.");
+        console.error("Error loading society officer or applications:", err);
+        setError("Failed to load profile or applications.");
       } finally {
-        setLoading(false);
+        setLoadingApps(false);
       }
     };
 
-    fetchUser();
-
-    // Dummy data – replace with Firestore later
-    setRequestedLetters([
-      {
-        id: "S-L001",
-        type: "සභා වෙනස් කිරීමේ ලිපිය",
-        date: "2025-11-30",
-        status: "Pending",
-      },
-      {
-        id: "S-L002",
-        type: "ණය ඉල්ලුම් වාර්තාව",
-        date: "2025-12-05",
-        status: "In Review",
-      },
-    ]);
-
-    setHistoryLetters([
-      {
-        id: "S-H001",
-        type: "සමිතිය වාර්ෂික වාර්තාව",
-        date: "2025-10-10",
-        status: "Approved",
-      },
-      {
-        id: "S-H002",
-        type: "ගිණුම් තහවුරු කිරීමේ ලිපිය",
-        date: "2025-09-22",
-        status: "Approved",
-      },
-    ]);
+    fetchUserAndApps();
   }, []);
 
   const handleSignOut = () => {
@@ -89,7 +243,45 @@ const SocietyOfficer = () => {
     navigate("/login");
   };
 
-  if (loading) return <p className="society-loading">Loading profile...</p>;
+  // Forward to another society position (chairman / secretary / treasurer)
+  const handleForward = async (collectionName, appId, targetRole) => {
+    if (!user) return;
+
+    setActionError("");
+    setActionSuccess("");
+
+    try {
+      const ref = doc(db, collectionName, appId);
+      await updateDoc(ref, {
+        currentRole: targetRole,
+        status: `ForwardedTo_${targetRole}`,
+        lastActionBy: user.username || user.email || "SocietyOfficer",
+        lastActionAt: new Date(),
+      });
+
+      if (collectionName === "scholarshipApplications") {
+        setScholarshipApps((prev) => prev.filter((a) => a.id !== appId));
+      } else if (collectionName === "loanApplications") {
+        setLoanApps((prev) => prev.filter((a) => a.id !== appId));
+      } else if (collectionName === "fundReleaseApplications") {
+        setFundApps((prev) => prev.filter((a) => a.id !== appId));
+      }
+
+      setActionSuccess(
+        targetRole === "society_chairman"
+          ? "අයදුම්පත සභාපති (Chairman) වෙත යොමු කරන ලදී."
+          : targetRole === "society_secretary"
+          ? "අයදුම්පත ලේකම් (Secretary) වෙත යොමු කරන ලදී."
+          : "අයදුම්පත භාණ්ඩාගාරික (Treasurer) වෙත යොමු කරන ලදී."
+      );
+    } catch (err) {
+      console.error("Error forwarding application:", err);
+      setActionError("Forward කිරීමේදී දෝෂයක් සිදු විය.");
+    }
+  };
+
+  if (loadingProfile)
+    return <p className="society-loading">Loading profile...</p>;
   if (error) return <p className="society-error">{error}</p>;
   if (!user) return null;
 
@@ -99,22 +291,22 @@ const SocietyOfficer = () => {
       ? user.createdAt.toDate().toLocaleDateString()
       : "";
 
-  const totalPending = requestedLetters.length;
-  const totalHistory = historyLetters.length;
-  const approvedCount = historyLetters.filter(
+  const totalPending =
+    scholarshipApps.length + loanApps.length + fundApps.length;
+  const totalHistory = historyApps.length;
+  const approvedCount = historyApps.filter(
     (l) => l.status === "Approved"
   ).length;
 
   return (
     <section className="society-dashboard">
       <div className="society-shell">
-        {/* LEFT: PROFESSIONAL PROFILE COLUMN */}
+        {/* LEFT: PROFILE / SUMMARY */}
         <aside className="society-sidebar">
-          {/* Top bar */}
           <div className="society-sidebar-topbar">
             <div className="sidebar-brand">
               <p>දකුණු පළාත් ග්‍රාම සංවර්ධන දෙපාර්තමේන්තුව</p>
-              <span>Rural Development Society Officer</span>
+              <span>Rural Development Society – Officer Panel</span>
             </div>
             <button className="signout-btn" onClick={handleSignOut}>
               Sign Out
@@ -170,16 +362,22 @@ const SocietyOfficer = () => {
               <span className="info-label">Society Name</span>
               <span className="info-value">{user.society || "N/A"}</span>
             </div>
+            <div className="info-row">
+              <span className="info-label">Reg. No</span>
+              <span className="info-value">
+                {user.societyRegisterNo || "N/A"}
+              </span>
+            </div>
           </div>
 
           {/* Stats */}
           <div className="sidebar-stats">
             <div className="stat-card">
-              <p className="stat-label">Pending / In Review</p>
+              <p className="stat-label">Pending Applications</p>
               <p className="stat-value">{totalPending}</p>
             </div>
             <div className="stat-card">
-              <p className="stat-label">Approved Letters</p>
+              <p className="stat-label">Approved (History)</p>
               <p className="stat-value">{approvedCount}</p>
             </div>
             <div className="stat-card">
@@ -189,44 +387,287 @@ const SocietyOfficer = () => {
           </div>
         </aside>
 
-        {/* RIGHT: LETTERS COLUMN */}
+        {/* RIGHT: APPLICATIONS */}
         <main className="society-main">
-          {/* Requested letters */}
+          {/* Pending – Scholarship */}
           <section className="society-card">
-            <h4 className="card-title">Requested Letters</h4>
-            {requestedLetters.length === 0 ? (
-              <p className="muted-text">No pending letter requests.</p>
+            <h4 className="card-title">Pending Scholarship Applications</h4>
+            {loadingApps ? (
+              <p className="muted-text">අයදුම්පත් රදිමින්...</p>
+            ) : scholarshipApps.length === 0 ? (
+              <p className="muted-text">
+                දැනට {label} මට්ටමට යොමු වූ ශිෂ්‍යත්ව අයදුම්පත් නොමැත.
+              </p>
             ) : (
               <ul className="letter-list">
-                {requestedLetters.map((l) => (
-                  <li key={l.id} className="letter-item">
+                {scholarshipApps.map((app) => (
+                  <li key={app.id} className="letter-item">
                     <div>
                       <p className="letter-type">
-                        <strong>{l.type}</strong>
+                        <strong>{app.fullName}</strong> – O/L {app.examYear}
                       </p>
-                      <p className="letter-sub">Date: {l.date}</p>
+                      <p className="letter-sub">
+                        Address: {app.address?.slice(0, 80)}...
+                      </p>
+                      {app.createdAt && (
+                        <p className="letter-sub">
+                          Submitted: {app.createdAt}
+                        </p>
+                      )}
                     </div>
-                    <span
-                      className={`badge ${
-                        l.status === "Approved"
-                          ? "badge-success"
-                          : l.status === "Rejected"
-                          ? "badge-danger"
-                          : "badge-warning"
-                      }`}
-                    >
-                      {l.status}
-                    </span>
+
+                    {user.position === "society_officer" && (
+                      <div className="letter-actions">
+                        <button
+                          type="button"
+                          className="btn-mini"
+                          onClick={() =>
+                            handleForward(
+                              "scholarshipApplications",
+                              app.id,
+                              "society_chairman"
+                            )
+                          }
+                        >
+                          Forward to Chairman
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-mini"
+                          onClick={() =>
+                            handleForward(
+                              "scholarshipApplications",
+                              app.id,
+                              "society_secretary"
+                            )
+                          }
+                        >
+                          Forward to Secretary
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-mini"
+                          onClick={() =>
+                            handleForward(
+                              "scholarshipApplications",
+                              app.id,
+                              "society_treasurer"
+                            )
+                          }
+                        >
+                          Forward to Treasurer
+                        </button>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
             )}
           </section>
 
-          {/* History */}
+          {/* Pending – Loan applications */}
+          <section className="society-card">
+            <h4 className="card-title">Pending Loan Applications</h4>
+            {loadingApps ? (
+              <p className="muted-text">අයදුම්පත් රදිමින්...</p>
+            ) : loanApps.length === 0 ? (
+              <p className="muted-text">
+                දැනට {label} මට්ටමට යොමු වූ ණය අයදුම්පත් නොමැත.
+              </p>
+            ) : (
+              <ul className="letter-list">
+                {loanApps.map((app) => (
+                  <li key={app.id} className="letter-item">
+                    <div>
+                      <p className="letter-type">
+                        <strong>{app.borrowerName}</strong> – Loan:{" "}
+                        {app.loanAmount} රු.
+                      </p>
+                      <p className="letter-sub">
+                        Project: {app.projectType || "N/A"}
+                      </p>
+                      {app.createdAt && (
+                        <p className="letter-sub">
+                          Submitted: {app.createdAt}
+                        </p>
+                      )}
+                    </div>
+
+                    {user.position === "society_officer" && (
+                      <div className="letter-actions">
+                        <button
+                          type="button"
+                          className="btn-mini"
+                          onClick={() =>
+                            handleForward(
+                              "loanApplications",
+                              app.id,
+                              "society_chairman"
+                            )
+                          }
+                        >
+                          Forward to Chairman
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-mini"
+                          onClick={() =>
+                            handleForward(
+                              "loanApplications",
+                              app.id,
+                              "society_secretary"
+                            )
+                          }
+                        >
+                          Forward to Secretary
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-mini"
+                          onClick={() =>
+                            handleForward(
+                              "loanApplications",
+                              app.id,
+                              "society_treasurer"
+                            )
+                          }
+                        >
+                          Forward to Treasurer
+                        </button>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          {/* Pending – Fund release applications */}
+          <section className="society-card">
+            <h4 className="card-title">Pending Fund Release Applications</h4>
+            {loadingApps ? (
+              <p className="muted-text">අයදුම්පත් රදිමින්...</p>
+            ) : fundApps.length === 0 ? (
+              <p className="muted-text">
+                දැනට {label} මට්ටමට යොමු වූ මුදල් නිදහස් කිරීමේ අයදුම්පත්
+                නොමැත.
+              </p>
+            ) : (
+              <ul className="letter-list">
+                {fundApps.map((app) => (
+                  <li key={app.id} className="letter-item">
+                    <div>
+                      <p className="letter-type">
+                        <strong>{app.societyName || "Society"}</strong> –{" "}
+                        Request: {app.requestedAmount || "N/A"} රු.
+                      </p>
+                      <p className="letter-sub">
+                        District: {app.district} | Division:{" "}
+                        {app.divisionName}
+                      </p>
+                      {app.createdAt && (
+                        <p className="letter-sub">
+                          Submitted: {app.createdAt}
+                        </p>
+                      )}
+                    </div>
+
+                    {user.position === "society_officer" && (
+                      <div className="letter-actions">
+                        <button
+                          type="button"
+                          className="btn-mini"
+                          onClick={() =>
+                            handleForward(
+                              "fundReleaseApplications",
+                              app.id,
+                              "society_chairman"
+                            )
+                          }
+                        >
+                          Forward to Chairman
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-mini"
+                          onClick={() =>
+                            handleForward(
+                              "fundReleaseApplications",
+                              app.id,
+                              "society_secretary"
+                            )
+                          }
+                        >
+                          Forward to Secretary
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-mini"
+                          onClick={() =>
+                            handleForward(
+                              "fundReleaseApplications",
+                              app.id,
+                              "society_treasurer"
+                            )
+                          }
+                        >
+                          Forward to Treasurer
+                        </button>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {actionError && (
+              <p className="society-error" style={{ marginTop: 8 }}>
+                {actionError}
+              </p>
+            )}
+            {actionSuccess && (
+              <p className="society-success" style={{ marginTop: 8 }}>
+                {actionSuccess}
+              </p>
+            )}
+          </section>
+
+          {/* Member lists (FO/04) */}
+          <section className="society-card">
+            <h4 className="card-title">
+              Society Member Loan Requests (FO/04 Lists)
+            </h4>
+            {loadingApps ? (
+              <p className="muted-text">Loading member lists...</p>
+            ) : memberLists.length === 0 ? (
+              <p className="muted-text">
+                දැනට මෙම සමිතිය සඳහා සාමාජික ණය ලැයිස්තු (FO/04) සුරක්ෂිත කර
+                නොමැත.
+              </p>
+            ) : (
+              <ul className="letter-list">
+                {memberLists.map((list) => (
+                  <li key={list.id} className="letter-item">
+                    <div>
+                      <p className="letter-type">
+                        Member list – {list.members?.length || 0} members
+                      </p>
+                      {list.createdAt && (
+                        <p className="letter-sub">
+                          Submitted: {list.createdAt}
+                        </p>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          {/* History placeholder */}
           <section className="society-card">
             <div className="history-header">
-              <h4 className="card-title">Letter History</h4>
+              <h4 className="card-title">Application History</h4>
               <button
                 type="button"
                 className="toggle-btn"
@@ -238,17 +679,26 @@ const SocietyOfficer = () => {
 
             {showHistory && (
               <div className="history-content">
-                {historyLetters.length === 0 ? (
-                  <p className="muted-text">No history records.</p>
+                {historyApps.length === 0 ? (
+                  <p className="muted-text">No history records yet.</p>
                 ) : (
                   <ul className="letter-list">
-                    {historyLetters.map((l) => (
+                    {historyApps.map((l) => (
                       <li key={l.id} className="letter-item">
                         <div>
                           <p className="letter-type">
-                            <strong>{l.type}</strong>
+                            <strong>{l.fullName || l.borrowerName}</strong>
                           </p>
-                          <p className="letter-sub">Date: {l.date}</p>
+                          {l.examYear && (
+                            <p className="letter-sub">
+                              Exam Year: {l.examYear}
+                            </p>
+                          )}
+                          {l.loanAmount && (
+                            <p className="letter-sub">
+                              Loan: {l.loanAmount} රු.
+                            </p>
+                          )}
                         </div>
                         <span
                           className={`badge ${

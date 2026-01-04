@@ -1,7 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../login/signup.css";
 import { db } from "../firebase.js";
-import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
 export default function SignUp() {
@@ -22,8 +28,10 @@ export default function SignUp() {
 
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedSecretary, setSelectedSecretary] = useState("");
-  const [societies, setSocieties] = useState([]);
-  const [selectedSociety, setSelectedSociety] = useState("");
+  const [societies, setSocieties] = useState([]); // [{id, name, regNo}]
+  const [selectedSocietyId, setSelectedSocietyId] = useState("");
+  const [selectedSocietyName, setSelectedSocietyName] = useState("");
+  const [selectedSocietyRegNo, setSelectedSocietyRegNo] = useState("");
   const [error, setError] = useState("");
 
   // District → Divisions (Sinhala)
@@ -91,7 +99,7 @@ export default function SignUp() {
     "හික්කඩුව": "hikkaduwa",
     "හබරාදුව": "habaraduwa",
     "ඇල්පිටිය": "elptiya",
-    "යක්කලමුල්ල": "yakkalamulla",
+    "යටකලමුල්ල": "yakkalamulla",
     "තවලම": "thawalama",
     "නාගොඩ": "nagoda",
     "නෙළුව": "neluwa",
@@ -152,7 +160,9 @@ export default function SignUp() {
     setSelectedDistrict(district);
     setSelectedSecretary("");
     setSocieties([]);
-    setSelectedSociety("");
+    setSelectedSocietyId("");
+    setSelectedSocietyName("");
+    setSelectedSocietyRegNo("");
   };
 
   const handleChange = (e) => {
@@ -199,17 +209,20 @@ export default function SignUp() {
           return;
         }
 
-        const names = snapshot.docs.map((doc) => {
-          const data = doc.data();
-          return (
+        const list = snapshot.docs.map((docSnap) => {
+          const data = docSnap.data();
+          const name =
             data["සමිතියේ නම"] ||
             data["ග්‍රාම සංවර්ධන සමිතිය"] ||
             data["ග්‍රාම නිලධාරී වසම"] ||
-            doc.id
-          );
+            docSnap.id;
+
+          const regNo = data["ලි.ප.අ"] || data.registerNo || "";
+
+          return { id: docSnap.id, name, regNo };
         });
 
-        setSocieties(names);
+        setSocieties(list);
       } catch (err) {
         console.log(err);
         setSocieties([]);
@@ -218,6 +231,13 @@ export default function SignUp() {
 
     fetchVillages();
   }, [selectedDistrict, selectedSecretary]);
+
+  const handleSocietyChange = (id) => {
+    setSelectedSocietyId(id);
+    const s = societies.find((x) => x.id === id);
+    setSelectedSocietyName(s?.name || "");
+    setSelectedSocietyRegNo(s?.regNo || "");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -233,33 +253,107 @@ export default function SignUp() {
 
       // === 1) CHECK UNIQUENESS RULES ===
 
-      if (formData.position === "village_officer") {
+      // 1a) District Officer -> one per district
+      if (formData.position === "districtOfficer") {
+        if (!selectedDistrict) {
+          setError("කරුණාකර දිස්ත්‍රික්කය තෝරන්න.");
+          return;
+        }
+        const qDO = query(
+          usersRef,
+          where("position", "==", "districtOfficer"),
+          where("district", "==", selectedDistrict)
+        );
+        const existingDO = await getDocs(qDO);
+        if (!existingDO.empty) {
+          setError(
+            "මෙම දිස්ත්‍රික්කය සඳහා District Officer හරෙකු දැනටමත් ලියාපදිංචි වී ඇත."
+          );
+          return;
+        }
+      }
+
+      // 1b) Village Officer -> one per (district + division)
+      else if (formData.position === "village_officer") {
         if (!selectedDistrict || !selectedSecretary) {
           setError("කරුණාකර දිස්ත්‍රික්කය සහ ප්‍රාදේශීය ලේකම් කොට්ඨාසය තෝරන්න.");
           return;
         }
 
-        const q = query(
+        const qVO = query(
           usersRef,
           where("position", "==", "village_officer"),
           where("district", "==", selectedDistrict),
           where("division", "==", selectedSecretary)
         );
 
-        const existing = await getDocs(q);
-        if (!existing.empty) {
+        const existingVO = await getDocs(qVO);
+        if (!existingVO.empty) {
           setError(
             "මෙම ප්‍රාදේශීය ලේකම් කොට්ඨාසය සඳහා ග්‍රාම සංවර්ධන නිලධාරීවරයෙකු දැනටමත් ලියාපදිංචි වී ඇත."
           );
           return;
         }
-      } else {
-        // Global uniqueness per position
-        const q = query(
+      }
+
+      // 1c) Divisional Secretary -> one per (district + division)
+      else if (formData.position === "divisional_secretary") {
+        if (!selectedDistrict || !selectedSecretary) {
+          setError("කරුණාකර දිස්ත්‍රික්කය සහ ප්‍රාදේශීය ලේකම් කොට්ඨාසය තෝරන්න.");
+          return;
+        }
+
+        const qDS = query(
+          usersRef,
+          where("position", "==", "divisional_secretary"),
+          where("district", "==", selectedDistrict),
+          where("division", "==", selectedSecretary)
+        );
+
+        const existingDS = await getDocs(qDS);
+        if (!existingDS.empty) {
+          setError(
+            "මෙම ප්‍රාදේශීය ලේකම් කොට්ඨාසයට වූ Divisional Secretary දැනටමත් ලියාපදිංචි වී ඇත."
+          );
+          return;
+        }
+      }
+
+      // 1d) Society positions -> one per (district + division + society + position)
+      else if (societyPositions.includes(formData.position)) {
+        if (!selectedDistrict || !selectedSecretary || !selectedSocietyId) {
+          setError(
+            "කරුණාකර දිස්ත්‍රික්කය, ප්‍රාදේශීය ලේකම් කොට්ඨාසය සහ Society තෝරන්න."
+          );
+          return;
+        }
+
+        const qSoc = query(
+          usersRef,
+          where("position", "==", formData.position),
+          where("district", "==", selectedDistrict),
+          where("division", "==", selectedSecretary),
+          where("societyId", "==", selectedSocietyId)
+        );
+        const existingSoc = await getDocs(qSoc);
+        if (!existingSoc.empty) {
+          setError(
+            "මෙම Society සඳහා මෙම තනතුර (සභාපති/ලේකම්/භාණ්ඩාගාරික) සඳහා පරිශීලකයෙකු දැනටමත් ලියාපදිංචි වී ඇත."
+          );
+          return;
+        }
+      }
+
+      // 1e) Director (chairman) & Subject Officer -> single globally
+      else if (
+        formData.position === "chairman" ||
+        formData.position === "subjectOfficer"
+      ) {
+        const qGlobal = query(
           usersRef,
           where("position", "==", formData.position)
         );
-        const existing = await getDocs(q);
+        const existing = await getDocs(qGlobal);
         if (!existing.empty) {
           setError("මෙම තනතුර සඳහා පරිශීලකයෙකු දැනටමත් ලියාපදිංචි වී ඇත.");
           return;
@@ -271,7 +365,10 @@ export default function SignUp() {
         position: formData.position,
         district: selectedDistrict || null,
         division: selectedSecretary || null,
-        society: selectedSociety || null,
+        society: selectedSocietyName || null,
+        societyId: selectedSocietyId || null,
+        societyRegisterNo: selectedSocietyRegNo || null,
+
         firstName: formData.firstName,
         lastName: formData.lastName,
         username: formData.username,
@@ -294,7 +391,6 @@ export default function SignUp() {
     <div className="signup-container">
       <div className="signup-box">
         <h2 className="signup-title">Create Account</h2>
-        {/* <p className="signup-subtitle">Register to access the dashboard</p> */}
 
         <form onSubmit={handleSubmit} className="signup-form">
           {/* ===== SECTION: ROLE & AREA ===== */}
@@ -434,17 +530,22 @@ export default function SignUp() {
 
                 <label>Society Name</label>
                 <select
-                  value={selectedSociety}
-                  onChange={(e) => setSelectedSociety(e.target.value)}
+                  value={selectedSocietyId}
+                  onChange={(e) => handleSocietyChange(e.target.value)}
                   required
                 >
                   <option value="">Select Society</option>
-                  {societies.map((soc, idx) => (
-                    <option key={idx} value={soc}>
-                      {soc}
+                  {societies.map((soc) => (
+                    <option key={soc.id} value={soc.id}>
+                      {soc.name}
                     </option>
                   ))}
                 </select>
+                {selectedSocietyRegNo && (
+                  <p className="muted-text">
+                    Reg No: {selectedSocietyRegNo}
+                  </p>
+                )}
               </>
             )}
           </div>

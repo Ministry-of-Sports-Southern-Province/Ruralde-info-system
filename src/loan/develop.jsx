@@ -1,7 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../loan/develop.css";
+import { db } from "../firebase";
+import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
 const Develop = () => {
+  const navigate = useNavigate();
+
   const districtData = {
     Galle: [
       "හික්කඩුව",
@@ -71,6 +76,40 @@ const Develop = () => {
   const [selectedSecretary, setSelectedSecretary] = useState("");
   const [attachedFile, setAttachedFile] = useState(null);
 
+  // other form fields
+  const [registerNo, setRegisterNo] = useState("");
+  const [registerDate, setRegisterDate] = useState("");
+  const [societyName, setSocietyName] = useState("");
+  const [societyAddress, setSocietyAddress] = useState("");
+  const [reasonFileName, setReasonFileName] = useState(""); // just file name
+  const [requestedAmount, setRequestedAmount] = useState("");
+  const [meetingDate, setMeetingDate] = useState("");
+  const [repayMethod, setRepayMethod] = useState("");
+
+  const [societyContext, setSocietyContext] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [submitSuccess, setSubmitSuccess] = useState("");
+
+  useEffect(() => {
+    // load selected society context from Startup
+    try {
+      const raw = localStorage.getItem("selectedSocietyContext");
+      if (raw) {
+        const ctx = JSON.parse(raw);
+        setSocietyContext(ctx);
+
+        // auto-fill some fields if available
+        setSelectedDistrict(ctx.district || "");
+        setSelectedSecretary(ctx.divisionName || "");
+        setSocietyName(ctx.societyName || "");
+        setRegisterNo(ctx.registerNo || "");
+      }
+    } catch (e) {
+      console.error("Error reading selectedSocietyContext:", e);
+    }
+  }, []);
+
   const handleDistrictChange = (district) => {
     setSelectedDistrict(district);
     setSelectedSecretary("");
@@ -112,10 +151,99 @@ const Develop = () => {
     setDebitDetails(newDetails);
   };
 
-  const handleSubmit = (e) => {
+  const handleFileChange = (file) => {
+    setAttachedFile(file);
+    setReasonFileName(file ? file.name : "");
+  };
+
+  const validateForm = () => {
+    if (!selectedDistrict) return "දිස්ත්‍රික්කය තෝරන්න.";
+    if (!selectedSecretary) return "ප්‍රාදේශීය ලේකම් කොට්ඨාසය තෝරන්න.";
+    if (!registerNo.trim()) return "ලියාපදිංචි අංකය ඇතුළත් කරන්න.";
+    if (!societyName.trim()) return "සමිතියේ නම ඇතුළත් කරන්න.";
+    if (!societyAddress.trim()) return "ලිපිනය ඇතුළත් කරන්න.";
+    if (!requestedAmount.trim()) return "අවශ්‍ය මුදල ඇතුළත් කරන්න.";
+    return null;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: send data to backend / Firestore
-    alert("Form submitted!");
+    setSubmitError("");
+    setSubmitSuccess("");
+
+    const errorMsg = validateForm();
+    if (errorMsg) {
+      setSubmitError(errorMsg);
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      // Filter out completely empty dynamic rows
+      const cleanedBanks = bankDetails.filter(
+        (b) => b.bankName || b.accountNumber || b.salary
+      );
+      const cleanedDebits = debitDetails.filter(
+        (d) => d.amount || d.date || d.warika
+      );
+
+      const payload = {
+        // location + society info
+        district: selectedDistrict,
+        divisionName: selectedSecretary,
+        societyName,
+        registerNo,
+        registerDate: registerDate || null,
+        societyAddress,
+
+        // bank + debit tables
+        bankDetails: cleanedBanks,
+        previousDebits: cleanedDebits,
+
+        reasonFileName,
+        requestedAmount,
+        meetingDate: meetingDate || null,
+        repayMethod,
+
+        attachedFilePath: null, // if later you use Storage, save URL here
+
+        societyContext: societyContext || null,
+
+        status: "SubmittedToSocietyOfficer",
+        currentRole: "society_officer",
+        createdAt: Timestamp.now(),
+      };
+
+      await addDoc(collection(db, "fundReleaseApplications"), payload);
+
+      setSubmitSuccess(
+        "මුදල් නිදහස් කිරීම සඳහා අයදුම්පත සාර්ථකව සුරක්ෂිත කර Society Officer වෙත යොමු කරන ලදී."
+      );
+
+      // Optional: redirect after a short delay
+      setTimeout(() => {
+        navigate("/societyofficer");
+      }, 900);
+
+      // Optional: clear form
+      setBankDetails([{ bankName: "", accountNumber: "", salary: "" }]);
+      setDebitDetails([{ amount: "", date: "", warika: "" }]);
+      setRegisterDate("");
+      setSocietyAddress("");
+      setAttachedFile(null);
+      setReasonFileName("");
+      setRequestedAmount("");
+      setMeetingDate("");
+      setRepayMethod("");
+    } catch (err) {
+      console.error("Error saving fund release form:", err);
+      setSubmitError(
+        "අයදුම්පත සුරක්ෂිත කිරීමේදී දෝෂයක් සිදු විය. කරුණාකර නැවත උත්සහ කරන්න."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -135,6 +263,17 @@ const Develop = () => {
           <strong>සමිතිය පිළිබඳ නිවැරදි තොරතුරු</strong> සහ{" "}
           <strong>පෙර ලබාගත් ණයක්</strong> සත්‍ය ලෙස සටහන් කරන්න.
         </p>
+
+        {submitError && (
+          <p className="develop-error" style={{ marginBottom: 8 }}>
+            {submitError}
+          </p>
+        )}
+        {submitSuccess && (
+          <p className="develop-success" style={{ marginBottom: 8 }}>
+            {submitSuccess}
+          </p>
+        )}
 
         <form className="develop-form" onSubmit={handleSubmit}>
           {/* District + Secretary */}
@@ -174,24 +313,43 @@ const Develop = () => {
           <div className="form-row">
             <div className="form-group">
               <label>03. ලියාපදිංචි අංකය:</label>
-              <input type="text" placeholder="Enter Register No" />
+              <input
+                type="text"
+                placeholder="Enter Register No"
+                value={registerNo}
+                onChange={(e) => setRegisterNo(e.target.value)}
+              />
             </div>
 
             <div className="form-group">
               <label>ලියාපදිංචි දිනය:</label>
-              <input type="date" />
+              <input
+                type="date"
+                value={registerDate}
+                onChange={(e) => setRegisterDate(e.target.value)}
+              />
             </div>
           </div>
 
           {/* Society Name & Address */}
           <div className="form-group">
             <label>04. ග්‍රාම සංවර්ධන සමිතියේ නම:</label>
-            <input type="text" placeholder="Enter Society Name" />
+            <input
+              type="text"
+              placeholder="Enter Society Name"
+              value={societyName}
+              onChange={(e) => setSocietyName(e.target.value)}
+            />
           </div>
 
           <div className="form-group">
             <label>05. ලිපිනය:</label>
-            <input type="text" placeholder="Enter Address" />
+            <input
+              type="text"
+              placeholder="Enter Address"
+              value={societyAddress}
+              onChange={(e) => setSocietyAddress(e.target.value)}
+            />
           </div>
 
           {/* Bank Table */}
@@ -265,20 +423,32 @@ const Develop = () => {
             </label>
             <input
               type="file"
-              onChange={(e) => setAttachedFile(e.target.files[0])}
+              onChange={(e) => handleFileChange(e.target.files[0])}
             />
+            {reasonFileName && (
+              <p className="muted-text">Attached: {reasonFileName}</p>
+            )}
           </div>
 
           {/* Want Money */}
           <div className="form-group">
             <label>08. අවශ්‍ය මුදල රුපියල්:</label>
-            <input type="number" placeholder="Enter Amount" />
+            <input
+              type="number"
+              placeholder="Enter Amount"
+              value={requestedAmount}
+              onChange={(e) => setRequestedAmount(e.target.value)}
+            />
           </div>
 
           {/* Date of Function */}
           <div className="form-group">
             <label>09. මීට අදාල මහා සභාව පැවැත්වු දිනය:</label>
-            <input type="date" />
+            <input
+              type="date"
+              value={meetingDate}
+              onChange={(e) => setMeetingDate(e.target.value)}
+            />
           </div>
 
           {/* Debit Money Table */}
@@ -347,8 +517,13 @@ const Develop = () => {
 
           {/* Type of Debit */}
           <div className="form-group">
-            <label>11. ඉල්ලුම් කරන මුදල නැවත සමිති ගිණුමට බැර කරන ආකාරය:</label>
-            <select>
+            <label>
+              11. ඉල්ලුම් කරන මුදල නැවත සමිති ගිණුමට බැර කරන ආකාරය:
+            </label>
+            <select
+              value={repayMethod}
+              onChange={(e) => setRepayMethod(e.target.value)}
+            >
               <option value="">Select Type</option>
               <option value="Cash">Cash</option>
               <option value="Bank Transfer">Bank Transfer</option>
@@ -356,41 +531,11 @@ const Develop = () => {
             </select>
           </div>
 
-          {/* Signatures */}
-          <div className="section-block">
-            <h4>12. ඉහත සඳහන් තොරතුරු නිවැරදි බැව් සහතික කරමි.</h4>
-            <div className="signature-section">
-              <div className="signature-field">
-                <div className="signature-line" />
-                <div>භාණ්ඩාගාරික</div>
-              </div>
-              <div className="signature-field">
-                <div className="signature-line" />
-                <div>සභාපති</div>
-              </div>
-              <div className="signature-field">
-                <div className="signature-line" />
-                <div>ලේකම්</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Submit Button */}
+          {/* Submit Button ONLY */}
           <div className="submit-btn-container">
-            <button type="submit" className="submit-btn">
-              Submit
+            <button type="submit" className="submit-btn" disabled={submitting}>
+              {submitting ? "Saving..." : "Submit"}
             </button>
-          </div>
-
-          {/* Verification Links */}
-          <div className="verification-links">
-            <a href="/ruralofficer" className="verification-link">
-              Rural Officer Verification
-            </a>
-            <span className="verification-separator">|</span>
-            <a href="/provincialofficer" className="verification-link">
-              Provincial Officer Verification
-            </a>
           </div>
         </form>
       </div>

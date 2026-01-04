@@ -783,6 +783,9 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ===== DISTRICT ANALYTICS TABLE ===== */
+
 .district-analytics-table {
   margin-top: 8px;
   display: flex;
@@ -825,4 +828,36 @@
 .district-bar-text {
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ===== STATUS FILTER CHIPS (for Pending tab) ===== */
+
+.subject-status-filter {
+  margin: 6px 0 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.status-chip {
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #f9fafb;
+  color: #4b5563;
+  cursor: pointer;
+  transition:
+    background 0.16s ease-out,
+    color 0.16s ease-out,
+    box-shadow 0.16s ease-out,
+    border-color 0.16s ease-out;
+}
+
+.status-chip-active {
+  background: linear-gradient(90deg, #2563eb, #4f46e5);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.45);
 }

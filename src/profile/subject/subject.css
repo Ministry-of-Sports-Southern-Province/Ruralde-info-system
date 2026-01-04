@@ -778,6 +778,38 @@
   white-space: nowrap;
 }
 
+/* ===== STATUS FILTER CHIPS (for Applications tab) ===== */
+
+.subject-status-filter {
+  margin: 4px 0 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.status-chip {
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #f9fafb;
+  color: #4b5563;
+  cursor: pointer;
+  transition:
+    background 0.16s ease-out,
+    color 0.16s ease-out,
+    box-shadow 0.16s ease-out,
+    border-color 0.16s ease-out;
+}
+
+.status-chip-active {
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.45);
+}
+
 /* ===== ANIMATIONS ===== */
 
 @keyframes slideInLeft {
