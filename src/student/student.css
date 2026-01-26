@@ -1,64 +1,101 @@
-/* ===== WRAPPER ===== */
+/* Container & layout */
+
 .student-wrapper {
-  width: 100%;
-  padding: 80px 20px 60px;
-  margin-top: 80px;
-  background: #eef2ff;
+  background: #eef3ff;
+  padding: 40px 0;
+  min-height: 100vh;
+  font-family: "Noto Sans Sinhala", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
 }
 
-/* ===== MAIN CARD ===== */
 .student-container {
-  max-width: 1000px;
+  max-width: 960px;
   margin: 0 auto;
   background: #ffffff;
-  border-radius: 14px;
-  box-shadow:
-    0 18px 35px rgba(15, 23, 42, 0.15),
-    0 0 0 1px rgba(148, 163, 184, 0.25);
-  padding: 26px 26px 30px;
-  box-sizing: border-box;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Tahoma, Geneva, Verdana, sans-serif;
+  border-radius: 18px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+  padding: 28px 32px 36px;
 }
 
-/* Header (reuse develop-header styles if you have them globally) */
+.student-container--wide {
+  max-width: 1024px;
+}
+
+/* Header */
+
 .develop-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  font-size: 0.95rem;
-  color: #0f172a;
+  align-items: flex-start;
   margin-bottom: 8px;
 }
 
-/* Title & intro */
-.student-title {
-  text-align: center;
-  font-size: 1.8rem;
+.develop-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dept-title {
+  font-size: 18px;
   font-weight: 700;
-  color: #114494;
-  margin: 4px 0 8px;
+  margin: 0;
+  color: #111827;
+}
+
+.form-code {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Main title & intro */
+
+.student-title {
+  font-size: 24px;
+  text-align: center;
+  margin: 12px 0 10px;
+  color: #111827;
+  font-weight: 800;
 }
 
 .student-intro {
-  text-align: center;
-  font-size: 0.95rem;
+  font-size: 14px;
+  line-height: 1.6;
   color: #4b5563;
-  margin-bottom: 20px;
+  margin: 0 0 20px;
 }
 
-/* ===== FORM ===== */
+/* Alerts */
+
+.alert {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.alert-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+.alert-success {
+  background: #ecfdf3;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+
+/* Form */
 
 .student-form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  margin-top: 8px;
 }
 
 .form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  margin-bottom: 18px;
 }
 
 .form-row {
@@ -67,161 +104,247 @@
   flex-wrap: wrap;
 }
 
-.form-row .form-group {
-  flex: 1;
-  min-width: 240px;
-}
-
-.form-group label {
-  font-size: 0.95rem;
+.form-label {
+  display: block;
+  font-size: 14px;
   font-weight: 600;
-  color: #114494;
+  margin-bottom: 4px;
+  color: #111827;
 }
 
-/* Inputs, textareas, radios */
-.form-group input[type="text"],
-.form-group input[type="number"],
-.form-group input[type="date"],
-.form-group textarea {
+.required {
+  color: #dc2626;
+  margin-left: 4px;
+}
+
+.form-control {
   width: 100%;
-  padding: 9px 10px;
   border-radius: 8px;
-  border: 1.5px solid #d1d5db;
-  font-size: 0.95rem;
+  border: 1px solid #d1d5db;
+  padding: 8px 10px;
+  font-size: 14px;
+  color: #111827;
   outline: none;
-  transition: all 0.2s ease;
-  background: #ffffff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    background-color 0.15s ease;
+  background-color: #f9fafb;
 }
 
-.form-group textarea {
+.form-control:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.35);
+  background-color: #ffffff;
+}
+
+.textarea {
   min-height: 80px;
   resize: vertical;
 }
 
-.form-group input:focus,
-.form-group textarea:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.35);
-}
-
-/* Radio group */
-.radio-group {
-  display: flex;
-  gap: 12px;
+.muted-text {
+  font-size: 12px;
+  color: #6b7280;
   margin-top: 4px;
-  font-size: 0.9rem;
+}
+
+/* Attempt tabs */
+
+.attempt-tabs {
+  display: inline-flex;
+  border-radius: 999px;
+  background-color: #e5e7eb;
+  padding: 3px;
+  margin-top: 4px;
+}
+
+.attempt-tab {
+  border: none;
+  background: transparent;
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 999px;
+  cursor: pointer;
   color: #374151;
+  transition: background-color 0.15s ease, color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-.radio-group input {
-  margin-right: 4px;
-}
-
-/* Scholarship amounts row */
-.scholarship-amount-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.scholarship-amount-row input {
-  flex: 1;
-  min-width: 140px;
-}
-
-/* ===== RESULTS TABLE ===== */
-
-.section-block label {
-  display: block;
-  font-size: 0.95rem;
+.attempt-tab--active {
+  background: #ffffff;
+  color: #1d4ed8;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
   font-weight: 600;
-  color: #114494;
-  margin-bottom: 6px;
 }
+
+/* Section block above results table */
+
+.section-block {
+  margin-top: 4px;
+  margin-bottom: 18px;
+}
+
+.section-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.section-number {
+  font-weight: 700;
+  font-size: 14px;
+  color: #111827;
+  margin-top: 1px;
+}
+
+.section-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.section-subtitle {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Table */
 
 .student-table-wrapper {
-  width: 100%;
-  overflow-x: auto;
+  margin-top: 8px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  background: #ffffff;
 }
 
 .student-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 400px;
+  font-size: 13px;
+}
+
+.student-table thead {
+  background: #f3f4f6;
 }
 
 .student-table th,
 .student-table td {
-  border: 1px solid #e5e7eb;
-  padding: 6px 8px;
-  font-size: 0.9rem;
+  padding: 8px 10px;
+  border-bottom: 1px solid #e5e7eb;
   text-align: left;
 }
 
 .student-table th {
-  background: #e5edff;
-  color: #0f172a;
   font-weight: 600;
+  color: #374151;
+  font-size: 13px;
+}
+
+.student-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .student-table input {
   width: 100%;
-  padding: 5px 6px;
   border-radius: 6px;
   border: 1px solid #d1d5db;
-  font-size: 0.9rem;
+  padding: 5px 8px;
+  font-size: 13px;
+  background: #f9fafb;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .student-table input:focus {
   border-color: #2563eb;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.25);
+  background-color: #ffffff;
 }
 
-/* ===== SUBMIT ===== */
+/* Scholarship amounts */
+
+.scholarship-amount-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.amount-field {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.amount-label {
+  display: block;
+  font-size: 12px;
+  color: #4b5563;
+  margin-bottom: 4px;
+}
+
+/* Submit button */
 
 .submit-btn-container {
-  margin-top: 16px;
-  text-align: center;
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .submit-btn {
-  background: linear-gradient(135deg, #16a34a, #22c55e);
-  color: #ffffff;
-  padding: 10px 30px;
-  border-radius: 999px;
   border: none;
-  font-size: 0.96rem;
+  border-radius: 999px;
+  padding: 9px 22px;
+  font-size: 14px;
   font-weight: 600;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
   cursor: pointer;
-  box-shadow: 0 6px 16px rgba(22, 163, 74, 0.6);
-  transition: all 0.2s ease;
+  box-shadow: 0 12px 20px rgba(37, 99, 235, 0.25);
+  transition: transform 0.1s ease, box-shadow 0.1s ease,
+    background 0.15s ease;
 }
 
-.submit-btn:hover {
-  background: linear-gradient(135deg, #15803d, #22c55e);
-  transform: translateY(-2px);
+.submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 26px rgba(37, 99, 235, 0.3);
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
 }
 
-/* ===== RESPONSIVE ===== */
+.submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 10px 18px rgba(37, 99, 235, 0.25);
+}
+
+.submit-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+/* Responsive */
 
 @media (max-width: 768px) {
-  .student-wrapper {
-    padding: 60px 12px 40px;
-    margin-top: 70px;
-  }
-
   .student-container {
-    padding: 22px 14px 24px;
+    margin: 0 10px;
+    padding: 20px 16px 24px;
+    border-radius: 14px;
   }
 
   .student-title {
-    font-size: 1.5rem;
-  }
-
-  .student-intro {
-    font-size: 0.9rem;
+    font-size: 20px;
   }
 
   .form-row {
     flex-direction: column;
+  }
+
+  .submit-btn-container {
+    justify-content: center;
   }
 }

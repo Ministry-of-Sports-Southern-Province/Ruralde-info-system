@@ -16,8 +16,9 @@ import Secretary from "./register/secretary";
 import Treasurer from "./register/treasurer";
 import Chairmanprofile from "./profile/chairman/chairmanprofile";
 import DistrictOfficer from "./profile/districtOfficer/districtOfficer";
-import SocietyOfficer from "./profile/societyOfficer/societyOfficer";
 import RuralDevOfficer from "./profile/ruraldevofficer/ruraldevofficer";
+import SocietySecretary from "./profile/societyOfficer/societySecretary";
+import SocietyTreasure from "./profile/societyOfficer/societyTreasure";
 import Subject from "./profile/subject/subject";
 import DivisionalSecrtary from "./profile/devsecretary/divisionalsecretary";
 import Startup from "./startup/startup";
@@ -25,6 +26,8 @@ import Login from "./login/login";
 import SignUp from "./login/signup";
 import Footer from "./footer/footer";
 import Project from "./projects/project";
+import SocietyChairman from "./profile/societyOfficer/societyChairman"; // new chairman profile
+
 function App() {
   return (
     <BrowserRouter>
@@ -32,32 +35,42 @@ function App() {
       <Navbar />
 
       <Routes>
+        {/* Public / general routes */}
         <Route path="/" element={<Home />} />
-        <Route path="/ruraldevofficer" element={<RuralDevOfficer />} />
-        <Route path="/provincialofficer" element={<ProvincialOfficer />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/project" element={<Project />} />
+
+        {/* Applications / forms */}
+        <Route path="/develop" element={<Develop />} />
         <Route path="/student" element={<Student />} />
         <Route path="/society" element={<Society />} />
         <Route path="/member" element={<Member />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/develop" element={<Develop />} />
-        <Route path="/about" element={<About />} />
+
+        {/* Auth & startup */}
         <Route path="/register" element={<Register />} />
         <Route path="/chairman" element={<Chairman />} />
         <Route path="/secretary" element={<Secretary />} />
         <Route path="/treasurer" element={<Treasurer />} />
         <Route path="/startup" element={<Startup />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<SignUp />}></Route>
-        <Route path="/footer" element={<Footer />}></Route>
-        <Route path="/chairmanprofile" element={<Chairmanprofile />}></Route>
-        <Route path="/districtOfficer" element={<DistrictOfficer />}></Route>
-        <Route path="/societyOfficer" element={<SocietyOfficer />}></Route>
-        <Route path="/subject" element={<Subject />}></Route>
-        <Route path="/project" element={<Project />}></Route>
-        <Route path="/divisionalsecretary" element={<DivisionalSecrtary/>}></Route>
+        <Route path="/signup" element={<SignUp />} />
 
-        <Route path="/"></Route>
+        {/* Profiles (non-society) */}
+        <Route path="/chairmanprofile" element={<Chairmanprofile />} />
+        <Route path="/districtOfficer" element={<DistrictOfficer />} />
+        <Route path="/provincialofficer" element={<ProvincialOfficer />} />
+        <Route path="/ruraldevofficer" element={<RuralDevOfficer />} />
+        <Route path="/subject" element={<Subject />} />
+        <Route path="/divisionalsecretary" element={<DivisionalSecrtary />} />
 
+        {/* Society profiles */}
+        <Route path="/societychairman" element={<SocietyChairman />} />
+        <Route path="/societysecretary" element={<SocietySecretary />} />
+        <Route path="/societytreasurer" element={<SocietyTreasure />} />
+
+        {/* Optional: footer as full page (if you really need it) */}
+        <Route path="/footer" element={<Footer />} />
       </Routes>
     </BrowserRouter>
   );

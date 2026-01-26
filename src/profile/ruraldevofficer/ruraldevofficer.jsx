@@ -21,7 +21,7 @@ const Ruraldevofficer = () => {
   const [loadingUser, setLoadingUser] = useState(true);
   const [error, setError] = useState("");
 
-  // societies / registration decisions (your existing logic)
+  // societies / registration decisions
   const [historyDecisions, setHistoryDecisions] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
@@ -46,10 +46,14 @@ const Ruraldevofficer = () => {
   // Tabs: pending | history | analytics
   const [activeTab, setActiveTab] = useState("pending");
 
-  // NEW: applications forwarded to RDO
+  // NEW: applications forwarded to RDO (by Treasurer)
   const [pendingApps, setPendingApps] = useState([]);
   const [loadingApps, setLoadingApps] = useState(false);
   const [appsError, setAppsError] = useState("");
+
+  // for messages about forwarding apps
+  const [actionError, setActionError] = useState("");
+  const [actionSuccess, setActionSuccess] = useState("");
 
   useEffect(() => {
     const fetchUserAndData = async () => {
@@ -146,12 +150,17 @@ const Ruraldevofficer = () => {
           }
         }
 
-        // 4) NEW: Load applications forwarded to this RDO
+        // 4) Load applications forwarded to this RDO
         if (userData.district && userData.division) {
           setLoadingApps(true);
           setAppsError("");
+          setActionError("");
+          setActionSuccess("");
 
           try {
+            const allPending = [];
+
+            // --- LOAN APPLICATIONS ---
             const loansRef = collection(db, "loanApplications");
             const qLoans = query(
               loansRef,
@@ -160,11 +169,11 @@ const Ruraldevofficer = () => {
               where("societyContext.divisionName", "==", userData.division)
             );
             const loanSnap = await getDocs(qLoans);
-            const apps = [];
             loanSnap.forEach((d) => {
               const data = d.data();
-              apps.push({
+              allPending.push({
                 id: d.id,
+                type: "loan",
                 ...data,
                 createdAt:
                   data.createdAt && data.createdAt.toDate
@@ -173,10 +182,51 @@ const Ruraldevofficer = () => {
               });
             });
 
-            // You can also load scholarshipApplications / fundReleaseApplications
-            // and push into same apps array (with a "type" field) if needed.
+            // --- SCHOLARSHIP APPLICATIONS (if you want RDO to see them) ---
+            const schRef = collection(db, "scholarshipApplications");
+            const qSch = query(
+              schRef,
+              where("currentRole", "==", "rural_officer"),
+              where("societyContext.district", "==", userData.district),
+              where("societyContext.divisionName", "==", userData.division)
+            );
+            const schSnap = await getDocs(qSch);
+            schSnap.forEach((d) => {
+              const data = d.data();
+              allPending.push({
+                id: d.id,
+                type: "scholarship",
+                ...data,
+                createdAt:
+                  data.createdAt && data.createdAt.toDate
+                    ? data.createdAt.toDate().toLocaleString()
+                    : "",
+              });
+            });
 
-            setPendingApps(apps);
+            // --- FUND RELEASE APPLICATIONS (if needed) ---
+            const fundRef = collection(db, "fundReleaseApplications");
+            const qFund = query(
+              fundRef,
+              where("currentRole", "==", "rural_officer"),
+              where("societyContext.district", "==", userData.district),
+              where("societyContext.divisionName", "==", userData.division)
+            );
+            const fundSnap = await getDocs(qFund);
+            fundSnap.forEach((d) => {
+              const data = d.data();
+              allPending.push({
+                id: d.id,
+                type: "fund",
+                ...data,
+                createdAt:
+                  data.createdAt && data.createdAt.toDate
+                    ? data.createdAt.toDate().toLocaleString()
+                    : "",
+              });
+            });
+
+            setPendingApps(allPending);
           } catch (appErr) {
             console.error("Error loading RDO applications:", appErr);
             setAppsError("Failed to load forwarded applications.");
@@ -211,7 +261,6 @@ const Ruraldevofficer = () => {
     setSelectedAlreadyDecided(false);
     setSelectedDecidedStatus("");
     setSelectedHistoryItem(null);
-    setActiveTab("pending");
 
     if (!user || !user.identitynumber) return;
 
@@ -240,7 +289,6 @@ const Ruraldevofficer = () => {
     setReferralNote("");
     setReferralError("");
     setReferralSuccess("");
-    setActiveTab("history");
 
     let soc = null;
     if (historyItem.societyId) {
@@ -264,6 +312,7 @@ const Ruraldevofficer = () => {
 
     setSelectedAlreadyDecided(true);
     setSelectedDecidedStatus(historyItem.decision);
+    setActiveTab("history");
   };
 
   // Submit referral to DO with Accept / Decline (registration)
@@ -350,24 +399,31 @@ const Ruraldevofficer = () => {
     }
   };
 
-  // NEW: Forward RDO-handled application to District Officer
-  const handleForwardAppToDistrictOfficer = async (appId) => {
+  // Forward application (at RDO) to District Officer
+  const handleForwardAppToDistrictOfficer = async (app) => {
     if (!user) return;
     setAppsError("");
     setActionError("");
     setActionSuccess("");
 
+    // choose collection based on type
+    let collectionName = "loanApplications";
+    if (app.type === "scholarship") collectionName = "scholarshipApplications";
+    else if (app.type === "fund") collectionName = "fundReleaseApplications";
+
     try {
-      const ref = doc(db, "loanApplications", appId); // here we handle loans; add others if needed
+      const ref = doc(db, collectionName, app.id);
       await updateDoc(ref, {
         currentRole: "district_officer",
-        status: "ForwardedToDistrictOfficer",
+        status: "ForwardedTo_district_officer",
         lastActionBy: user.username || user.email || "RuralOfficer",
         lastActionAt: new Date(),
       });
 
-      setPendingApps((prev) => prev.filter((a) => a.id !== appId));
-      setActionSuccess("අයදුම්පත දිස්ත්‍රික් නිලධාරී (District Officer) වෙත යොමු කරන ලදී.");
+      setPendingApps((prev) => prev.filter((a) => a.id !== app.id));
+      setActionSuccess(
+        "අයදුම්පත දිස්ත්‍රික් නිලධාරී (District Officer) වෙත යොමු කරන ලදී."
+      );
     } catch (err) {
       console.error("Error forwarding to DO:", err);
       setActionError("District Officer වෙත යොමු කිරීමේදී දෝෂයක් සිදු විය.");
@@ -397,34 +453,300 @@ const Ruraldevofficer = () => {
   const actionDisabled =
     referralLoading || selectedAlreadyDecided || !!selectedHistoryItem;
 
+  const created =
+    user?.createdAt && user.createdAt.toDate
+      ? user.createdAt.toDate().toLocaleDateString()
+      : "";
+
   return (
     <section className="rural-dashboard">
       <div className="rural-shell">
         {/* LEFT: PROFILE SIDEBAR */}
-        {/* (unchanged profile sidebar, same as your code) */}
-        {/* ... keep everything in the sidebar exactly as you have ... */}
+        <aside className="rural-sidebar">
+          <div className="rural-sidebar-topbar">
+            <div className="sidebar-brand">
+              <p>දකුණු පළාත් ග්‍රාම සංවර්ධන දෙපාර්තමේන්තුව</p>
+              <span>Rural Development – Rural Officer Panel</span>
+            </div>
+            <button className="signout-btn" onClick={handleSignOut}>
+              Sign Out
+            </button>
+          </div>
 
-        {/* I skip re-pasting to keep this short – use your existing sidebar code here */}
+          <div className="sidebar-card">
+            <div className="avatar-circle">
+              {user.username ? user.username.charAt(0).toUpperCase() : "R"}
+            </div>
+            <h3 className="sidebar-name">{user.username || "Officer"}</h3>
+            <p className="sidebar-role">ග්‍රාම සංවර්ධන නිලධාරී / Rural Dev. Officer</p>
 
-        {/* RIGHT: TABBED MAIN AREA */}
+            <div className="info-row">
+              <span className="info-label">Email</span>
+              <span className="info-value">{user.email || "N/A"}</span>
+            </div>
+            <div className="info-row">
+              <span className="info-label">Contact</span>
+              <span className="info-value">{user.contactnumber || "N/A"}</span>
+            </div>
+            <div className="info-row">
+              <span className="info-label">Identity No</span>
+              <span className="info-value">
+                {user.identitynumber || "N/A"}
+              </span>
+            </div>
+            {created && (
+              <div className="info-row">
+                <span className="info-label">Registered On</span>
+                <span className="info-value">{created}</span>
+              </div>
+            )}
+
+            <h4 className="sidebar-section-title" style={{ marginTop: 16 }}>
+              Officer Area
+            </h4>
+            <div className="info-row">
+              <span className="info-label">District</span>
+              <span className="info-value">{user.district || "N/A"}</span>
+            </div>
+            <div className="info-row">
+              <span className="info-label">Division</span>
+              <span className="info-value">{user.division || "N/A"}</span>
+            </div>
+
+            <h4 className="sidebar-section-title" style={{ marginTop: 16 }}>
+              Society Registration Stats
+            </h4>
+            <div className="info-row">
+              <span className="info-label">Decisions Given</span>
+              <span className="info-value">{totalHistory}</span>
+            </div>
+            <div className="info-row">
+              <span className="info-label">Accepted</span>
+              <span className="info-value">{approvedCount}</span>
+            </div>
+            <div className="info-row">
+              <span className="info-label">Declined</span>
+              <span className="info-value">{declinedCount}</span>
+            </div>
+
+            <h4 className="sidebar-section-title" style={{ marginTop: 16 }}>
+              Toggle Sensitive Info
+            </h4>
+            <label className="toggle-checkbox">
+              <input
+                type="checkbox"
+                checked={showSensitiveInfo}
+                onChange={() => setShowSensitiveInfo((p) => !p)}
+              />
+              <span>Show committee members' personal info</span>
+            </label>
+          </div>
+        </aside>
+
+        {/* RIGHT: MAIN AREA */}
         <main className="rural-main">
-          {/* Tabs */}
-          {/* ... your existing tab bar & headers ... */}
+          {/* Tab bar */}
+          <div className="rural-tabs">
+            <button
+              className={
+                activeTab === "pending"
+                  ? "rural-tab-btn rural-tab-btn--active"
+                  : "rural-tab-btn"
+              }
+              onClick={() => setActiveTab("pending")}
+            >
+              තීරණයට බාකි / Pending
+            </button>
+            <button
+              className={
+                activeTab === "history"
+                  ? "rural-tab-btn rural-tab-btn--active"
+                  : "rural-tab-btn"
+              }
+              onClick={() => setActiveTab("history")}
+            >
+              ඉතිහාසය / History
+            </button>
+            <button
+              className={
+                activeTab === "analytics"
+                  ? "rural-tab-btn rural-tab-btn--active"
+                  : "rural-tab-btn"
+              }
+              onClick={() => setActiveTab("analytics")}
+            >
+              විශ්ලේෂණ / Analytics
+            </button>
+          </div>
 
+          {/* ---------- PENDING TAB ---------- */}
           {activeTab === "pending" && (
             <>
-              {/* Your existing "තීරණයට බාකි ලියාපදිංචි සමිති" section */}
-              {/* ... keep all that registration-related UI ... */}
+              {/* --- Societies pending registration decision --- */}
+              <section className="rural-card">
+                <h3 className="card-title">
+                  තීරණයට බාකි ලියාපදිංචි සමිති (Registration)
+                </h3>
+                {loadingSocieties ? (
+                  <p className="muted-text">සමිති ලැයිස්තුව රදිමින්...</p>
+                ) : societiesError ? (
+                  <p className="rural-error">{societiesError}</p>
+                ) : societiesToShow.length === 0 ? (
+                  <p className="muted-text">
+                    තවදුරටත් ඔබගේ කොට්ඨාසයේ නව ලියාපදිංචි සමිතියක් නැත.
+                  </p>
+                ) : (
+                  <table className="society-table">
+                    <thead>
+                      <tr>
+                        <th>සමිතියේ නම</th>
+                        <th>ලියාපදිංචි අංකය</th>
+                        <th>ලිපිනය</th>
+                        <th>සාමාජික සංඛ්‍යාව</th>
+                        <th>ක්‍රියා</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {societiesToShow.map((s) => (
+                        <tr key={s.id}>
+                          <td>{s.societyName || "N/A"}</td>
+                          <td>{s.registerNo || "N/A"}</td>
+                          <td>{s.address || "N/A"}</td>
+                          <td>{s.memberCount || "-"}</td>
+                          <td>
+                            <button
+                              type="button"
+                              className="btn-accept"
+                              onClick={() => handleSelectSociety(s)}
+                            >
+                              View / Decide
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </section>
 
-              {/* NEW: Applications forwarded to RDO */}
+              {/* Selected society details & decision form */}
+              {selectedSociety && (
+                <section className="rural-card">
+                  <h3 className="card-title">
+                    ලියාපදිංචි society – {selectedSociety.societyName}
+                  </h3>
+                  <div className="society-detail-grid">
+                    <div>
+                      <p>
+                        <strong>Reg. No:</strong>{" "}
+                        {selectedSociety.registerNo || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Address:</strong>{" "}
+                        {selectedSociety.address || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Phone:</strong>{" "}
+                        {selectedSociety.phone || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Email:</strong>{" "}
+                        {selectedSociety.email || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Members:</strong>{" "}
+                        {selectedSociety.memberCount || "N/A"}
+                      </p>
+                    </div>
+                    {showSensitiveInfo && (
+                      <div>
+                        <h4>Committee Members</h4>
+                        <div className="committee-grid">
+                          <PositionBlock
+                            title="සභාපති / Chairman"
+                            data={chairman}
+                          />
+                          <PositionBlock
+                            title="ලේකම් / Secretary"
+                            data={secretary}
+                          />
+                          <PositionBlock
+                            title="භාණ්ඩාගාරික / Treasurer"
+                            data={treasurer}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {selectedAlreadyDecided && (
+                    <p className="muted-text" style={{ marginTop: 8 }}>
+                      ඔබ විසින් මෙම society එකට දැනටමත්{" "}
+                      <strong>{selectedDecidedStatus}</strong> තීරණය
+                      ලබා දී ඇත.
+                    </p>
+                  )}
+
+                  {!selectedHistoryItem && (
+                    <form
+                      className="referral-form"
+                      onSubmit={(e) => e.preventDefault()}
+                    >
+                      <label className="form-label">
+                        ඔබේ සාරාංශ කටයුතු / නෝට්ස්:
+                        <textarea
+                          value={referralNote}
+                          onChange={(e) => setReferralNote(e.target.value)}
+                          rows={3}
+                          placeholder="ඔබේ නිර්දේශය මෙහි ලියන්න..."
+                        />
+                      </label>
+
+                      {referralError && (
+                        <p className="rural-error" style={{ marginTop: 8 }}>
+                          {referralError}
+                        </p>
+                      )}
+                      {referralSuccess && (
+                        <p className="rural-success" style={{ marginTop: 8 }}>
+                          {referralSuccess}
+                        </p>
+                      )}
+
+                      <div className="referral-actions">
+                        <button
+                          type="button"
+                          className="btn-decline"
+                          disabled={actionDisabled}
+                          onClick={(e) => handleSubmitReferral(e, "decline")}
+                        >
+                          Decline
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-accept"
+                          disabled={actionDisabled}
+                          onClick={(e) => handleSubmitReferral(e, "accept")}
+                        >
+                          Accept & Forward to District Officer
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </section>
+              )}
+
+              {/* NEW: Applications forwarded to this RDO */}
               <section className="rural-card" style={{ marginTop: 16 }}>
                 <h3 className="card-title">
-                  ඔබ වෙත යොමු වූ ණය අයදුම්පත් (Applications at RDO)
+                  ඔබ වෙත යොමු වූ අයදුම්පත් (Applications at RDO)
                 </h3>
                 <p className="muted-text">
-                  Society Officer / Chairman / Secretary / Treasurer මඟින්
-                  &quot;Forward to Rural Officer&quot; කරන ලද ණය අයදුම්පත් මෙහි
-                  පෙන්වයි. තීරණයෙන් පසු District Officer වෙත යොමු කරන්න.
+                  භාණ්ඩාගාරික (Treasurer) මඟින්{" "}
+                  <strong>currentRole = "rural_officer"</strong> ලෙස යොමු
+                  කරන ලද අයදුම්පත් මෙහි පෙන්වයි. අවශ්‍ය පරීක්ෂණ වර්ගීකරණය
+                  සිදු කර{" "}
+                  <strong>District Officer</strong> වෙත යොමු කරන්න.
                 </p>
 
                 {loadingApps ? (
@@ -433,15 +755,15 @@ const Ruraldevofficer = () => {
                   <p className="rural-error">{appsError}</p>
                 ) : pendingApps.length === 0 ? (
                   <p className="muted-text">
-                    දැනට ඔබ වෙත යොමු කරන ලද ණය අයදුම්පත් නොමැත.
+                    දැනට ඔබ වෙත යොමු කරන ලද අයදුම්පත් නොමැත.
                   </p>
                 ) : (
                   <table className="society-table">
                     <thead>
                       <tr>
-                        <th>ඉල්ලුම්කරුගේ නම</th>
-                        <th>ඉල්ලුම් කරන ණය මුදල (රු.)</th>
-                        <th>ව්‍යාපෘතිය</th>
+                        <th>වර්ගය</th>
+                        <th>ඉල්ලුම්කරු / ව්‍යාපෘතිය</th>
+                        <th>මුදල</th>
                         <th>Submitted</th>
                         <th>Action</th>
                       </tr>
@@ -449,16 +771,45 @@ const Ruraldevofficer = () => {
                     <tbody>
                       {pendingApps.map((app) => (
                         <tr key={app.id}>
-                          <td>{app.borrowerName || "-"}</td>
-                          <td>{app.loanAmount || "-"}</td>
-                          <td>{app.projectType || "-"}</td>
+                          <td>
+                            {app.type === "loan"
+                              ? "ණය"
+                              : app.type === "scholarship"
+                              ? "ශිෂ්‍යත්ව"
+                              : "මුදල් නිදහස්"}
+                          </td>
+                          <td>
+                            {app.type === "loan" && (
+                              <>
+                                {app.borrowerName || "-"} – {app.projectType}
+                              </>
+                            )}
+                            {app.type === "scholarship" && (
+                              <>
+                                {app.fullName || "-"} – O/L {app.examYear}
+                              </>
+                            )}
+                            {app.type === "fund" && (
+                              <>
+                                {app.societyName || "-"} –{" "}
+                                {app.projectName || ""}
+                              </>
+                            )}
+                          </td>
+                          <td>
+                            {app.type === "loan" && (app.loanAmount || "-")}
+                            {app.type === "scholarship" &&
+                              (app.monthlyAmount || "-")}
+                            {app.type === "fund" &&
+                              (app.requestedAmount || "-")}
+                          </td>
                           <td>{app.createdAt || "-"}</td>
                           <td>
                             <button
                               type="button"
                               className="btn-accept"
                               onClick={() =>
-                                handleForwardAppToDistrictOfficer(app.id)
+                                handleForwardAppToDistrictOfficer(app)
                               }
                             >
                               Forward to District Officer
@@ -484,7 +835,70 @@ const Ruraldevofficer = () => {
             </>
           )}
 
-          {/* History & Analytics tabs remain as in your existing file */}
+          {/* ---------- HISTORY TAB ---------- */}
+          {activeTab === "history" && (
+            <section className="rural-card">
+              <h3 className="card-title">ඔබ ලබා දී ඇති තීරණ ඉතිහාසය</h3>
+              {loadingHistory ? (
+                <p className="muted-text">History loading...</p>
+              ) : historyDecisions.length === 0 ? (
+                <p className="muted-text">
+                  තවත් ලියාපදිංචි society තීරණ අවශ්‍ය නොවීය.
+                </p>
+              ) : (
+                <ul className="history-list">
+                  {historyDecisions.map((h) => (
+                    <li
+                      key={h.id}
+                      className="history-item"
+                      onClick={() => handleHistoryClick(h)}
+                    >
+                      <div>
+                        <p className="history-title">
+                          {h.societyName || "Unnamed Society"}
+                        </p>
+                        <p className="history-sub">
+                          Reg. No: {h.registerNo || "N/A"}
+                        </p>
+                        <p className="history-sub">
+                          Decision:{" "}
+                          <strong
+                            className={
+                              h.decision === "Accepted"
+                                ? "badge-success"
+                                : h.decision === "Declined"
+                                ? "badge-danger"
+                                : "badge-warning"
+                            }
+                          >
+                            {h.decision}
+                          </strong>{" "}
+                          | {h.date}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
+
+          {/* ---------- ANALYTICS TAB (simple demo) ---------- */}
+          {activeTab === "analytics" && (
+            <section className="rural-card">
+              <h3 className="card-title">Analytics (Simple)</h3>
+              <p className="muted-text">
+                මෙහිදී ඔබට අවශ්‍ය වෙන විස්තරාත්මක වාර්තා, ග්‍රාෆ්, ලියාපදිංචි
+                ප්‍රවණතා ආදිය later එකතු කරගත හැක.
+              </p>
+              <ul>
+                <li>Decisions given: {totalHistory}</li>
+                <li>Accepted: {approvedCount}</li>
+                <li>Declined: {declinedCount}</li>
+                <li>Applications currently at RDO: {pendingApps.length}</li>
+              </ul>
+            </section>
+          )}
         </main>
       </div>
     </section>

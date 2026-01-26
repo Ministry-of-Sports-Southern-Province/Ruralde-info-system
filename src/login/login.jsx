@@ -76,10 +76,17 @@ export default function Login() {
             navigate("/divisionalSecretary");
             break;
 
+          // *** NEW: separate routes for each society position ***
           case "society_chairman": // සමිති සභාපති
-          case "society_treasurer": // සමිති භාණ්ඩාගාරික
+            navigate("/societychairman");
+            break;
+
           case "society_secretary": // සමිති ලේකම්
-            navigate("/societyofficer");
+            navigate("/societysecretary");
+            break;
+
+          case "society_treasurer": // සමිති භාණ්ඩාගාරික
+            navigate("/societytreasurer");
             break;
 
           default:
