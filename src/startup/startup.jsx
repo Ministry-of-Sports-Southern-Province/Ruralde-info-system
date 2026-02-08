@@ -134,7 +134,7 @@ const Startup = () => {
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedSecretary, setSelectedSecretary] = useState("");
 
-  // [{id, name, regNo}]
+  // [{id, name, gnSocietyName, regNo}]
   const [societies, setSocieties] = useState([]);
   const [selectedSocietyId, setSelectedSocietyId] = useState("");
   const [registrationNumber, setRegistrationNumber] = useState("");
@@ -197,8 +197,17 @@ const Startup = () => {
         const list = snapshot.docs.map((docSnap) => {
           const data = docSnap.data();
 
-          const name =
-            data["ග්‍රාම නිලධාරී වසම"] || // GN division
+          // Canonical Rural Development Society name used in DB
+          const gnSocietyName =
+            data["ග්‍රාම සංවර්ධන සමිතිය"] ||
+            data["සමිතියේ නම"] ||
+            data["ග්‍රාම නිලධාරී වසම"] ||
+            data["name"] ||
+            docSnap.id;
+
+          // Friendly display name for dropdown (can be same)
+          const displayName =
+            data["ග්‍රාම නිලධාරී වසම"] ||
             data["ග්‍රාම සංවර්ධන සමිතිය"] ||
             data["සමිතියේ නම"] ||
             data["name"] ||
@@ -206,12 +215,12 @@ const Startup = () => {
 
           // Try multiple possible keys for reg no
           const regNo =
-            data["ලි. ප. අ"] || // as seen in your screenshot
+            data["ලි. ප. අ"] || // as seen in your DB
             data["ලි.ප.අ"] ||
             data["regNo"] ||
             "";
 
-          return { id: docSnap.id, name, regNo };
+          return { id: docSnap.id, name: displayName, gnSocietyName, regNo };
         });
 
         setSocieties(list);
@@ -264,28 +273,30 @@ const Startup = () => {
         divisionName: selectedSecretary,
         divisionId,
         societyDocId: selectedSocietyId,
-        societyName: selectedSociety.name || "",
+        // IMPORTANT: use the canonical GN Society Name from DB
+        societyName: selectedSociety.gnSocietyName || selectedSociety.name || "",
         registerNo: registrationNumber, // from Firestore, not typed
         createdAt: Timestamp.now(),
       };
 
-      // Save one record of this selection
+      // Save one record of this selection (for auditing)
       await addDoc(collection(db, "startupSelections"), payload);
 
-      // Save in localStorage – used by all forms
+      // Save in localStorage – used by forms
       localStorage.setItem(
         "selectedSocietyContext",
         JSON.stringify(payload)
       );
 
-      // Update current user doc so SocietyOfficer sees this
+      // Update current user doc so all dashboards (Chairman / Secretary / Treasurer)
+      // know this user's society name and reg no
       const userId = localStorage.getItem("userId");
       if (userId) {
         const userRef = doc(db, "users", userId);
         await updateDoc(userRef, {
           district: selectedDistrict,
           division: selectedSecretary,
-          society: selectedSociety.name || "",
+          society: selectedSociety.gnSocietyName || selectedSociety.name || "",
           societyRegisterNo: registrationNumber,
         });
       } else {
@@ -314,6 +325,7 @@ const Startup = () => {
         <h2 className="form-title">
           ග්‍රාම සංවර්ධන සමිතිය සඳහා අයදුම් කිරීම
           <span className="form-subtitle">
+            {" "}
             / Application for Rural Development Society
           </span>
         </h2>
@@ -411,7 +423,7 @@ const Startup = () => {
                 />
               </div>
 
-              {/* Professional Next button */}
+              {/* Confirm + Next */}
               <div className="submit-btn-container" style={{ marginTop: 16 }}>
                 <button
                   type="button"

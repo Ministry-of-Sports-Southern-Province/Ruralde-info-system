@@ -211,17 +211,27 @@ export default function SignUp() {
 
         const list = snapshot.docs.map((docSnap) => {
           const data = docSnap.data();
+          console.log("Village doc:", docSnap.id, data);
+
           const name =
             data["සමිතියේ නම"] ||
             data["ග්‍රාම සංවර්ධන සමිතිය"] ||
             data["ග්‍රාම නිලධාරී වසම"] ||
             docSnap.id;
 
-          const regNo = data["ලි.ප.අ"] || data.registerNo || "";
+          // EXACT Sinhala key for reg no – adjust to match your Firestore.
+          // From your screenshot it looks like "ලි.ප.අ"
+          const regNo =
+            data["ලි.ප.අ"] || // change this key if your log shows different
+            data["ලි.ප අ"] || // small fallback if space used
+            data["ලි.පඅ"] ||
+            data.registerNo ||
+            "";
 
           return { id: docSnap.id, name, regNo };
         });
 
+        console.log("Loaded societies list:", list);
         setSocieties(list);
       } catch (err) {
         console.log(err);
@@ -541,11 +551,15 @@ export default function SignUp() {
                     </option>
                   ))}
                 </select>
-                {selectedSocietyRegNo && (
-                  <p className="muted-text">
-                    Reg No: {selectedSocietyRegNo}
-                  </p>
-                )}
+
+                {/* Auto-filled Society Reg No */}
+                <label>Society Reg No</label>
+                <input
+                  type="text"
+                  value={selectedSocietyRegNo}
+                  readOnly
+                  placeholder="Auto filled from database"
+                />
               </>
             )}
           </div>

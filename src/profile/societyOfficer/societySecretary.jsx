@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "./societyChairman.css"; // reuse same styles
+import "./societyChairman.css";
 import { db } from "../../firebase";
 import {
   doc,
@@ -27,7 +27,6 @@ const SocietySecretary = () => {
   const [scholarshipApps, setScholarshipApps] = useState([]);
   const [loanApps, setLoanApps] = useState([]);
   const [fundApps, setFundApps] = useState([]);
-
   const [loadingApps, setLoadingApps] = useState(false);
 
   const [historyApps, setHistoryApps] = useState([]);
@@ -38,11 +37,9 @@ const SocietySecretary = () => {
 
   const [selectedApp, setSelectedApp] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
-
   const [selectedHistoryApp, setSelectedHistoryApp] = useState(null);
 
   const [activeTab, setActiveTab] = useState("scholarship");
-  const [profileTab, setProfileTab] = useState("profile");
 
   // ---------- LOAD SECRETARY HISTORY ----------
   const loadHistory = async (regNo) => {
@@ -66,7 +63,6 @@ const SocietySecretary = () => {
           type: c.type,
         }));
 
-        // only society's applications that secretary has approved or declined
         const filtered = data
           .filter(
             (app) =>
@@ -89,7 +85,6 @@ const SocietySecretary = () => {
         historyList = historyList.concat(filtered);
       }
 
-      // latest action first
       historyList.sort(
         (a, b) =>
           (b.lastActionAt?.seconds || 0) - (a.lastActionAt?.seconds || 0)
@@ -121,16 +116,21 @@ const SocietySecretary = () => {
           return;
         }
 
-        const u = snap.data();
+        const u = { id: snap.id, ...snap.data() };
+        console.log("Loaded SECRETARY user:", u);
         setUser(u);
         setLoadingProfile(false);
 
-        const regNo = u.societyRegisterNo || null;
-        const role = "society_secretary"; // this profile is for secretary
+        // Try both possible field names
+        const regNo = u.societyRegisterNo || u.societyRegNo || null;
+        const role = "society_secretary";
 
         setLoadingApps(true);
 
         if (!regNo) {
+          console.warn(
+            "Secretary user has no societyRegisterNo/societyRegNo, cannot filter society applications."
+          );
           setScholarshipApps([]);
           setLoanApps([]);
           setFundApps([]);
@@ -139,7 +139,11 @@ const SocietySecretary = () => {
           return;
         }
 
-        // ---------- SCHOLARSHIP PENDING FOR SECRETARY ----------
+        const isForSecretary = (app) =>
+          app.societyContext?.registerNo === regNo &&
+          app.currentRole === role;
+
+        // ---------- SCHOLARSHIPS ----------
         const schRef = collection(db, "scholarshipApplications");
         const schSnap = await getDocs(schRef);
         const schListRaw = schSnap.docs.map((d) => ({
@@ -147,9 +151,8 @@ const SocietySecretary = () => {
           ...d.data(),
         }));
 
-        const schList = schListRaw
-          .filter((app) => app.societyContext?.registerNo === regNo)
-          .filter((app) => app.currentRole === role) // ONLY those forwarded to secretary
+        let schList = schListRaw
+          .filter(isForSecretary)
           .map((data) => ({
             id: data.id,
             type: "scholarship",
@@ -158,9 +161,15 @@ const SocietySecretary = () => {
               data.createdAt && data.createdAt.toDate
                 ? data.createdAt.toDate().toLocaleString()
                 : "",
+            _createdAtMs:
+              data.createdAt && data.createdAt.toDate
+                ? data.createdAt.toDate().getTime()
+                : 0,
           }));
 
-        // ---------- LOAN PENDING FOR SECRETARY ----------
+        schList.sort((a, b) => b._createdAtMs - a._createdAtMs);
+
+        // ---------- LOANS ----------
         const loanRef = collection(db, "loanApplications");
         const loanSnap = await getDocs(loanRef);
         const loanListRaw = loanSnap.docs.map((d) => ({
@@ -168,9 +177,8 @@ const SocietySecretary = () => {
           ...d.data(),
         }));
 
-        const loanList = loanListRaw
-          .filter((app) => app.societyContext?.registerNo === regNo)
-          .filter((app) => app.currentRole === role)
+        let loanList = loanListRaw
+          .filter(isForSecretary)
           .map((data) => ({
             id: data.id,
             type: "loan",
@@ -179,9 +187,15 @@ const SocietySecretary = () => {
               data.createdAt && data.createdAt.toDate
                 ? data.createdAt.toDate().toLocaleString()
                 : "",
+            _createdAtMs:
+              data.createdAt && data.createdAt.toDate
+                ? data.createdAt.toDate().getTime()
+                : 0,
           }));
 
-        // ---------- FUND PENDING FOR SECRETARY ----------
+        loanList.sort((a, b) => b._createdAtMs - a._createdAtMs);
+
+        // ---------- FUNDS ----------
         const fundRef = collection(db, "fundReleaseApplications");
         const fundSnap = await getDocs(fundRef);
         const fundListRaw = fundSnap.docs.map((d) => ({
@@ -189,9 +203,8 @@ const SocietySecretary = () => {
           ...d.data(),
         }));
 
-        const fundList = fundListRaw
-          .filter((app) => app.societyContext?.registerNo === regNo)
-          .filter((app) => app.currentRole === role)
+        let fundList = fundListRaw
+          .filter(isForSecretary)
           .map((data) => ({
             id: data.id,
             type: "fund",
@@ -200,13 +213,18 @@ const SocietySecretary = () => {
               data.createdAt && data.createdAt.toDate
                 ? data.createdAt.toDate().toLocaleString()
                 : "",
+            _createdAtMs:
+              data.createdAt && data.createdAt.toDate
+                ? data.createdAt.toDate().getTime()
+                : 0,
           }));
+
+        fundList.sort((a, b) => b._createdAtMs - a._createdAtMs);
 
         setScholarshipApps(schList);
         setLoanApps(loanList);
         setFundApps(fundList);
 
-        // load secretary history
         await loadHistory(regNo);
       } catch (err) {
         console.error("Error loading secretary or applications:", err);
@@ -229,7 +247,6 @@ const SocietySecretary = () => {
   };
 
   // ---------- ACTIONS ----------
-  // Approve at secretary -> forward to treasurer
   const handleAccept = async (collectionName, appId) => {
     if (!user) return;
     setActionError("");
@@ -239,7 +256,7 @@ const SocietySecretary = () => {
       const ref = doc(db, collectionName, appId);
       await updateDoc(ref, {
         status: "ApprovedBy_society_secretary",
-        currentRole: "society_treasurer", // VERY IMPORTANT for treasurer profile
+        currentRole: "society_treasurer",
         lastActionBy: user.username || user.email || "SocietySecretary",
         lastActionAt: new Date(),
       });
@@ -252,8 +269,9 @@ const SocietySecretary = () => {
         setFundApps((prev) => prev.filter((a) => a.id !== appId));
       }
 
-      if (user.societyRegisterNo) {
-        await loadHistory(user.societyRegisterNo);
+      const regNo = user.societyRegisterNo || user.societyRegNo;
+      if (regNo) {
+        await loadHistory(regNo);
       }
 
       setSelectedApp(null);
@@ -288,8 +306,9 @@ const SocietySecretary = () => {
         setFundApps((prev) => prev.filter((a) => a.id !== appId));
       }
 
-      if (user.societyRegisterNo) {
-        await loadHistory(user.societyRegisterNo);
+      const regNo = user.societyRegisterNo || user.societyRegNo;
+      if (regNo) {
+        await loadHistory(regNo);
       }
 
       setSelectedApp(null);
@@ -313,12 +332,16 @@ const SocietySecretary = () => {
   const closeDetails = () => {
     setSelectedApp(null);
     setSelectedType(null);
+    setActionError("");
+    setActionSuccess("");
   };
 
   const openHistoryDetails = (app) => {
     setSelectedHistoryApp(app);
     setSelectedApp(null);
     setSelectedType(null);
+    setActionError("");
+    setActionSuccess("");
   };
 
   const closeHistoryDetails = () => {
@@ -334,24 +357,7 @@ const SocietySecretary = () => {
     setActionSuccess("");
   };
 
-  const label = positionLabels[user?.position] || "Society Secretary";
-  const created =
-    user?.createdAt && user.createdAt.toDate
-      ? user.createdAt.toDate().toLocaleDateString()
-      : "";
-
-  const totalPending =
-    scholarshipApps.length + loanApps.length + fundApps.length;
-  const totalHistory = historyApps.length;
-  const approvedCount = historyApps.filter(
-    (l) => l.status === "Approved"
-  ).length;
-
-  if (loadingProfile)
-    return <p className="society-loading">Loading profile...</p>;
-  if (error) return <p className="society-error">{error}</p>;
-  if (!user) return null;
-
+  // ---------- Render helpers ----------
   const renderResultsTable = (title, results) => {
     if (!results || !Array.isArray(results) || results.length === 0) return null;
     const nonEmpty = results.filter(
@@ -386,7 +392,6 @@ const SocietySecretary = () => {
     );
   };
 
-  // ---------- PENDING TABS (same as your code, but using currentRole filter above) ----------
   const renderScholarshipTab = () => (
     <>
       <section className="society-card">
@@ -823,62 +828,43 @@ const SocietySecretary = () => {
     </>
   );
 
-  // ---------- MAIN LAYOUT ----------
+  if (loadingProfile)
+    return <p className="society-loading">Loading profile...</p>;
+  if (error) return <p className="society-error">{error}</p>;
+  if (!user) return null;
+
+  const label = positionLabels[user?.position] || "Society Secretary";
+  const created =
+    user?.createdAt && user.createdAt.toDate
+      ? user.createdAt.toDate().toLocaleDateString()
+      : "";
+
+  const totalPending =
+    scholarshipApps.length + loanApps.length + fundApps.length;
+  const totalHistory = historyApps.length;
+  const approvedCount = historyApps.filter(
+    (l) => l.status === "Approved"
+  ).length;
+
+  // show either societyRegisterNo or societyRegNo
+  const regFromUser =
+    user?.societyRegisterNo || user?.societyRegNo || user?.regNo || "";
+  const societyRegNoDisplay =
+    regFromUser && String(regFromUser).trim() !== "" ? regFromUser : "N/A";
+
   return (
     <section className="society-dashboard">
       <div className="society-shell">
-        {/* LEFT SIDEBAR */}
+        {/* LEFT SIDEBAR – chairman-like layout */}
         <aside className="society-sidebar">
           <div className="society-sidebar-topbar">
             <div className="sidebar-brand">
               <p>දකුණු පළාත් ග්‍රාම සංවර්ධන දෙපාර්තමේන්තුව</p>
               <span>Rural Development Society – Secretary Panel</span>
             </div>
-            <button className="signout-btn" onClick={handleSignOut}>
-              Sign Out
-            </button>
           </div>
 
-          <div className="profile-tabs-mobile">
-            <button
-              className={
-                profileTab === "profile"
-                  ? "profile-tab-btn profile-tab-btn--active"
-                  : "profile-tab-btn"
-              }
-              onClick={() => setProfileTab("profile")}
-            >
-              Profile
-            </button>
-            <button
-              className={
-                profileTab === "society"
-                  ? "profile-tab-btn profile-tab-btn--active"
-                  : "profile-tab-btn"
-              }
-              onClick={() => setProfileTab("society")}
-            >
-              Society Info
-            </button>
-            <button
-              className={
-                profileTab === "stats"
-                  ? "profile-tab-btn profile-tab-btn--active"
-                  : "profile-tab-btn"
-              }
-              onClick={() => setProfileTab("stats")}
-            >
-              Stats
-            </button>
-          </div>
-
-          {/* Profile card */}
-          <div
-            className={
-              "society-profile-card profile-section" +
-              (profileTab === "profile" ? " profile-section--visible" : "")
-            }
-          >
+          <div className="society-profile-card">
             <div className="society-avatar">
               <div className="avatar-circle">
                 {user.username ? user.username.charAt(0).toUpperCase() : "S"}
@@ -903,22 +889,7 @@ const SocietySecretary = () => {
                 {user.identitynumber || "N/A"}
               </span>
             </div>
-            {created && (
-              <div className="info-row">
-                <span className="info-label">Registered On</span>
-                <span className="info-value">{created}</span>
-              </div>
-            )}
-          </div>
 
-          {/* Society info */}
-          <div
-            className={
-              "society-info-card profile-section" +
-              (profileTab === "society" ? " profile-section--visible" : "")
-            }
-          >
-            <h4 className="sidebar-section-title">Society Information</h4>
             <div className="info-row">
               <span className="info-label">District</span>
               <span className="info-value">{user.district || "N/A"}</span>
@@ -933,19 +904,46 @@ const SocietySecretary = () => {
             </div>
             <div className="info-row">
               <span className="info-label">Reg. No</span>
-              <span className="info-value">
-                {user.societyRegisterNo || "N/A"}
-              </span>
+              <span className="info-value">{societyRegNoDisplay}</span>
+            </div>
+            {created && (
+              <div className="info-row">
+                <span className="info-label">Registered On</span>
+                <span className="info-value">{created}</span>
+              </div>
+            )}
+
+            <button className="signout-btn" onClick={handleSignOut}>
+              Sign Out
+            </button>
+
+            {/* DEBUG BLOCK - REMOVE when done */}
+            <div style={{ marginTop: 12 }}>
+              <p
+                style={{
+                  fontSize: "11px",
+                  color: "#777",
+                  marginBottom: 4,
+                }}
+              >
+                Debug user JSON (for field names):
+              </p>
+              <pre
+                style={{
+                  fontSize: "10px",
+                  maxHeight: 160,
+                  overflow: "auto",
+                  background: "#f7f7f7",
+                  padding: 6,
+                  borderRadius: 4,
+                }}
+              >
+                {JSON.stringify(user, null, 2)}
+              </pre>
             </div>
           </div>
 
-          {/* Stats */}
-          <div
-            className={
-              "sidebar-stats profile-section" +
-              (profileTab === "stats" ? " profile-section--visible" : "")
-            }
-          >
+          <div className="sidebar-stats">
             <div className="stat-card">
               <p className="stat-label">Pending Applications</p>
               <p className="stat-value">{totalPending}</p>

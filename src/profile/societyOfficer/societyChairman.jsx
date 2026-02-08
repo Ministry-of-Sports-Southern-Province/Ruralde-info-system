@@ -16,13 +16,12 @@ const positionLabels = {
 
 const SocietyChairman = () => {
   const navigate = useNavigate();
+
   const [user, setUser] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [error, setError] = useState("");
 
-  // Pending (currentRole === society_chairman)
   const [pendingScholarshipApps, setPendingScholarshipApps] = useState([]);
-  // All scholarships for this society
   const [allScholarshipApps, setAllScholarshipApps] = useState([]);
 
   const [loadingApps, setLoadingApps] = useState(false);
@@ -37,7 +36,6 @@ const SocietyChairman = () => {
   const [selectedType, setSelectedType] = useState(null);
   const [selectedHistoryApp, setSelectedHistoryApp] = useState(null);
 
-  // main tabs: pending, all, history
   const [activeTab, setActiveTab] = useState("pending");
 
   // ---------- LOAD HISTORY FROM FIRESTORE ----------
@@ -95,7 +93,7 @@ const SocietyChairman = () => {
     }
   };
 
-  // ---------- LOAD USER + APPS ----------
+  // ---------- LOAD USER + APPLICATIONS ----------
   useEffect(() => {
     const fetchUserAndApps = async () => {
       const userId = localStorage.getItem("userId");
@@ -120,7 +118,6 @@ const SocietyChairman = () => {
 
         const regNo = u.societyRegisterNo || null;
         const role = "society_chairman";
-
         setLoadingApps(true);
 
         if (!regNo) {
@@ -131,12 +128,12 @@ const SocietyChairman = () => {
           return;
         }
 
-        // === SCHOLARSHIPS (all for this society) ===
+        // Load all scholarship apps for this society
         const schRef = collection(db, "scholarshipApplications");
         const schSnap = await getDocs(schRef);
         const schRaw = schSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-        const allSchList = schRaw
+        let allSchList = schRaw
           .filter((app) => app.societyContext?.registerNo === regNo)
           .map((data) => ({
             id: data.id,
@@ -146,7 +143,14 @@ const SocietyChairman = () => {
               data.createdAt && data.createdAt.toDate
                 ? data.createdAt.toDate().toLocaleString()
                 : "",
+            _createdAtMs:
+              data.createdAt && data.createdAt.toDate
+                ? data.createdAt.toDate().getTime()
+                : 0,
           }));
+
+        // Sort newest first
+        allSchList.sort((a, b) => b._createdAtMs - a._createdAtMs);
 
         const pendingList = allSchList.filter(
           (app) => app.currentRole === role
@@ -175,20 +179,23 @@ const SocietyChairman = () => {
     navigate("/login");
   };
 
-  // ---------- HELPERS: ADD TO HISTORY LOCALLY AFTER ACTION ----------
+  // ---------- HELPERS: ADD TO HISTORY LOCALLY ----------
   const addToHistoryFromAction = (app, finalStatus) => {
     if (!user || !user.societyRegisterNo) return;
+
+    const createdAtString =
+      app.createdAt && app.createdAt.toLocaleString
+        ? app.createdAt.toLocaleString()
+        : typeof app.createdAt === "string"
+        ? app.createdAt
+        : "";
 
     const historyEntry = {
       ...app,
       id: app.id,
       type: "scholarship",
-      status: finalStatus, // "Approved" / "Rejected"
-      createdAt: app.createdAt
-        ? app.createdAt
-        : app.createdAt && app.createdAt.toDate
-        ? app.createdAt.toDate().toLocaleString()
-        : "",
+      status: finalStatus, // "Approved" or "Rejected"
+      createdAt: createdAtString,
       lastActionAt: { seconds: Math.floor(Date.now() / 1000) },
     };
 
@@ -209,8 +216,8 @@ const SocietyChairman = () => {
     setActionSuccess("");
 
     try {
-      const ref = doc(db, collectionName, appId);
       const now = new Date();
+      const ref = doc(db, collectionName, appId);
 
       await updateDoc(ref, {
         status: "ApprovedBy_society_chairman",
@@ -222,7 +229,7 @@ const SocietyChairman = () => {
       // Remove from pending
       setPendingScholarshipApps((prev) => prev.filter((a) => a.id !== appId));
 
-      // Update in all list and get updated app for history
+      // Update in all list and keep updated app to add to history
       let updatedAppForHistory = null;
       setAllScholarshipApps((prev) =>
         prev.map((a) => {
@@ -240,7 +247,7 @@ const SocietyChairman = () => {
         })
       );
 
-      // Update selected app in detail view
+      // Update selected app in detail panel
       setSelectedApp((prev) =>
         prev && prev.id === appId
           ? {
@@ -252,7 +259,7 @@ const SocietyChairman = () => {
           : prev
       );
 
-      // Add to history list (as Approved)
+      // Add to history tab
       if (updatedAppForHistory) {
         addToHistoryFromAction(updatedAppForHistory, "Approved");
       }
@@ -272,8 +279,8 @@ const SocietyChairman = () => {
     setActionSuccess("");
 
     try {
-      const ref = doc(db, collectionName, appId);
       const now = new Date();
+      const ref = doc(db, collectionName, appId);
 
       await updateDoc(ref, {
         status: "DeclinedBy_society_chairman",
@@ -284,7 +291,7 @@ const SocietyChairman = () => {
       // Remove from pending
       setPendingScholarshipApps((prev) => prev.filter((a) => a.id !== appId));
 
-      // Update in all list and get updated app for history
+      // Update in all list and keep updated app to add to history
       let updatedAppForHistory = null;
       setAllScholarshipApps((prev) =>
         prev.map((a) => {
@@ -312,7 +319,7 @@ const SocietyChairman = () => {
           : prev
       );
 
-      // Add to history list (as Rejected)
+      // Add to history tab
       if (updatedAppForHistory) {
         addToHistoryFromAction(updatedAppForHistory, "Rejected");
       }
@@ -361,6 +368,7 @@ const SocietyChairman = () => {
     setActionSuccess("");
   };
 
+  // ---------- Derived values ----------
   if (loadingProfile)
     return <p className="society-loading">Loading profile...</p>;
   if (error) return <p className="society-error">{error}</p>;
@@ -374,47 +382,44 @@ const SocietyChairman = () => {
 
   const totalPending = pendingScholarshipApps.length;
 
-  // Show action buttons for any selected scholarship
   const canActOnSelected =
     selectedType === "scholarship" && !!selectedApp;
 
-  // ---------- Tabs ----------
+  // ---------- Tab renders ----------
 
   const renderPendingScholarshipTab = () => (
-    <>
-      <section className="society-card">
-        <h4 className="card-title">Pending Scholarship Applications</h4>
-        {loadingApps ? (
-          <p className="muted-text">අයදුම්පත් රදිමින්...</p>
-        ) : pendingScholarshipApps.length === 0 ? (
-          <p className="muted-text">
-            දැනට සභාපති මට්ටමට යොමු වූ ශිෂ්‍යත්ව අයදුම්පත් නොමැත.
-          </p>
-        ) : (
-          <ul className="letter-list">
-            {pendingScholarshipApps.map((app) => (
-              <li
-                key={app.id}
-                className="letter-item letter-item--clickable"
-                onClick={() => openDetails(app, "scholarship")}
-              >
-                <div>
-                  <p className="letter-type">
-                    <strong>{app.fullName}</strong> – O/L {app.examYear}
-                  </p>
-                  <p className="letter-sub">
-                    Address: {app.address?.slice(0, 80)}...
-                  </p>
-                  {app.createdAt && (
-                    <p className="letter-sub">Submitted: {app.createdAt}</p>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </>
+    <section className="society-card">
+      <h4 className="card-title">Pending Scholarship Applications</h4>
+      {loadingApps ? (
+        <p className="muted-text">අයදුම්පත් රදිමින්...</p>
+      ) : pendingScholarshipApps.length === 0 ? (
+        <p className="muted-text">
+          දැනට සභාපති මට්ටමට යොමු වූ ශිෂ්‍යත්ව අයදුම්පත් නොමැත.
+        </p>
+      ) : (
+        <ul className="letter-list">
+          {pendingScholarshipApps.map((app) => (
+            <li
+              key={app.id}
+              className="letter-item letter-item--clickable"
+              onClick={() => openDetails(app, "scholarship")}
+            >
+              <div>
+                <p className="letter-type">
+                  <strong>{app.fullName}</strong> – O/L {app.examYear}
+                </p>
+                <p className="letter-sub">
+                  Address: {app.address?.slice(0, 80)}...
+                </p>
+                {app.createdAt && (
+                  <p className="letter-sub">Submitted: {app.createdAt}</p>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 
   const renderAllScholarshipTab = () => (
@@ -519,15 +524,84 @@ const SocietyChairman = () => {
               <h4 className="card-title">
                 History Details – {selectedHistoryApp.type}
               </h4>
+              {selectedHistoryApp.createdAt && (
+                <p className="detail-meta">
+                  Submitted: {selectedHistoryApp.createdAt}
+                </p>
+              )}
+              {selectedHistoryApp.status && (
+                <p className="detail-meta">
+                  Status: {selectedHistoryApp.status}
+                </p>
+              )}
             </div>
             <button className="btn-close" onClick={closeHistoryDetails}>
               ×
             </button>
           </div>
           <div className="detail-body">
-            <pre style={{ whiteSpace: "pre-wrap", fontSize: "13px" }}>
-              {JSON.stringify(selectedHistoryApp, null, 2)}
-            </pre>
+            {selectedHistoryApp.type === "scholarship" && (
+              <>
+                <p>
+                  <strong>Name:</strong>{" "}
+                  {selectedHistoryApp.fullName || "N/A"}
+                </p>
+                <p>
+                  <strong>Address:</strong>{" "}
+                  {selectedHistoryApp.address || "N/A"}
+                </p>
+                <p>
+                  <strong>Exam Year:</strong>{" "}
+                  {selectedHistoryApp.examYear || "N/A"}
+                </p>
+                <p>
+                  <strong>Monthly Amount:</strong>{" "}
+                  {selectedHistoryApp.monthlyAmount || "N/A"} රු.
+                </p>
+                <p>
+                  <strong>First School:</strong>{" "}
+                  {selectedHistoryApp.firstSchool || "N/A"}
+                </p>
+                <p>
+                  <strong>Village Officer Cert:</strong>{" "}
+                  {selectedHistoryApp.villageOfficerCert || "N/A"}
+                </p>
+                <p>
+                  <strong>Principal Recommendation:</strong>{" "}
+                  {selectedHistoryApp.principalCert || "N/A"}
+                </p>
+                <p>
+                  <strong>Current School Principal:</strong>{" "}
+                  {selectedHistoryApp.currentSchoolCert || "N/A"}
+                </p>
+              </>
+            )}
+
+            {selectedHistoryApp.type === "loan" && (
+              <>
+                <p>
+                  <strong>Borrower:</strong>{" "}
+                  {selectedHistoryApp.borrowerName || "N/A"}
+                </p>
+                <p>
+                  <strong>Loan Amount:</strong>{" "}
+                  {selectedHistoryApp.loanAmount || "N/A"} රු.
+                </p>
+              </>
+            )}
+
+            {selectedHistoryApp.type === "fund" && (
+              <>
+                <p>
+                  <strong>Society:</strong>{" "}
+                  {selectedHistoryApp.societyName || "N/A"}
+                </p>
+                <p>
+                  <strong>Requested Amount:</strong>{" "}
+                    {selectedHistoryApp.requestedAmount || "N/A"} රු.
+                </p>
+              </>
+            )}
           </div>
         </section>
       )}
@@ -583,7 +657,6 @@ const SocietyChairman = () => {
           </p>
         </div>
 
-        {/* Action buttons for every society scholarship application */}
         {canActOnSelected && (
           <div className="detail-actions">
             <button
@@ -619,6 +692,7 @@ const SocietyChairman = () => {
     );
   };
 
+  // ---------- MAIN RENDER ----------
   return (
     <section className="society-dashboard">
       <div className="society-shell">

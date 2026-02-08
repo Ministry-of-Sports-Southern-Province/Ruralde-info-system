@@ -45,7 +45,7 @@ const SocietyTreasurer = () => {
   const [activeTab, setActiveTab] = useState("scholarship");
   const [profileTab, setProfileTab] = useState("profile");
 
-  // --------- Load history for treasurer ----------
+  // ---------- Load Treasurer History ----------
   const loadHistory = async (regNo) => {
     if (!regNo) return;
 
@@ -100,6 +100,7 @@ const SocietyTreasurer = () => {
     }
   };
 
+  // ---------- Load User + Pending Apps ----------
   useEffect(() => {
     const fetchUserAndApps = async () => {
       const userId = localStorage.getItem("userId");
@@ -136,7 +137,6 @@ const SocietyTreasurer = () => {
           return;
         }
 
-        // Common filter: all apps for this society, whose currentRole is treasurer
         const isForTreasurer = (app) =>
           app.societyContext?.registerNo === regNo &&
           app.currentRole === role;
@@ -148,7 +148,8 @@ const SocietyTreasurer = () => {
           id: d.id,
           ...d.data(),
         }));
-        const schList = schListRaw
+
+        let schList = schListRaw
           .filter(isForTreasurer)
           .map((data) => ({
             id: data.id,
@@ -158,7 +159,13 @@ const SocietyTreasurer = () => {
               data.createdAt && data.createdAt.toDate
                 ? data.createdAt.toDate().toLocaleString()
                 : "",
+            _createdAtMs:
+              data.createdAt && data.createdAt.toDate
+                ? data.createdAt.toDate().getTime()
+                : 0,
           }));
+
+        schList.sort((a, b) => b._createdAtMs - a._createdAtMs);
 
         // Loans
         const loanRef = collection(db, "loanApplications");
@@ -167,7 +174,8 @@ const SocietyTreasurer = () => {
           id: d.id,
           ...d.data(),
         }));
-        const loanList = loanListRaw
+
+        let loanList = loanListRaw
           .filter(isForTreasurer)
           .map((data) => ({
             id: data.id,
@@ -177,7 +185,13 @@ const SocietyTreasurer = () => {
               data.createdAt && data.createdAt.toDate
                 ? data.createdAt.toDate().toLocaleString()
                 : "",
+            _createdAtMs:
+              data.createdAt && data.createdAt.toDate
+                ? data.createdAt.toDate().getTime()
+                : 0,
           }));
+
+        loanList.sort((a, b) => b._createdAtMs - a._createdAtMs);
 
         // Funds
         const fundRef = collection(db, "fundReleaseApplications");
@@ -186,7 +200,8 @@ const SocietyTreasurer = () => {
           id: d.id,
           ...d.data(),
         }));
-        const fundList = fundListRaw
+
+        let fundList = fundListRaw
           .filter(isForTreasurer)
           .map((data) => ({
             id: data.id,
@@ -196,7 +211,13 @@ const SocietyTreasurer = () => {
               data.createdAt && data.createdAt.toDate
                 ? data.createdAt.toDate().toLocaleString()
                 : "",
+            _createdAtMs:
+              data.createdAt && data.createdAt.toDate
+                ? data.createdAt.toDate().getTime()
+                : 0,
           }));
+
+        fundList.sort((a, b) => b._createdAtMs - a._createdAtMs);
 
         setScholarshipApps(schList);
         setLoanApps(loanList);
@@ -214,6 +235,7 @@ const SocietyTreasurer = () => {
     fetchUserAndApps();
   }, []);
 
+  // ---------- AUTH ----------
   const handleSignOut = () => {
     const ok = window.confirm("Do you really want to sign out?");
     if (!ok) return;
@@ -222,19 +244,20 @@ const SocietyTreasurer = () => {
     navigate("/login");
   };
 
-  // TREASURER APPROVE – final
+  // ---------- ACTIONS ----------
   const handleAccept = async (collectionName, appId) => {
     if (!user) return;
     setActionError("");
     setActionSuccess("");
 
     try {
+      const now = new Date();
       const ref = doc(db, collectionName, appId);
       await updateDoc(ref, {
         status: `ApprovedBy_society_treasurer`,
         currentRole: "final",
         lastActionBy: user.username || user.email || "SocietyTreasurer",
-        lastActionAt: new Date(),
+        lastActionAt: now,
       });
 
       if (collectionName === "scholarshipApplications") {
@@ -264,11 +287,12 @@ const SocietyTreasurer = () => {
     setActionSuccess("");
 
     try {
+      const now = new Date();
       const ref = doc(db, collectionName, appId);
       await updateDoc(ref, {
         status: `DeclinedBy_society_treasurer`,
         lastActionBy: user.username || user.email || "SocietyTreasurer",
-        lastActionAt: new Date(),
+        lastActionAt: now,
       });
 
       if (collectionName === "scholarshipApplications") {
@@ -347,7 +371,6 @@ const SocietyTreasurer = () => {
   if (!user) return null;
 
   // ---------- helpers ----------
-
   const renderResultsTable = (title, results) => {
     if (!results || !Array.isArray(results) || results.length === 0) return null;
     const nonEmpty = results.filter(
@@ -387,7 +410,9 @@ const SocietyTreasurer = () => {
   const renderScholarshipTab = () => (
     <>
       <section className="society-card">
-        <h4 className="card-title">Treasurer – Pending / Forwarded Scholarships</h4>
+        <h4 className="card-title">
+          Treasurer – Pending / Forwarded Scholarships
+        </h4>
         {loadingApps ? (
           <p className="muted-text">අයදුම්පත් රදිමින්...</p>
         ) : scholarshipApps.length === 0 ? (
