@@ -219,8 +219,9 @@ const SocietyChairman = () => {
       const now = new Date();
       const ref = doc(db, collectionName, appId);
 
+      // Agent change: Status updated to 'secortry' as per requirement
       await updateDoc(ref, {
-        status: "ApprovedBy_society_chairman",
+        status: "secortry",
         currentRole: "society_secretary",
         lastActionBy: user.username || user.email || "SocietyChairman",
         lastActionAt: now,
@@ -236,7 +237,7 @@ const SocietyChairman = () => {
           if (a.id === appId) {
             const updated = {
               ...a,
-              status: "ApprovedBy_society_chairman",
+              status: "secortry", // Agent change
               currentRole: "society_secretary",
               lastActionAt: { seconds: Math.floor(now.getTime() / 1000) },
             };
@@ -252,7 +253,7 @@ const SocietyChairman = () => {
         prev && prev.id === appId
           ? {
               ...prev,
-              status: "ApprovedBy_society_chairman",
+              status: "secortry", // Agent change
               currentRole: "society_secretary",
               lastActionAt: { seconds: Math.floor(now.getTime() / 1000) },
             }
@@ -803,5 +804,4 @@ const SocietyChairman = () => {
     </section>
   );
 };
-
 export default SocietyChairman;

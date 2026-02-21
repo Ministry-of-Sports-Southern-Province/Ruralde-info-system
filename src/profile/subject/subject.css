@@ -20,7 +20,7 @@
   gap: 24px;
 }
 
-/* ===== SIDEBAR ===== */
+/* ===== SIDEBAR (DESKTOP) ===== */
 
 .subject-sidebar {
   background: rgba(255, 255, 255, 0.96);
@@ -170,7 +170,7 @@
   margin: 3px 0;
 }
 
-/* Basic info (not used as main anymore but kept in case) */
+/* Basic info */
 .sidebar-info {
   text-align: left;
   padding: 10px 12px;
@@ -241,8 +241,40 @@
 .subject-main {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
   animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* Top summary bar in main content (desktop or mobile) */
+.subject-summary-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 8px;
+  margin-bottom: 6px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.14);
+}
+
+.summary-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.summary-pill-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+  margin-bottom: 2px;
+}
+
+.summary-pill-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
 }
 
 /* Tabs for subject main */
@@ -311,7 +343,6 @@
   backdrop-filter: blur(10px);
 }
 
-/* Widget titles */
 .widget-title,
 .subject-title {
   margin: 0 0 10px;
@@ -320,7 +351,7 @@
   color: #111827;
 }
 
-/* Summary grid */
+/* Summary grid inside widgets */
 .profile-summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -419,7 +450,6 @@
   animation: fadeInUp 0.25s ease-out forwards;
 }
 
-/* Toggle button (if used for history collapse) */
 .toggle-btn,
 .history-toggle-btn {
   padding: 6px 12px;
@@ -575,7 +605,7 @@
   }
 }
 
-/* ===== DETAIL CARD (Subject detail) ===== */
+/* ===== DETAIL CARD ===== */
 
 .subject-detail-card {
   background: #fff;
@@ -729,7 +759,7 @@
   color: #4b5563;
 }
 
-/* ===== DISTRICT ANALYTICS TABLE (NEW) ===== */
+/* ===== DISTRICT ANALYTICS TABLE ===== */
 
 .district-analytics-table {
   margin-top: 18px;
@@ -778,7 +808,7 @@
   white-space: nowrap;
 }
 
-/* ===== STATUS FILTER CHIPS (for Applications tab) ===== */
+/* ===== STATUS FILTER CHIPS ===== */
 
 .subject-status-filter {
   margin: 4px 0 8px;
@@ -834,43 +864,240 @@
   }
 }
 
-/* ===== RESPONSIVE ===== */
+/* ===== MOBILE / RESPONSIVE ===== */
 
 @media (max-width: 960px) {
   .subject-shell {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .subject-sidebar {
+  /* MAIN (letters) first */
+  .subject-main {
     order: 1;
   }
 
-  .subject-main {
-    order: 2;
+  /* Hide heavy sidebar entirely on mobile */
+  .subject-sidebar {
+    display: none;
   }
 
   .subject-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  .sub-tab-bar {
+    width: 100%;
+    justify-content: space-between;
+    overflow-x: auto;
+  }
+
+  /* ===== MOBILE COMPACT PROFILE INSIDE MAIN (TO BE RENDERED AFTER LETTERS) ===== */
+
+  .subject-mobile-profile {
+    margin-top: 10px;
+    background: rgba(255, 255, 255, 0.97);
+    border-radius: 16px;
+    padding: 12px 14px 10px;
+    box-shadow:
+      0 12px 26px rgba(15, 23, 42, 0.18),
+      0 0 0 1px rgba(148, 163, 184, 0.24);
+  }
+
+  .subject-mobile-profile-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .subject-mobile-profile-avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+    background: #22c55e;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 16px rgba(34, 197, 94, 0.45);
+  }
+
+  .subject-mobile-profile-name {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0;
+    color: #0f172a;
+  }
+
+  .subject-mobile-profile-role {
+    font-size: 12px;
+    color: #4b5563;
+    margin: 2px 0 0;
+  }
+
+  .subject-mobile-profile-area {
+    font-size: 11px;
+    color: #166534;
+    margin-top: 2px;
+  }
+
+  .subject-mobile-profile-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 6px;
+    margin-top: 6px;
+    font-size: 11px;
+    color: #4b5563;
+  }
+
+  .subject-mobile-profile-info-item span {
+    display: block;
+  }
+
+  .subject-mobile-profile-info-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #9ca3af;
+  }
+
+  .subject-mobile-profile-info-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  /* Summary pills reused under mobile profile */
+  .subject-mobile-summary {
+    margin-top: 8px;
+  }
+
+  .subject-summary-bar {
+    border-radius: 12px;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+  }
 }
 
+/* Very small screens */
 @media (max-width: 600px) {
   .subject-dashboard {
     padding-top: 100px;
-  }
-
-  .sidebar-name {
-    font-size: 18px;
   }
 
   .detail-body {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  /* make district table more compact on small screens */
   .district-table-header,
   .district-table-row {
     grid-template-columns: 1.6fr repeat(4, 0.8fr);
     font-size: 11px;
+  }
+}
+/* Mobile-only back row and profile card */
+.subject-mobile-back-row,
+.subject-mobile-header-card {
+  display: none;
+}
+
+@media (max-width: 960px) {
+  /* Hide heavy sidebar on mobile */
+  .subject-sidebar {
+    display: none;
+  }
+
+  .subject-mobile-back-row {
+    display: flex;
+    margin-bottom: 6px;
+  }
+
+  .mobile-back-btn {
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: none;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #111827;
+    background: #f3f4f6;
+    box-shadow: 0 3px 8px rgba(148, 163, 184, 0.45);
+  }
+
+  .mobile-back-btn:hover {
+    background: #e5e7eb;
+  }
+
+  .subject-mobile-header-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+    background: rgba(255, 255, 255, 0.97);
+    border-radius: 14px;
+    padding: 8px 10px;
+    box-shadow:
+      0 10px 20px rgba(15, 23, 42, 0.18),
+      0 0 0 1px rgba(148, 163, 184, 0.25);
+  }
+
+  .subject-mobile-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .subject-mobile-header-avatar img {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    object-fit: cover;
+    border: 2px solid #22c55e;
+    box-shadow: 0 4px 10px rgba(34, 197, 94, 0.4);
+  }
+
+  .subject-mobile-header-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .subject-mobile-header-name {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .subject-mobile-header-role {
+    margin: 1px 0 0;
+    font-size: 11px;
+    font-weight: 500;
+    color: #4b5563;
+  }
+
+  .subject-mobile-header-area {
+    margin: 2px 0 0;
+    font-size: 11px;
+    color: #166534;
+  }
+
+  .mobile-header-signout-btn {
+    padding: 4px 9px;
+    border-radius: 999px;
+    border: none;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+    color: #ffffff;
+    box-shadow: 0 3px 8px rgba(220, 38, 38, 0.55);
+  }
+
+  .mobile-header-signout-btn:hover {
+    filter: brightness(1.05);
   }
 }

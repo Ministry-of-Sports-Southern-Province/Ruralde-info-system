@@ -254,8 +254,9 @@ const SocietySecretary = () => {
 
     try {
       const ref = doc(db, collectionName, appId);
+      // Agent change: Status updated to 'treasure' as per requirement
       await updateDoc(ref, {
-        status: "ApprovedBy_society_secretary",
+        status: "treasure",
         currentRole: "society_treasurer",
         lastActionBy: user.username || user.email || "SocietySecretary",
         lastActionAt: new Date(),

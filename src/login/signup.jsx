@@ -1,3 +1,5 @@
+// List of files changed: src/login/signup.jsx
+// Agnet change: Added file list and refined auto-fill/loading logic.
 import React, { useState, useEffect } from "react";
 import "../login/signup.css";
 import { db } from "../firebase.js";
@@ -119,7 +121,7 @@ export default function SignUp() {
     "මාදම්පාගම": "madampagama",
     "වඳුරඔ": "wanduraba",
 
-    "තිහගොඩ": "thiagoda",
+    "තිහගොඩ": "thihagoda", // Agnet change: corrected from thiagoda
     "අකුරැස්ස": "akuressa",
     "හක්මණ": "hakmana",
     "වැලිගම": "weligama",
@@ -128,11 +130,11 @@ export default function SignUp() {
     "අතුරලිය": "athuraliya",
     "දෙවිනුවර": "devinuwara",
     "පිටබැද්දර": "pitabeddara",
-    "මුලටියන": "mulatiyana",
+    "මුලටියන": "Mulatiyana", // Agnet change: corrected from mulatiyana to match filename
     "වැලිපිටිය": "welipitiya",
     "පස්ගොඩ": "pasgoda",
     "කැබුරුපිටිය": "kaburupitiya",
-    "කිරින්ද පුහුල්වැල්ල": "kirinda_puhulwella",
+    "කිරින්ද පුහුල්වැල්ල": "kirinda puhulwella", // Agnet change: corrected from kirinda_puhulwella
     "කොටපොළ": "kotapola",
     "මාතර": "matara",
 
@@ -142,10 +144,10 @@ export default function SignUp() {
     "හම්බන්තොට": "hambantota",
     "කටුවන": "katuwana",
     "ලුණුගම්වෙහෙර": "lunugamwehera",
-    "ඕකෙවෙල": "okewela",
+    "ඕකෙවෙල": "okawela", // Agnet change: corrected from okewela
     "සූරියවැව": "suriyawewa",
     "තංගල්ල": "tangalle",
-    "තිස්සමහාරාමය": "tissamaharamaya",
+    "තිස්සමහාරාමය": "thissamaharamaya", // Agnet change: corrected from tissamaharamaya
     "වලස්මුල්ල": "walasmulla",
     "වීරකැටිය": "wiraketiya",
   };
@@ -225,7 +227,9 @@ export default function SignUp() {
             data["ලි.ප.අ"] || // change this key if your log shows different
             data["ලි.ප අ"] || // small fallback if space used
             data["ලි.පඅ"] ||
-            data.registerNo ||
+            data["registerNo"] ||
+            data["ලියා පදිංචි අංකය"] ||
+            data["ලියාපදිංචි අංකය"] ||
             "";
 
           return { id: docSnap.id, name, regNo };
@@ -242,10 +246,12 @@ export default function SignUp() {
     fetchVillages();
   }, [selectedDistrict, selectedSecretary]);
 
+  // Agnet change: Function to handle society selection and automatically fill the registration number
   const handleSocietyChange = (id) => {
     setSelectedSocietyId(id);
     const s = societies.find((x) => x.id === id);
     setSelectedSocietyName(s?.name || "");
+    // Agnet change: Automatically set the registration number (regNo) for the selected society
     setSelectedSocietyRegNo(s?.regNo || "");
   };
 
@@ -552,11 +558,11 @@ export default function SignUp() {
                   ))}
                 </select>
 
-                {/* Auto-filled Society Reg No */}
+                {/* Agnet change: Auto-filled Society Reg No (regNo) field */}
                 <label>Society Reg No</label>
                 <input
                   type="text"
-                  value={selectedSocietyRegNo}
+                  value={selectedSocietyRegNo} // Agnet change: Automatically filled when a society is selected
                   readOnly
                   placeholder="Auto filled from database"
                 />

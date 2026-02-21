@@ -137,6 +137,7 @@ const SocietyTreasurer = () => {
           return;
         }
 
+        // Agent change: Show applications approved by both Chairman and Secretary (status 'treasure')
         const isForTreasurer = (app) =>
           app.societyContext?.registerNo === regNo &&
           app.currentRole === role;
@@ -254,7 +255,7 @@ const SocietyTreasurer = () => {
       const now = new Date();
       const ref = doc(db, collectionName, appId);
       await updateDoc(ref, {
-        status: `ApprovedBy_society_treasurer`,
+        status: `ApprovedBy_society_treasurer`, // Agent change
         currentRole: "final",
         lastActionBy: user.username || user.email || "SocietyTreasurer",
         lastActionAt: now,

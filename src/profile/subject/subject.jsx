@@ -17,7 +17,7 @@ const Subject = () => {
   const [loadingUser, setLoadingUser] = useState(true);
   const [error, setError] = useState("");
 
-  const [requests, setRequests] = useState([]); // secretaryRequests (all)
+  const [requests, setRequests] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
 
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -29,10 +29,7 @@ const Subject = () => {
   const [showSignOutModal, setShowSignOutModal] = useState(false);
   const [showSensitiveInfo, setShowSensitiveInfo] = useState(false);
 
-  // Tabs: pending | requested | history | analytics
   const [activeTab, setActiveTab] = useState("pending");
-
-  // Sub-filters for pending tab: all | pending | accepted | rejected | forwarded
   const [statusFilter, setStatusFilter] = useState("all");
 
   // ===== LOAD USER + SECRETARY REQUESTS =====
@@ -46,7 +43,6 @@ const Subject = () => {
       }
 
       try {
-        // 1) Load subject officer
         const userRef = doc(db, "users", userId);
         const userSnap = await getDoc(userRef);
 
@@ -60,7 +56,6 @@ const Subject = () => {
         setUser(userData);
         setLoadingUser(false);
 
-        // 2) Load ALL secretaryRequests (subject sees all registrations in DB)
         setLoadingRequests(true);
         try {
           const secRef = collection(db, "secretaryRequests");
@@ -118,20 +113,19 @@ const Subject = () => {
                   : "",
 
               // Subject Officer
-              subjectStatus: d.subjectStatus || "Pending", // Pending | AcceptedBySubject | RejectedBySubject | ForwardedToDirector
+              subjectStatus: d.subjectStatus || "Pending",
               subjectNote: d.subjectNote || "",
               subjectDecisionAt:
                 d.subjectDecisionAt && d.subjectDecisionAt.toDate
                   ? d.subjectDecisionAt.toDate().toLocaleString()
                   : "",
 
-              // When record was first created at DS/DO level
+              // createdAt
               createdAt:
                 d.createdAt && d.createdAt.toDate
                   ? d.createdAt.toDate().toLocaleString()
                   : "",
 
-              // Keep raw district decision for analytics
               _rawDistrictDecision: d.districtDecision || "Pending",
             });
           });
@@ -167,6 +161,15 @@ const Subject = () => {
   };
   const handleCancelSignOut = () => setShowSignOutModal(false);
 
+  // ===== BACK BUTTON =====
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/"); // fallback
+    }
+  };
+
   // ===== SELECT A REQUEST =====
   const handleSelectRequest = (req) => {
     setSelectedRequest(req);
@@ -176,7 +179,7 @@ const Subject = () => {
     setActiveTab("pending");
   };
 
-  // ===== SUBJECT OFFICER DECISION: ACCEPT / REJECT =====
+  // ===== SUBJECT OFFICER DECISION =====
   const handleSubjectDecision = async (decision) => {
     if (!selectedRequest || !user) return;
 
@@ -300,7 +303,6 @@ const Subject = () => {
 
   const allRequests = requests;
 
-  // filter for status tabs
   const filteredRequests = allRequests.filter((r) => {
     if (statusFilter === "pending") return r.subjectStatus === "Pending";
     if (statusFilter === "accepted")
@@ -309,7 +311,7 @@ const Subject = () => {
       return r.subjectStatus === "RejectedBySubject";
     if (statusFilter === "forwarded")
       return r.subjectStatus === "ForwardedToDirector";
-    return true; // all
+    return true;
   });
 
   const historyRequests = allRequests;
@@ -323,12 +325,12 @@ const Subject = () => {
     (r) => r.subjectStatus === "ForwardedToDirector"
   ).length;
 
-  // ===== DISTRICT APPROVAL ANALYTICS (for Analytics tab) =====
+  // Analytics
   let districtApprovedCount = 0;
   let districtRejectedCount = 0;
   let districtPendingCount = 0;
 
-  const districtMap = {}; // { "Matara": { total, approved, rejected, pending } }
+  const districtMap = {};
 
   historyRequests.forEach((r) => {
     const decision = (r._rawDistrictDecision || "Pending").toLowerCase();
@@ -362,6 +364,8 @@ const Subject = () => {
     a.district.localeCompare(b.district)
   );
 
+  const roleLabel = user.position || "විෂය භාර නිලධාරී";
+
   return (
     <div className="subject-dashboard">
       {/* SIGN OUT MODAL */}
@@ -393,7 +397,7 @@ const Subject = () => {
       )}
 
       <div className="subject-shell">
-        {/* ===== SIDEBAR ===== */}
+        {/* ===== SIDEBAR (desktop) ===== */}
         <aside className="subject-sidebar">
           <div className="sidebar-header">
             <div>
@@ -415,9 +419,7 @@ const Subject = () => {
               />
             </div>
             <h2 className="sidebar-name">{user.username}</h2>
-            <p className="sidebar-role-main">
-              {user.position || "විෂය භාර නිලධාරී"}
-            </p>
+            <p className="sidebar-role-main">{roleLabel}</p>
             <p className="sidebar-role-sub">
               විෂය භාර නිලධාරී – {user.district || "සියලුම"} දිස්ත්‍රික්කය
             </p>
@@ -427,7 +429,6 @@ const Subject = () => {
               ප්‍රා.ලේ.
             </p>
 
-            {/* Collapsible profile (sensitive) */}
             <div className="sidebar-info-card">
               <button
                 type="button"
@@ -487,24 +488,56 @@ const Subject = () => {
             </div>
           </div>
 
-          {/* RESPONSIBILITIES / HELP */}
           <div className="sidebar-notes">
             <h4>ඔබගේ භූමිකාව</h4>
             <ul>
               <li>RDO, DO, DS තීරණ මුලින්ම සලකා බලන්න.</li>
-              <li>
-                විෂය අදාළ නීති හා උපදෙස් අනුව Accept / Reject තීරණය ලබා
-                දෙන්න.
-              </li>
-              <li>
-                අවසානයේ Director වෙත යොමු කිරීම (Forward to Director).
-              </li>
+              <li>Accept / Reject තීරණය ලබා දෙන්න.</li>
+              <li>අවසානයේ Director වෙත යොමු කිරීම.</li>
             </ul>
           </div>
         </aside>
 
         {/* ===== MAIN CONTENT ===== */}
         <main className="subject-main">
+          {/* MOBILE BACK ROW + PROFILE CARD */}
+          <div className="subject-mobile-back-row">
+            <button
+              type="button"
+              className="mobile-back-btn"
+              onClick={handleBack}
+            >
+              ◀ Back
+            </button>
+          </div>
+
+          <div className="subject-mobile-header-card">
+            <div className="subject-mobile-header-left">
+              <div className="subject-mobile-header-avatar">
+                <img
+                  src={user.photoURL || "https://via.placeholder.com/80"}
+                  alt="Profile"
+                />
+              </div>
+              <div className="subject-mobile-header-text">
+                <p className="subject-mobile-header-name">{user.username}</p>
+                <p className="subject-mobile-header-role">{roleLabel}</p>
+                <p className="subject-mobile-header-area">
+                  {user.district || "සියලුම"} / {user.division || "සියලුම"}{" "}
+                  ප්‍රා.ලේ.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="mobile-header-signout-btn"
+              onClick={handleSignOutClick}
+            >
+              Sign Out
+            </button>
+          </div>
+
           {/* Tabs */}
           <div className="sub-tab-bar">
             <button
@@ -533,7 +566,7 @@ const Subject = () => {
             </button>
           </div>
 
-          {/* Small header under tabs */}
+          {/* Header under tabs */}
           <div className="sub-main-header">
             <h1 className="sub-main-title">සමිති ලියාපදිංචි කළමනාකරණය</h1>
             <p className="sub-main-subtitle">
@@ -543,10 +576,9 @@ const Subject = () => {
             </p>
           </div>
 
-          {/* ===== 1. APPLICATIONS & ACTIONS (with status filter tabs) ===== */}
+          {/* ===== PENDING TAB ===== */}
           {activeTab === "pending" && (
             <>
-              {/* Status filter tabs */}
               <div className="subject-status-filter">
                 <button
                   className={`status-chip ${
@@ -618,10 +650,7 @@ const Subject = () => {
                 <div className="sub-widget">
                   <h3 className="widget-title">සමිති ලියාපදිංචි ලිපි</h3>
                   <p className="muted-text">
-                    වම්පස ලැයිස්තුව මගින් ඔබට දිස්ත්‍රික් / ප්‍රා.ලේ.
-                    අනුව ලියාපදිංචි ඉල්ලීම් තෝරාගත හැක. ඉහත /
-                    පසුතාල විස්තර සලකා Accept / Reject / Forward to Director
-                    තීරණ ලබා දෙන්න.
+                    ලැයිස්තුව මගින් ඉල්ලීම් තෝරාගෙන විස්තර බලන්න.
                   </p>
                   {loadingRequests ? (
                     <p className="muted-text">
@@ -683,22 +712,15 @@ const Subject = () => {
                 <div className="sub-widget">
                   <h3 className="widget-title">විෂය නිලධාරී මගපෙන්වීම</h3>
                   <p className="muted-text">
-                    • ඉල්ලීම තෝරන්න → වම්පසින් සිදු වූ සියලු පියවර
-                    (RDO/DO/DS) බලන්න.
+                    • ඉල්ලීම තෝරන්න → RDO/DO/DS තීරණ බලන්න.
                     <br />
-                    • &quot;Subject Officer Action&quot; කොටසෙන්
-                    Accept/Reject තීරණය ලබා දෙන්න.
+                    • Subject Officer Action කොටසෙන් Accept / Reject.
                     <br />
-                    • අවසානයේ &quot;Forward to Director&quot; භාවිතා කර
-                    Director වෙත යොමු කරන්න.
-                    <br />
-                    • Forwarding chain එකේ නම, තනතුර සහ දිනය යාවත්කාලීනව
-                    ගැලපේ.
+                    • අවසානයේ Forward to Director.
                   </p>
                 </div>
               </section>
 
-              {/* DETAIL & APPROVAL CHAIN */}
               {selectedRequest && (
                 <section className="subject-detail-card">
                   <div className="detail-header">
@@ -720,7 +742,6 @@ const Subject = () => {
                   </div>
 
                   <div className="detail-body">
-                    {/* Society info block */}
                     <div className="detail-column">
                       <div className="society-card">
                         <h4>සමිතිය සම්බන්ධ තොරතුරු</h4>
@@ -776,7 +797,6 @@ const Subject = () => {
                       </div>
                     </div>
 
-                    {/* Approval chain + subject actions */}
                     <div className="detail-column">
                       <div className="approval-chain">
                         <h4>අනුමැතිය / පියවර වල සටහන්</h4>
@@ -876,8 +896,7 @@ const Subject = () => {
                       <div className="referral-form subject-action-card">
                         <h4>Subject Officer Action</h4>
                         <p className="muted-text">
-                          මෙය ඔබගේ විෂය භාර නිල තීරණය ලබා දෙන කොටසයි. Accept
-                          හෝ Reject තෝරා, අවසානයේ Director වෙත යොමු කරන්න.
+                          මෙය ඔබගේ විෂය භාර නිල තීරණය ලබා දෙන කොටසයි.
                         </p>
 
                         <label>විෂය නිලධාරී සටහන</label>
@@ -903,7 +922,6 @@ const Subject = () => {
                           <p className="success-text">{actionSuccess}</p>
                         )}
 
-                        {/* Accept/Reject visible only if Subject has not decided */}
                         {selectedRequest.subjectStatus === "Pending" && (
                           <div
                             className="referral-actions"
@@ -928,7 +946,6 @@ const Subject = () => {
                           </div>
                         )}
 
-                        {/* Forward to Director visible only AFTER Subject has decided */}
                         {(selectedRequest.subjectStatus ===
                           "AcceptedBySubject" ||
                           selectedRequest.subjectStatus ===
@@ -961,7 +978,7 @@ const Subject = () => {
             </>
           )}
 
-          {/* 2. HISTORY TAB */}
+          {/* ===== HISTORY TAB ===== */}
           {activeTab === "history" && (
             <section className="sub-widget">
               <h3 className="widget-title">Registration History</h3>
@@ -1023,14 +1040,13 @@ const Subject = () => {
             </section>
           )}
 
-          {/* 3. ANALYTICS TAB */}
+          {/* ===== ANALYTICS TAB ===== */}
           {activeTab === "analytics" && (
             <section className="sub-widget">
               <h3 className="widget-title">විෂය මට්ටමේ විශ්ලේෂණය</h3>
               <p className="muted-text">
                 පහත සංඛ්‍යාතයන් මගින් ඔබගේ වත්මන් කාර්ය භාරය සහ දිස්ත්‍රික්
-                මට්ටමේ තීරණ පිළිබඳ දර්ශනයක් ලබා ගත හැක. Charts ලෙස
-                පෙන්වීමේ අඩංගුව තවදුරටත් සංවර්ධනය කළ හැක.
+                මට්ටමේ තීරණ පිළිබඳ දර්ශනයක් ලබා ගත හැක.
               </p>
 
               <div className="analytics-grid">
@@ -1066,7 +1082,6 @@ const Subject = () => {
                 </div>
               </div>
 
-              {/* === DISTRICT APPROVAL SUMMARY === */}
               <div className="analytics-grid" style={{ marginTop: 24 }}>
                 <div className="analytics-card">
                   <h4>දිස්ත්‍රික් මට්ටමේ අනුමත</h4>
@@ -1093,7 +1108,6 @@ const Subject = () => {
                 </div>
               </div>
 
-              {/* Simple chart-style table per district */}
               <div className="district-analytics-table">
                 <h4 style={{ marginTop: 24 }}>District Approval Breakdown</h4>
                 {districtAnalyticsRows.length === 0 ? (
